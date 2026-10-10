@@ -36,6 +36,10 @@
   /* 원화 환산(약 32,400원)은 한국 손님에게만 쓸모가 있다.
      베트남어로 보면 '(khoảng 32.400₩)' 라는 남의 나라 돈이 떠서 가격을 헷갈리게 한다. */
   body:not([data-lang="ko"]) .wonhint { display: none; }
+  /* 프레임 바깥(단계 표시) 언어 전환 줄 */
+  .langbar { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-bottom: 14px; }
+  .langbar button { font: inherit; font-size: 12.5px; color: inherit; background: var(--card); border: 1.5px solid var(--line); border-radius: 20px; padding: 5px 12px; cursor: pointer; }
+  .langbar button.on { background: var(--navy); color: #fff; border-color: var(--navy); }
   .flow { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-bottom: 24px; }
   .flow .node { background: var(--card); border: 1.5px solid var(--line); border-radius: 20px; padding: 6px 14px; font-size: 12.5px; cursor: pointer; }
   .flow .node.on { background: var(--navy); color: #fff; border-color: var(--navy); }
@@ -448,7 +452,7 @@
   /* 와이어프레임 설명용 요소 — 관리자(또는 ?dev=1)일 때만 노출 */
   .devonly { display: none; }
   body.devmode .devonly { display: revert; }
-  body.devmode .flow.devonly { display: flex; }
+  body.devmode .flow.devonly, body.devmode .langbar.devonly { display: flex; }
   /* 일반 보기(비 devmode) — 보는 화면 크기에 맞춰 자동으로 커지고, 모바일에서는 전체 화면 */
   body:not(.devmode) { padding: 16px 12px; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
   body:not(.devmode) .phone {
@@ -495,8 +499,7 @@
 </head>
 <body>
 
-<h1 class="devonly">mㅏssㅏ 고객 앱 와이어프레임 v3</h1>
-<div class="sub devonly">하노이 MVP — 홈 배너 분기 · 후불 결제 (2026.06)</div>
+<div class="langbar devonly" id="langBar"></div>
 
 <div class="flow devonly" id="flow"></div>
 
@@ -1059,19 +1062,57 @@ const NAMES = { home: '홈', thList: '마사지 홈서비스', therapy: '홈 뷰
 let stack = ['home'];
 
 const flowEl = document.getElementById('flow');
+const langBarEl = document.getElementById('langBar');
 const titleEl = document.getElementById('appTitle');
 
-function cur() { return stack[stack.length - 1]; }
+// 단계 표시줄 전용 번역표 — [vi, en, zh, ja]
+// 본문 DICT 에는 '홈'·'시간'·'위치'·'확인(후불)'·'완료' 가 없어서 여기에 따로 둔다.
+const FLOW_I18N = {
+  '홈':              ['Trang chủ','Home','首页','ホーム'],
+  '마사지 홈서비스': ['Massage tại nhà','Home Massage','上门按摩','出張マッサージ'],
+  '홈 뷰티':         ['Làm đẹp tại nhà','Home Beauty','上门美容','ホームビューティー'],
+  '스파 안내':       ['Spa','Spa','水疗','スパ'],
+  '매장 리스트':     ['Danh sách cửa hàng','Stores','门店列表','店舗リスト'],
+  '매장 상세':       ['Cửa hàng','Store','店铺','店舗'],
+  '코스':            ['Liệu trình','Course','套餐','コース'],
+  '시간':            ['Thời gian','Time','时间','時間'],
+  '위치':            ['Vị trí','Location','位置','場所'],
+  '확인(후불)':      ['Xác nhận (trả sau)','Confirm (pay later)','确认（后付）','確認（後払い）'],
+  '완료':            ['Hoàn tất','Done','完成','完了']
+};
+// LANG 은 파일 아래쪽 모듈에서 let 으로 선언돼 여기서 읽으면 TDZ 오류가 난다.
+// 그래서 applyLang 이 window.LANG_CUR 에 복사해 두고, 바깥 UI 는 그것만 읽는다.
+function flowLang() { return window.LANG_CUR || 'ko'; }
+function trFlow(ko) {
+  const l = flowLang();
+  if (l === 'ko') return ko;
+  const e = FLOW_I18N[ko];
+  if (!e) return ko;
+  return e[{ vi: 0, en: 1, zh: 2, ja: 3 }[l]] || ko;
+}
 
-function render() {
-  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === cur()));
-  titleEl.textContent = document.getElementById(cur()).dataset.title;
+const FLOW_LANGS = [['ko','🇰🇷 KO'],['vi','🇻🇳 VI'],['en','🇺🇸 EN'],['zh','🇨🇳 中'],['ja','🇯🇵 日']];
+function renderLangBar() {
+  if (!langBarEl) return;
+  langBarEl.innerHTML = '';
+  FLOW_LANGS.forEach(([code, label]) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = label;
+    if (code === flowLang()) b.className = 'on';
+    b.onclick = () => { if (window.applyLang) applyLang(code); };
+    langBarEl.appendChild(b);
+  });
+}
+
+function renderFlow() {
+  if (!flowEl) return;
   flowEl.innerHTML = '';
   MAIN_FLOW.forEach((id, i) => {
     const node = document.createElement('div');
     const shownId = (cur() === 'therapy' || cur() === 'spa' || cur() === 'stores' || cur() === 'storeDtl') && id === 'thList' ? cur() : id;
     node.className = 'node' + (shownId === cur() ? ' on' : '');
-    node.textContent = (i + 1) + '. ' + NAMES[shownId];
+    node.textContent = (i + 1) + '. ' + trFlow(NAMES[shownId]);
     node.onclick = () => go(shownId);
     flowEl.appendChild(node);
     if (i < MAIN_FLOW.length - 1) {
@@ -1081,6 +1122,17 @@ function render() {
       flowEl.appendChild(a);
     }
   });
+}
+window.renderFlow = renderFlow;
+window.renderLangBar = renderLangBar;
+
+function cur() { return stack[stack.length - 1]; }
+
+function render() {
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === cur()));
+  titleEl.textContent = document.getElementById(cur()).dataset.title;
+  renderFlow();
+  renderLangBar();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -3709,6 +3761,8 @@ new MutationObserver(() => {
 
 function applyLang(lang) {
   LANG = lang;
+  window.LANG_CUR = lang;                                   // 프레임 바깥 UI 가 읽는 값
+  if (window.renderFlow) { renderFlow(); renderLangBar(); } // 단계 표시줄·언어 버튼도 같이 바꾼다
   try { localStorage.setItem('massa_lang', lang); } catch (e) {}   // 다음 실행에도 유지
   savePushToken();   // 푸시 제목도 바뀐 언어로 받게
   // 원화 환산은 한국어일 때만 보여준다. CSS 로 끄는 이유는 언어를 바꿔도
