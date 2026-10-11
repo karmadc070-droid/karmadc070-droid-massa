@@ -1081,6 +1081,7 @@ const BK_ST = { requested:['요청됨','var(--amber)'], confirmed:['확정','var
                 no_show:['노쇼','var(--bad)'] };
 const BCOLS = [
   { k:'booking_no',   h:'예약번호', l:1 },
+  { k:'cust',         h:'고객',     l:1, v:(b)=> b.profiles ? (b.profiles.full_name || '') : '' },
   { k:'prov',         h:'마사지사', l:1, v:(b)=> b.providers ? b.providers.display_name : '' },
   { k:'svc',          h:'서비스',   l:1, v:(b)=> b.services  ? b.services.name  : '' },
   { k:'status',       h:'상태',     l:1 },
@@ -1093,7 +1094,7 @@ let BKS = null;
 async function loadBk() {
   const box = $('bk'); box.innerHTML = '<div class="empty">불러오는 중…</div>';
   const { data, error } = await sb.from('bookings')
-    .select('*, providers(display_name), services(name)')
+    .select('*, providers(display_name), services(name), profiles!bookings_customer_id_fkey(full_name, phone)')
     .order('created_at', { ascending: false }).limit(300);
   if (error) { box.innerHTML = '<div class="empty">불러오지 못했습니다 — ' + esc(error.message) + '</div>'; return; }
   BKS = data || [];
@@ -1106,6 +1107,7 @@ function drawBk() {
   const q = ($('bkq').value || '').trim().toLowerCase();
   let rows = BKS;
   if (q) rows = rows.filter(b => [b.booking_no, b.providers && b.providers.display_name,
+      b.profiles && b.profiles.full_name, b.profiles && b.profiles.phone,
       b.services && b.services.name, b.hotel_name, b.address]
       .some(v => String(v || '').toLowerCase().includes(q)));
   if ($('bkst').value)   rows = rows.filter(b => b.status === $('bkst').value);
@@ -1134,6 +1136,11 @@ function drawBk() {
       return `<tr>
         <td class="l"><div style="font-weight:600">${esc(b.booking_no || b.id.slice(0, 8))}</div>
           <div style="font-size:11px;color:var(--ink-soft)">${esc(b.hotel_name || b.address || '위치 미입력')}</div></td>
+        <td class="l">${b.profiles && b.profiles.full_name ? esc(b.profiles.full_name)
+            : '<span style="color:var(--ink-soft)">이름 없음</span>'}
+          ${b.profiles && b.profiles.phone
+            ? `<div style="font-size:11px"><a href="tel:${esc(b.profiles.phone)}" style="color:var(--cool)">${esc(b.profiles.phone)}</a></div>`
+            : '<div style="font-size:11px;color:var(--bad)">연락처 없음</div>'}</td>
         <td class="l">${b.providers ? esc(b.providers.display_name)
           : '<span style="color:var(--bad)">미배정</span>'}</td>
         <td class="l" style="font-size:12px">${esc(b.services ? b.services.name : '-')}</td>
