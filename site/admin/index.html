@@ -1467,6 +1467,7 @@ function drawMembers() {
 
 const RCOLS = [
   { k: 'name',     h: '마사지사',    l: 1 },
+  { k: 'city_name', h: '활동 지역',  l: 1 },
   { k: 'tier',     h: '등급',        l: 1 },
   { k: 'joined',   h: '가입',        l: 1 },
   { k: 'cnt',      h: '예약',        t: 'n' },
@@ -1518,6 +1519,10 @@ function drawRoster() {
               ${r.status === 'pending' ? ' · 심사 대기' : ''}
               ${r.pending_cnt ? ` · <b style="color:var(--amber)">확인 대기 ${r.pending_cnt}</b>` : ''}
             </div></div></div></td>
+        <td class="l">${r.city_name ? esc(r.city_name)
+            : '<span style="color:var(--bad)">지역 없음</span>'}
+          <div style="font-size:11px;color:var(--ink-soft)">${r.ward_names
+            ? esc(r.ward_names) : '성 전체'}</div></td>
         <td class="l">${tierChip(r.tier, tiers)}${r.suggest_vip
             ? '<div style="font-size:11px;color:var(--amber)">10% 후보</div>' : ''}</td>
         <td class="l" style="font-size:12px;color:var(--ink-soft)">${esc(r.joined || '-')}</td>
