@@ -457,6 +457,9 @@ const sb = createClient(
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g,
   c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+// 화면의 모든 날짜·시각은 베트남 현지 시간으로 찍는다.
+// timeZone 을 안 주면 보는 사람(한국)의 시간대로 나와 실제보다 2시간 뒤로 보인다.
+const TZ = 'Asia/Ho_Chi_Minh';
 const num = (n) => Number(n || 0).toLocaleString('ko-KR');
 const vnd = (n) => Number(n || 0).toLocaleString('ko-KR') + '₫';
 const short = (n) => { n = Number(n || 0);
@@ -893,7 +896,7 @@ function drawCps() {
     : '발행한 쿠폰이 없습니다. 아래에서 만들 수 있습니다.';
   if (!CPS.length) { $('cp').innerHTML = ''; return; }
 
-  const d = (v) => v ? new Date(v).toLocaleDateString('ko-KR', { month:'2-digit', day:'2-digit' }) : '-';
+  const d = (v) => v ? new Date(v).toLocaleDateString('ko-KR', { timeZone: TZ, month:'2-digit', day:'2-digit' }) : '-';
   $('cp').innerHTML = '<div class="scroll"><table class="tbl"><thead><tr>'
     + ['이름','코드','할인','상태','발행'].map((h, i) => `<th class="${i < 3 ? 'l' : ''}">${esc(h)}</th>`).join('')
     + '<th></th></tr></thead><tbody>'
@@ -977,7 +980,7 @@ function drawReps() {
     + `<br>처분은 신고 대상과 신고자 양쪽에 알림으로 전달됩니다.`;
 
   const dt = (v) => v ? new Date(v).toLocaleString('ko-KR',
-    { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : '-';
+    { timeZone: TZ, month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : '-';
 
   // 안전 요청은 거르지 않는다. 사람이 위험한 상황일 수 있다.
   $('sos').innerHTML = SOS.length
@@ -1121,12 +1124,13 @@ function drawBk() {
     + ` · 진행 중 <b>${num(cnt('confirmed') + cnt('on_the_way') + cnt('in_progress'))}</b>`
     + ` · 완료 <b>${num(cnt('completed'))}</b> · 취소·노쇼 <b>${num(cnt('cancelled') + cnt('no_show'))}</b>`
     + (rows.length !== BKS.length ? ` · <b>지금 보이는 ${num(rows.length)}건</b>` : '')
-    + `<br>머리칸을 누르면 정렬됩니다. 완료·취소는 되돌릴 수 없으니 확인하고 눌러 주세요.`;
+    + `<br>시각은 모두 <b>베트남 현지 시간</b>입니다 (한국보다 2시간 느립니다).`
+    + ` 머리칸을 누르면 정렬됩니다. 완료·취소는 되돌릴 수 없으니 확인하고 눌러 주세요.`;
 
   if (!rows.length) { $('bk').innerHTML = '<div class="empty">해당하는 예약이 없습니다.</div>'; return; }
 
   const dt = (v) => v ? new Date(v).toLocaleString('ko-KR',
-    { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : '-';
+    { timeZone: TZ, month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : '-';
 
   $('bk').innerHTML = '<div class="scroll"><table class="tbl">'
     + thead('bk', BCOLS, true)
@@ -1240,7 +1244,7 @@ function drawApps() {
   const doc = (url, label, need) => url
     ? `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(label)}</a>`
     : `<span class="miss${need ? ' need' : ''}">${esc(label)} 없음</span>`;
-  const d = (v) => v ? new Date(v).toLocaleString('ko-KR', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : '-';
+  const d = (v) => v ? new Date(v).toLocaleString('ko-KR', { timeZone: TZ, month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : '-';
 
   $('apps').innerHTML = rows.map((r, i) => {
     const p = r.p, k = r.k, ok = r.lack.length === 0;
@@ -1411,7 +1415,7 @@ function drawMembers() {
 
   if (!rows.length) { $('members').innerHTML = '<div class="empty">해당하는 사람이 없습니다.</div>'; return; }
 
-  const d = (v) => v ? new Date(v).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }) : '-';
+  const d = (v) => v ? new Date(v).toLocaleDateString('ko-KR', { timeZone: TZ, month: '2-digit', day: '2-digit' }) : '-';
   $('members').innerHTML = '<div class="scroll"><table class="tbl">'
     + thead('members', MCOLS)
     + '<tbody>' + rows.map(r => {
@@ -1497,8 +1501,8 @@ function drawRoster() {
         <td class="${cred ? 'cred' : ''}">${vnd(cred)}</td>
         <td class="owe${owe ? '' : ' zero'}">${vnd(owe)}
           ${r.due_at ? `<div style="font-size:11px;font-weight:400;color:${isLate(r) ? 'var(--bad)' : 'var(--ink-soft)'}">
-            ${isLate(r) ? '기한 지남 · ' : '기한 '}${esc(new Date(r.due_at).toLocaleDateString('ko-KR', { month:'2-digit', day:'2-digit' }))}
-            ${r.warned_at ? '<br>경고 보냄 ' + esc(new Date(r.warned_at).toLocaleDateString('ko-KR', { month:'2-digit', day:'2-digit' })) : ''}
+            ${isLate(r) ? '기한 지남 · ' : '기한 '}${esc(new Date(r.due_at).toLocaleDateString('ko-KR', { timeZone: TZ, month:'2-digit', day:'2-digit' }))}
+            ${r.warned_at ? '<br>경고 보냄 ' + esc(new Date(r.warned_at).toLocaleDateString('ko-KR', { timeZone: TZ, month:'2-digit', day:'2-digit' })) : ''}
           </div>` : ''}</td>
         <td><div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end">
           <button class="mini" onclick="prepay('${esc(r.id)}')">페이백 입력</button>
@@ -1622,7 +1626,7 @@ async function openDeposits(providerId) {
   if (!data || !data.length) { alert('확인을 기다리는 입금이 없습니다.'); loadRoster(); return; }
 
   const d = data[0];
-  const when = d.reported_at ? new Date(d.reported_at).toLocaleString('ko-KR') : '-';
+  const when = d.reported_at ? new Date(d.reported_at).toLocaleString('ko-KR', { timeZone: TZ }) : '-';
   const ok = confirm(`입금 신고 ${data.length}건 중 가장 오래된 것입니다.\n\n`
     + `금액 ${vnd(d.amount_vnd)}\n신고 ${when}\n${d.memo ? '메모 ' + d.memo + '\n' : ''}`
     + `\n통장에서 확인하셨으면 [확인], 아니면 [취소] 를 눌러 주세요.\n`
