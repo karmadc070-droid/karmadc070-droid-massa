@@ -333,8 +333,10 @@ svg{display:block;width:100%;height:auto;overflow:visible}
             <option value="cancelled">취소</option>
             <option value="no_show">노쇼</option>
           </select>
+          <select id="bkcity"><option value="">지역 전체</option></select>
           <label class="chk"><input type="checkbox" id="bkunpaid">미결제만</label>
           <label class="chk"><input type="checkbox" id="bknone">미배정만</label>
+          <label class="chk"><input type="checkbox" id="bkout">범위 밖만</label>
         </div>
       </div>
       <div id="bk"></div>
@@ -1085,6 +1087,7 @@ const BK_ST = { requested:['요청됨','var(--amber)'], confirmed:['확정','var
 const BCOLS = [
   { k:'booking_no',   h:'예약번호', l:1 },
   { k:'cust',         h:'고객',     l:1, v:(b)=> b.profiles ? (b.profiles.full_name || '') : '' },
+  { k:'region',       h:'지역',     l:1, v:(b)=> b.city ? b.city.name_ko : '' },
   { k:'prov',         h:'마사지사', l:1, v:(b)=> b.providers ? b.providers.display_name : '' },
   { k:'svc',          h:'서비스',   l:1, v:(b)=> b.services  ? b.services.name  : '' },
   { k:'status',       h:'상태',     l:1 },
@@ -1094,13 +1097,29 @@ const BCOLS = [
 ];
 let BKS = null;
 
+// 마사지사 활동 성과 예약 성이 다른 건. 둘 다 있어야 판정한다 —
+// 하나라도 비어 있으면 '다르다' 가 아니라 '모른다' 다.
+const isOutOfArea = (b) => !!(b.city_code && b.providers && b.providers.city_code
+                              && b.providers.city_code !== b.city_code);
+
 async function loadBk() {
   const box = $('bk'); box.innerHTML = '<div class="empty">불러오는 중…</div>';
   const { data, error } = await sb.from('bookings')
-    .select('*, providers(display_name), services(name), profiles!bookings_customer_id_fkey(full_name, phone)')
+    .select('*, providers(display_name, city_code), services(name),'
+          + ' profiles!bookings_customer_id_fkey(full_name, phone),'
+          + ' city:regions!bookings_city_code_fkey(name_ko),'
+          + ' ward:regions!bookings_ward_code_fkey(name_vi)')
     .order('created_at', { ascending: false }).limit(300);
   if (error) { box.innerHTML = '<div class="empty">불러오지 못했습니다 — ' + esc(error.message) + '</div>'; return; }
   BKS = data || [];
+  // 지역 거르개 — 실제로 예약이 들어온 성만 올린다. 빈 선택지는 쓸모가 없다
+  const sel = $('bkcity'), keep = sel.value;
+  const cities = [...new Map(BKS.filter(b => b.city_code)
+    .map(b => [b.city_code, b.city ? b.city.name_ko : b.city_code])).entries()]
+    .sort((a, b) => a[1].localeCompare(b[1], 'ko'));
+  sel.innerHTML = '<option value="">지역 전체</option>'
+    + cities.map(([c, n]) => `<option value="${esc(c)}">${esc(n)}</option>`).join('');
+  sel.value = keep;
   if (!SORT.bk) SORT.bk = { key:'created_at', dir:-1 };   // 기본은 최신순
   drawBk();
 }
@@ -1114,8 +1133,10 @@ function drawBk() {
       b.services && b.services.name, b.hotel_name, b.address]
       .some(v => String(v || '').toLowerCase().includes(q)));
   if ($('bkst').value)   rows = rows.filter(b => b.status === $('bkst').value);
+  if ($('bkcity').value) rows = rows.filter(b => b.city_code === $('bkcity').value);
   if ($('bkunpaid').checked) rows = rows.filter(b => !b.is_paid);
   if ($('bknone').checked)   rows = rows.filter(b => !b.provider_id);
+  if ($('bkout').checked)    rows = rows.filter(isOutOfArea);
   rows = sortRows('bk', rows, BCOLS);
 
   const cnt = (st) => BKS.filter(b => b.status === st).length;
@@ -1123,6 +1144,8 @@ function drawBk() {
     `최근 <b>${num(BKS.length)}건</b> · 요청됨 <b>${num(cnt('requested'))}</b>`
     + ` · 진행 중 <b>${num(cnt('confirmed') + cnt('on_the_way') + cnt('in_progress'))}</b>`
     + ` · 완료 <b>${num(cnt('completed'))}</b> · 취소·노쇼 <b>${num(cnt('cancelled') + cnt('no_show'))}</b>`
+    + (BKS.some(isOutOfArea)
+        ? ` · <b style="color:var(--bad)">범위 밖 ${num(BKS.filter(isOutOfArea).length)}</b>` : '')
     + (rows.length !== BKS.length ? ` · <b>지금 보이는 ${num(rows.length)}건</b>` : '')
     + `<br>머리칸을 누르면 정렬됩니다. 완료·취소는 되돌릴 수 없으니 확인하고 눌러 주세요.`;
 
@@ -1144,6 +1167,10 @@ function drawBk() {
           ${b.profiles && b.profiles.phone
             ? `<div style="font-size:11px"><a href="tel:${esc(b.profiles.phone)}" style="color:var(--cool)">${esc(b.profiles.phone)}</a></div>`
             : '<div style="font-size:11px;color:var(--bad)">연락처 없음</div>'}</td>
+        <td class="l">${b.city ? esc(b.city.name_ko)
+            : '<span style="color:var(--ink-soft)">미판정</span>'}
+          ${b.ward ? `<div style="font-size:11px;color:var(--ink-soft)">${esc(b.ward.name_vi)}</div>` : ''}
+          ${isOutOfArea(b) ? '<div style="font-size:11px;color:var(--bad)">★ 범위 밖</div>' : ''}</td>
         <td class="l">${b.providers ? esc(b.providers.display_name)
           : '<span style="color:var(--bad)">미배정</span>'}</td>
         <td class="l" style="font-size:12px">${esc(b.services ? b.services.name : '-')}</td>
@@ -1740,7 +1767,7 @@ $('mq').oninput = drawMembers;
 ['rtier', 'rowe', 'rpend', 'rlate'].forEach(id => $(id).onchange = drawRoster);
 ['mtype', 'mbk'].forEach(id => $(id).onchange = drawMembers);
 ['apsort', 'apok'].forEach(id => $(id).onchange = drawApps);
-['bkst', 'bkunpaid', 'bknone'].forEach(id => $(id).onchange = drawBk);
+['bkst', 'bkcity', 'bkunpaid', 'bknone', 'bkout'].forEach(id => $(id).onchange = drawBk);
 $('bkq').oninput = drawBk;
 $('repst').onchange = drawReps;
 $('repq').oninput = drawReps;
