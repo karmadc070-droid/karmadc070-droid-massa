@@ -1647,6 +1647,14 @@ function providerCard(p, idx) {
   </div></div>`;
 }
 
+// 지역을 바꾸면 열려 있는 목록을 다시 그린다.
+window.repaintLists = function () {
+  ['thList', 'therapy'].forEach(id => {
+    const sc = document.getElementById(id);
+    if (sc && sc.classList.contains('on') && CACHE.providers) fillList(id, CACHE.providers);
+  });
+};
+
 function fillList(screenId, providers) {
   const screen = document.getElementById(screenId);
   screen.querySelectorAll('.tcard').forEach(n => n.remove());
@@ -1660,7 +1668,15 @@ function fillList(screenId, providers) {
       + '<span>📍 <span>마사지사와의 거리</span></span>'
       + '<button class="chip sel" onclick="askMyPos(true)"><span>위치 켜기</span></button></div>');
   }
-  providers.forEach((p, i) => notice.insertAdjacentHTML('beforebegin', providerCard(p, i)));
+  // 고른 성에서 활동하는 사람만 보여준다. 성을 안 골랐으면(MYCITY null) 전부 보여준다.
+  // ★ 지역이 아직 안 정해진 사람은 거르지 않는다. '다르다' 가 아니라 '모른다' 라서,
+  //    걸러 버리면 멀쩡한 마사지사가 아무에게도 안 보이게 된다.
+  const shown = MYCITY ? providers.filter(p => !p.city_code || p.city_code === MYCITY) : providers;
+  shown.forEach((p, i) => notice.insertAdjacentHTML('beforebegin', providerCard(p, i)));
+  if (!shown.length) {
+    notice.insertAdjacentHTML('beforebegin',
+      '<div class="notice">' + rEsc(T('이 지역에는 아직 마사지사가 없습니다. 다른 지역을 골라 보세요.')) + '</div>');
+  }
   if (window.applyLang && LANG !== 'ko') applyLang(LANG);
   screen.querySelectorAll('.bookbtn').forEach(b => b.onclick = () => {
     SEL.provider = CACHE.providers.find(x => x.id === b.dataset.pid) || null;
@@ -2669,25 +2685,37 @@ window.openReview = (bookingId, providerId) => {
 
 // ── 홈뷰티 등록 신청 ──
 // 지역 선택(성/시 전체 목록)
-const PROVINCES = ['하노이','호치민','다낭','하이퐁','껀터','안장','박장','박깐','박리에우','박닌','붕따우','벤째','빈딘','빈즈엉','빈푹','까마우','까오방','닥락','디엔비엔','동나이','동탑','자라이','하장','하남','하띤','하이즈엉','허우장','호아빈','흥옌','칸호아(나짱)','키엔장','꼰뚬','라이쩌우','럼동(달랏)','랑선','라오까이','롱안','남딘','응에안','닌빈','닌투언','푸토','푸옌','꽝빈','꽝남','꽝응아이','꽝닌','꽝찌','속짱','선라','떠이닌','타이빈','타이응우옌','타인호아','후에','띠엔장','짜빈','뚜옌꽝','빈롱','옌바이'];
+// ── 지역 선택 ──────────────────────────────
+// 옛날엔 한국어 성 이름 63개를 여기 박아 뒀다. 2025 개편으로 34개가 됐고 또 바뀐다.
+// 이제 서버의 regions 를 쓴다 (loadRegions). 바뀌면 서버만 고치면 된다.
+let MYCITY = null;                      // 고른 성 코드. null 이면 전체
+try { MYCITY = localStorage.getItem('massa.city') || null; } catch (e) {}
+
 window.openLocations = function () { window.go('location'); renderLocList(); };
+
 window.renderLocList = function () {
-  const q = (document.getElementById('locSearch').value || '').trim();
-  const list = PROVINCES.filter(p => !q || p.includes(q));
+  const q = (document.getElementById('locSearch').value || '').trim().toLowerCase();
+  const hit = (c) => !q || [c.name_ko, c.name_vi, c.name_en]
+    .some(n => String(n || '').toLowerCase().includes(q));
+  const rows = REG.cities.filter(hit);
+  const pin = '<span class="locpin"><svg width="15" height="15" viewBox="0 0 24 24" fill="#3E7C4F">'
+    + '<path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg></span>';
   const el = document.getElementById('locList');
-  const BIG_CITIES = ['하노이','호치민','다낭','하이퐁','껀터','칸호아(나짱)','럼동(달랏)','후에'];
-  el.innerHTML = list.map(p => '<div class="locrow' + (BIG_CITIES.includes(p) ? ' big' : '') + '" onclick="pickLocation(\'' + p + '\')"><span class="locpin"><svg width="15" height="15" viewBox="0 0 24 24" fill="#3E7C4F"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg></span>' + trOne(p, LANG) + '</div>').join('') || '<div class="notice">검색 결과가 없습니다.</div>';
-};
-window.pickLocation = function (city) {
-  const el = document.getElementById('homeLoc');
-  el.dataset.ko = city;                       // 원본(한국어) 보관
-  el.textContent = trOne(city, LANG);         // 현재 언어로 표시
-  window.go('home');
+  el.innerHTML =
+    (q ? '' : `<div class="locrow big" onclick="pickLocation('')">${pin}${rEsc(T('전체 지역'))}</div>`)
+    + rows.map(c => `<div class="locrow" onclick="pickLocation('${c.code}')">${pin}${rEsc(regName(c.code))}</div>`).join('')
+    + (rows.length ? '' : `<div class="notice">${rEsc(T('검색 결과가 없습니다.'))}</div>`);
 };
 
-// 국가 선택(스크롤 목록)
-const COUNTRIES = [['🇰🇷','한국','Korea'],['🇻🇳','베트남','Vietnam'],['🇺🇸','영어','English'],['🇯🇵','일본','Japan'],['🇨🇳','중국','China']];
-function countryLabel(name) { const c = COUNTRIES.find(x => x[1] === name || x[2] === name); return c ? (c[0] + ' ' + c[1]) : name; }
+window.pickLocation = function (code) {
+  MYCITY = code || null;
+  try { code ? localStorage.setItem('massa.city', code) : localStorage.removeItem('massa.city'); } catch (e) {}
+  const el = document.getElementById('homeLoc');
+  if (el) el.textContent = code ? regName(code) : T('전체 지역');
+  window.go('home');
+  if (window.repaintLists) repaintLists();
+};
+
 window.openCountryPicker = function () {
   let ov = document.getElementById('ctryOv');
   if (!ov) { ov = document.createElement('div'); ov.id = 'ctryOv'; ov.style.cssText = 'position:fixed;inset:0;z-index:210;background:rgba(20,25,28,.5);display:flex;align-items:flex-end;justify-content:center'; document.body.appendChild(ov); }
@@ -3615,6 +3643,12 @@ const DICT = {
   '이름': ['Tên', 'Name', '姓名', '名前'],
   '활동 지역': ['Khu vực hoạt động', 'Service area', '活动区域', '対応エリア'],
   '성·시 선택': ['Chọn tỉnh/thành', 'Select province/city', '选择省市', '省·市を選択'],
+  '전체 지역': ['Toàn quốc', 'All areas', '全部地区', '全地域'],
+  '이 지역에는 아직 마사지사가 없습니다. 다른 지역을 골라 보세요.':
+    ['Khu vực này chưa có kỹ thuật viên. Hãy chọn khu vực khác.',
+     'No therapists here yet. Try another area.',
+     '该地区暂无按摩师，请选择其他地区。',
+     'この地域にはまだセラピストがいません。別の地域をお選びください。'],
   '성을 고르면 활동할 구역이 나옵니다. 여러 곳을 고를 수 있고, 안 고르면 성 전체로 등록됩니다.':
     ['Chọn tỉnh/thành để hiện các phường/xã. Có thể chọn nhiều; bỏ trống là nhận cả tỉnh.',
      'Pick a province to see its wards. You may select several; leave empty to cover the whole province.',
@@ -4340,6 +4374,9 @@ async function load() {
   if (_tabs[1]) _tabs[1].onclick = () => { window.go('myBookings'); loadMyBookings(); _setTab(1); };
   if (_tabs[2]) _tabs[2].onclick = () => { openAccount(); _setTab(2); };
   await loadRegions();   // 거리 계산과 지역 표시가 여기에 걸려 있다. 목록보다 먼저 받는다
+  // 저장된 지역을 홈에 찍는다. 이름은 regions 에서 오므로 여기서 해야 한다.
+  const _hl = document.getElementById('homeLoc');
+  if (_hl) _hl.textContent = MYCITY ? regName(MYCITY) : T('전체 지역');
   try {
     const { data: providers, error } = await sb.from('providers')
       // sort_priority 로 먼저 줄을 세운다. 전에는 rating 순이었는데 후기가 0건이라
