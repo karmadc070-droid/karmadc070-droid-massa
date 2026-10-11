@@ -17,10 +17,10 @@ LABELS = {
     "legal": ("© 2026 massa. Nền tảng đặt lịch massage và làm đẹp tại nhà ở Việt Nam. Hiện đang hoạt động tại Hà Nội.<br>"
               "massa là nền tảng kết nối khách hàng với nhà cung cấp đã được xác minh; dịch vụ cung cấp không phải là điều trị y tế."),
     "rbar_tag": 'ĐANG TUYỂN',
-    "rbar": 'Tuyển 30 Thành viên sáng lập',
+    "rbar": 'Tuyển 100 Thành viên sáng lập',
     "rbar_sub": '20 ca đầu tiên — bạn giữ 100% tiền khách trả',
     "rbar_cta": 'Xem chi tiết',
-    'pop_h': '30 Thành viên sáng lập đầu tiên',
+    'pop_h': '100 Thành viên sáng lập đầu tiên',
     'pop_sub': '20 ca đầu tiên — bạn giữ 100% tiền khách trả, không trừ hoa hồng.',
     'pop_li1': 'Bạn tự chọn giờ làm và khu vực',
     'pop_li2': 'Bạn tự đặt giá dịch vụ của mình',
@@ -298,7 +298,7 @@ PAGES = {
 
 "partner": {
  "title": "Tuyển KTV massage & làm đẹp tại nhà — Thành viên sáng lập | massa",
- "desc": "massa tuyển 30 Thành viên sáng lập tại Hà Nội. 20 ca đầu bạn giữ 100% tiền khách trả. Không phí gia nhập, không phí đào tạo, không phỏng vấn. Đăng ký trong 5 phút.",
+ "desc": "massa tuyển 100 Thành viên sáng lập trên toàn Việt Nam. Đủ 100 người là đóng. 20 ca đầu bạn giữ 100% tiền khách trả. Không phí gia nhập, không phí đào tạo, không phỏng vấn. Đăng ký trong 5 phút.",
  "blocks": [
   {"type": "section",
    "kicker": "Tuyển đối tác",
@@ -310,8 +310,8 @@ PAGES = {
 
   {"type": "section", "soft": True,
    "kicker": "Thành viên sáng lập",
-   "h2": "30 chuyên viên đầu tiên<br>của massa tại Hà Nội",
-   "lead": "Chúng tôi đang xây dựng đội ngũ đầu tiên. Người tham gia bây giờ nhận điều kiện tốt nhất mà chúng tôi có.",
+   "h2": "100 chuyên viên đầu tiên<br>của massa tại Việt Nam",
+   "lead": "Chỉ 100 người, theo thứ tự đăng ký. Đủ 100 là đóng. Người tham gia bây giờ nhận điều kiện tốt nhất mà chúng tôi có. Đã bắt đầu ở Hà Nội và Đà Nẵng, nay mở rộng ra toàn quốc.",
    "blocks": [
     {"type": "table", "rows": [
       ("20 ca đầu tiên", "<b>Bạn giữ 100% tiền khách trả.</b> Không trừ hoa hồng. Tính theo số ca, nên ưu đãi còn nguyên cho đến khi bạn dùng hết."),

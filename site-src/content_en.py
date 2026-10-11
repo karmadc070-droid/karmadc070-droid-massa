@@ -15,10 +15,10 @@ LABELS = {
     "legal": ("© 2026 massa. Home massage and beauty booking in Vietnam. Currently operating in Hanoi.<br>"
               "massa is a platform connecting customers with verified providers. The care offered is not a medical treatment."),
     "rbar_tag": 'NOW HIRING',
-    "rbar": 'Looking for 30 founding therapists',
+    "rbar": 'Looking for 100 founding therapists',
     "rbar_sub": 'Keep 100% of what the customer pays on your first 20 jobs',
     "rbar_cta": 'See details',
-    'pop_h': 'Our first 30 founding therapists',
+    'pop_h': 'Our first 100 founding therapists',
     'pop_sub': 'Keep 100% of what the customer pays on your first 20 jobs. No commission.',
     'pop_li1': 'You choose your hours and districts',
     'pop_li2': 'You set your own price',
@@ -296,7 +296,7 @@ PAGES = {
 
 "partner": {
  "title": "Hiring home massage & beauty therapists — founding members | massa",
- "desc": "massa is looking for 30 founding therapists in Hanoi. Keep 100% of what the customer pays on your first 20 jobs. No joining fee, no training fee, no interview. Signing up takes five minutes.",
+ "desc": "massa is looking for 100 founding therapists across Vietnam. Once 100 are in, these terms close. Keep 100% of what the customer pays on your first 20 jobs. No joining fee, no training fee, no interview. Signing up takes five minutes.",
  "blocks": [
   {"type": "section",
    "kicker": "Join as a partner",
@@ -308,8 +308,8 @@ PAGES = {
 
   {"type": "section", "soft": True,
    "kicker": "Founding members",
-   "h2": "The first thirty therapists<br>of massa in Hanoi",
-   "lead": "We are building the first team. Whoever joins now gets the best terms we have to give.",
+   "h2": "The first hundred therapists<br>of massa in Vietnam",
+   "lead": "First come, first served — 100 places. Once they are filled, these terms close. Whoever joins now gets the best terms we have to give. We started in Hanoi and Da Nang; now we are opening across Vietnam.",
    "blocks": [
     {"type": "table", "rows": [
       ("First 20 jobs", "<b>You keep 100% of what the customer pays.</b> No commission taken. It counts jobs rather than days, so the offer stays whole until you have used it."),
