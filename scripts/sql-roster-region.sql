@@ -1,0 +1,14 @@
+-- admin_provider_list 에 활동 지역 세 칸(city_code · city_name · ward_names)을 보탠다.
+--
+-- ★ 함수 전체를 다시 타이핑하지 않는다. 60줄을 손으로 옮겨 적으면 어딘가 틀린다.
+-- pg_get_functiondef 로 현재 정의를 꺼내 '기준 줄' 하나만 바꿔 끼운다.
+-- 기준 줄이 1곳이 아니면 중단한다 (scripts/vps-roster-region.py 가 그 일을 한다).
+--
+-- 아래는 보태진 세 줄의 내용이다. 기록용이며, 적용은 파이썬 쪽에서 한다.
+--
+--   pr.city_code,
+--   (select r.name_ko from regions r where r.code = pr.city_code) as city_name,
+--   (select string_agg(r.name_vi, ' · ' order by r.sort)
+--      from regions r where r.code = any(pr.ward_codes)) as ward_names,
+--
+-- 기준 줄 — pr.rating, pr.review_count, pr.base_district as district,
