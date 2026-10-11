@@ -1569,7 +1569,7 @@ function fillList(screenId, providers) {
     const first = screen.querySelector('.tcard') || notice;
     first.insertAdjacentHTML('beforebegin',
       '<div class="geo-ask" id="geoBanner" style="display:' + (MYPOS ? 'none' : '') + '">'
-      + '<span>📍 <span>내 위치를 켜면 마사지사까지 실제 거리를 보여드려요.</span></span>'
+      + '<span>📍 <span>마사지사와의 거리</span></span>'
       + '<button class="chip sel" onclick="askMyPos(true)"><span>위치 켜기</span></button></div>');
   }
   providers.forEach((p, i) => notice.insertAdjacentHTML('beforebegin', providerCard(p, i)));
@@ -3493,7 +3493,7 @@ const DICT = {
   '수집 항목은 이름·연락처·국적·언어·위치(선택)이며, 예약 중개·안전 확인·정산 목적에 한해 이용합니다. 제공자에게는 서비스 수행에 필요한 최소 정보(이름·연락처·방문 주소)만 전달됩니다. 신분증·계좌 등 제공자 민감정보는 비공개 저장소에 보관되며 심사 담당자만 열람할 수 있습니다. 보관 기간은 회원 탈퇴 시까지이며, 관계 법령상 보존 의무가 있는 기록은 해당 기간 동안 보관 후 파기합니다.': ['Chúng tôi thu thập tên, thông tin liên hệ, quốc tịch, ngôn ngữ và vị trí (tùy chọn), chỉ dùng cho mục đích trung gian đặt lịch, xác nhận an toàn và đối soát. Nhà cung cấp chỉ nhận thông tin tối thiểu cần thiết (tên, liên hệ, địa chỉ đến). Thông tin nhạy cảm của nhà cung cấp như CMND/CCCD, tài khoản ngân hàng được lưu ở kho riêng và chỉ người phụ trách thẩm định mới xem được. Dữ liệu được lưu đến khi bạn hủy tài khoản; hồ sơ có nghĩa vụ lưu trữ theo luật sẽ được giữ trong thời hạn quy định rồi hủy.', 'We collect your name, contact details, nationality, language and location (optional), and use them only for booking, safety checks and settlement. Providers receive only the minimum needed to perform the service (name, contact, visit address). Sensitive provider data such as ID and bank details is kept in private storage viewable only by reviewers. Data is kept until you delete your account; records with a statutory retention duty are kept for the required period and then destroyed.', '收集项目为姓名、联系方式、国籍、语言及位置(可选)，仅用于预约中介、安全确认与结算。服务者仅获得执行服务所需的最少信息(姓名、联系方式、上门地址)。身份证、账户等服务者敏感信息保存在非公开存储中，仅审核人员可查阅。保存期限至会员退出为止，依法须保存的记录将在规定期限内保存后销毁。', '収集項目は氏名・連絡先・国籍・言語・位置情報(任意)で、予約仲介・安全確認・精算の目的に限り利用します。提供者にはサービス遂行に必要な最小限の情報(氏名・連絡先・訪問先住所)のみが伝わります。身分証・口座など提供者の機微情報は非公開ストレージに保管され、審査担当者のみが閲覧できます。保管期間は退会時までで、法令上の保存義務がある記録は当該期間の保管後に破棄します。'],
   '⚙ 필터': ['⚙ Bộ lọc', '⚙ Filter', '⚙ 筛选', '⚙ 絞り込み'],
   '필터': ['Bộ lọc', 'Filter', '筛选', '絞り込み'],
-  '내 위치를 켜면 마사지사까지 실제 거리를 보여드려요.': ['Bật vị trí để xem khoảng cách thực tế đến kỹ thuật viên.', 'Turn on location to see the real distance to each therapist.', '开启定位即可查看到按摩师的实际距离。', '位置情報をオンにすると、セラピストまでの実際の距離が表示されます。'],
+  '마사지사와의 거리': ['Khoảng cách đến kỹ thuật viên', 'Distance to therapist', '到按摩师的距离', 'セラピストまでの距離'],
   '위치 켜기': ['Bật vị trí', 'Turn on location', '开启定位', '位置情報をオン'],
   '권역': ['khu vực', 'area', '区域', 'エリア'],
   '내 근처': ['Gần tôi', 'Nearby', '附近', '近く'],
