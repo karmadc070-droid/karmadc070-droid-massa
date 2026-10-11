@@ -3944,3 +3944,32 @@ ko·vi·en·zh·ja 전부 단계 이름 바뀜 / 바깥 버튼 누르면 앱 내
 모두 `옛제목 0 / langBar 1 / FLOW_I18N 2` 확인.
 
 **남은 것** — `admin.html`(운영 콘솔) 에도 같은 옛 제목이 그대로 있다. 손대지 않았다.
+
+## Z-64 · 앱·콘솔 화면 문구 정리 (2026-10-11)
+
+세 가지를 걷어냈다. 전부 와이어프레임 시절 잔재다.
+
+| 뺀 것 | index.html (앱) | admin.html (콘솔) | 와이어프레임 문서 |
+|---|---|---|---|
+| 제목 `고객 앱 와이어프레임 v3` | O | O | O |
+| 부제 `하노이 MVP — …(2026.06)` | O | O | O |
+| 아래 개발용 설명문 `홈 배너 3개…` | O | O | O |
+| 위치 문구 → `마사지사와의 거리` | O | O | — |
+
+**★ 번역 사전의 열쇠가 한국어 원문이다.** 화면 문구를 줄이면 `DICT` 키도 같이 바꿔야 한다.
+한쪽만 고쳤으면 한국어만 짧아지고 **베트남어·영어는 옛 긴 문장이 그대로 나왔을 것이다.**
+`index.html` 은 사전 항목이 있어 키와 4개 언어를 같이 교체했고,
+`admin.html` 은 사전 항목이 없어(`grep` 0건) 화면 문구만 고쳤다. 세어 보고 알았다.
+
+새 번역 — vi `Khoảng cách đến kỹ thuật viên` / en `Distance to therapist`
+/ zh `到按摩师的距离` / ja `セラピストまでの距離`
+
+**배포 경로가 둘이다** — `admin.html` 은 `vps-deploy-app.sh`(→ `/srv/massa-app/admin.html`) 와
+`vps-deploy-massaviet.sh`(→ `/srv/massaviet-web/admin/console/index.html`) **양쪽에 올라간다.**
+하나만 돌리면 massaviet.com/admin 이 옛 화면 그대로다. 둘 다 돌렸다.
+
+**검증** — 앱 세 주소(app.massaviet.com·massa.moahagwon.com·massa-seven.vercel.app)
+옛 문구 0건 / 서버의 admin 사본 2개 모두 옛 문구 0건·새 문구 1건.
+
+**걸렸던 것** — PowerShell 에서 `$(...)` 가 로컬에서 먼저 풀려 원격 `grep` 이 깨졌다.
+여러 줄 원격 명령은 **base64 로 싸서 보낸다** (Z-30 과 같은 교훈이 또 나왔다).
