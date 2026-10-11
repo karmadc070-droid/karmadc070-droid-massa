@@ -1405,6 +1405,44 @@ const setStatus = (t, ok) => {
 
 // ── 상태 캐시 & 예약 선택값 ──
 const CACHE = { providers: [], services: [], stores: [], provPrice: {} };
+
+// ── 지역(성·프엉) ───────────────────────────────
+// 2025-07-01 개편 기준. 성 34개 + 실제로 쓰인 프엉. 서버의 regions 표에서 받아 온다.
+// 앱에 목록을 박아 두지 않는 이유 — 행정구역은 또 바뀐다. 박아 두면 그때 앱을 다시 내야 한다.
+const REG = { byCode: {}, cities: [], wardsOf: {} };
+
+async function loadRegions() {
+  const { data, error } = await sb.from('regions')
+    .select('code, parent_code, level, name_vi, name_ko, name_en, lat, lng')
+    .eq('is_active', true).order('sort');
+  if (error || !data) return;                       // 못 받아도 앱은 돌아간다. 거리만 안 나온다
+  REG.byCode = {}; REG.cities = []; REG.wardsOf = {};
+  data.forEach(r => {
+    REG.byCode[r.code] = r;
+    if (r.level === 1) REG.cities.push(r);
+    else (REG.wardsOf[r.parent_code] = REG.wardsOf[r.parent_code] || []).push(r);
+  });
+}
+
+// 보는 사람의 언어로 지역 이름을 돌려준다.
+function regName(code) {
+  const r = REG.byCode[code];
+  if (!r) return '';
+  return (LANG === 'ko' ? r.name_ko : LANG === 'vi' ? r.name_vi : r.name_en) || r.name_vi;
+}
+
+// 마사지사의 대표 좌표. 집 주소가 아니라 활동 프엉의 중심점을 쓴다.
+// ★ 집 좌표를 쓰면 손님이 여러 곳에서 거리를 재어 집 위치를 역산할 수 있다.
+// 프엉이 여러 곳이면 첫 번째, 프엉이 없으면 성 중심점.
+function provCoord(p) {
+  if (!p) return null;
+  const codes = (p.ward_codes && p.ward_codes.length) ? p.ward_codes : (p.city_code ? [p.city_code] : []);
+  for (const c of codes) {
+    const r = REG.byCode[c];
+    if (r && r.lat != null && r.lng != null) return r;
+  }
+  return null;
+}
 const SEL = { provider: null, serviceType: 'aroma', serviceId: null, duration: 90, hotel: '', room: '', frontNote: '', payment: 'card_onsite' };
 
 // 마사지사가 자기 코스 가격을 따로 정했으면 그 값을, 없으면 기본가를 쓴다.
@@ -1480,17 +1518,26 @@ function haversineKm(la1, ln1, la2, ln2) {
   return 2 * R * Math.asin(Math.sqrt(a));
 }
 
-// 마사지사까지 실제 거리(km). 못 구하면 null.
+// 마사지사까지 거리(km). 못 구하면 null.
+// 상대 좌표는 활동 프엉의 중심점이다 (provCoord 주석 참고). 집 좌표가 아니다.
 function distOf(p) {
-  if (!MYPOS || !p || p.lat == null || p.lng == null) return null;
-  return haversineKm(MYPOS.lat, MYPOS.lng, Number(p.lat), Number(p.lng));
+  if (!MYPOS || !p) return null;
+  const r = provCoord(p);
+  if (!r) return null;
+  return haversineKm(MYPOS.lat, MYPOS.lng, Number(r.lat), Number(r.lng));
 }
 
-// 화면에 쓸 문구. 거리를 모르면 권역만 말하고 지어내지 않는다.
+// 화면에 쓸 문구. 거리를 모르면 지역 이름만 말하고 지어내지 않는다.
+// ★ '약' 을 붙인다. 프엉 중심점까지의 거리라 집 앞까지의 거리가 아니다.
+//    숫자를 정확한 것처럼 보이게 하면 거짓말이 된다.
 function distText(p) {
   const d = distOf(p);
-  if (d == null) return p && p.base_district ? '📍 <span>' + p.base_district + '</span> <span>권역</span>' : '';
-  return '📍 ' + (d < 1 ? Math.round(d * 1000) + 'm' : d.toFixed(1) + ' km');
+  if (d == null) {
+    const code = p && ((p.ward_codes && p.ward_codes[0]) || p.city_code);
+    const nm = code ? regName(code) : (p && p.base_district) || '';
+    return nm ? '📍 <span>' + nm + '</span>' : '';
+  }
+  return '📍 <span>약</span> ' + (d < 1 ? Math.round(d * 100) * 10 + 'm' : d.toFixed(1) + ' km');
 }
 
 // 위치를 받아 온다. 이미 허용돼 있으면 조용히, 아니면 손님이 눌렀을 때만 묻는다.
@@ -4240,6 +4287,7 @@ async function load() {
   if (_tabs[0]) _tabs[0].onclick = () => { window.go('home'); _setTab(0); };
   if (_tabs[1]) _tabs[1].onclick = () => { window.go('myBookings'); loadMyBookings(); _setTab(1); };
   if (_tabs[2]) _tabs[2].onclick = () => { openAccount(); _setTab(2); };
+  await loadRegions();   // 거리 계산과 지역 표시가 여기에 걸려 있다. 목록보다 먼저 받는다
   try {
     const { data: providers, error } = await sb.from('providers')
       // sort_priority 로 먼저 줄을 세운다. 전에는 rating 순이었는데 후기가 0건이라
