@@ -21,11 +21,21 @@
     "path": "../android-package/signing.keystore",
     "alias": "my-key-alias"
   },
-  "appVersionName": "1.1.0",
-  "appVersionCode": 3,
+  "appVersionName": "1.1.1",
+  "appVersionCode": 4,
   "shortcuts": [
-    { "name": "예약 내역", "shortName": "예약", "url": "/?src=pwa#bookings", "chosenIconUrl": "https://app.massaviet.com/icon-192.png" },
-    { "name": "계정", "shortName": "계정", "url": "/?src=pwa#account", "chosenIconUrl": "https://app.massaviet.com/icon-192.png" }
+    {
+      "name": "예약 내역",
+      "shortName": "예약",
+      "url": "/?src=pwa#bookings",
+      "chosenIconUrl": "https://app.massaviet.com/icon-192.png"
+    },
+    {
+      "name": "계정",
+      "shortName": "계정",
+      "url": "/?src=pwa#account",
+      "chosenIconUrl": "https://app.massaviet.com/icon-192.png"
+    }
   ],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://app.massaviet.com/manifest.webmanifest",
@@ -35,5 +45,10 @@
   "isMetaQuest": false,
   "fullScopeUrl": "https://app.massaviet.com/",
   "minSdkVersion": 24,
-  "fingerprints": []
+  "fingerprints": [],
+  "features": {
+    "locationDelegation": {
+      "enabled": true
+    }
+  }
 }
