@@ -1647,12 +1647,14 @@ function providerCard(p, idx) {
   </div></div>`;
 }
 
-// 지역을 바꾸면 열려 있는 목록을 다시 그린다.
+// 지역을 바꾸면 두 목록을 다시 그린다.
+// ★ 숨어 있는 화면도 다시 그린다. 안 그리면 나중에 그 화면으로 갔을 때
+//    옛 목록이 그대로 남아 있다 (실제로 그렇게 새서 다낭을 골라도 6명이 다 보였다).
+// ★ fillList 를 직접 부르지 않고 refreshList 를 쓴다. 성별·상태 같은 다른 거르개가
+//    computeProviders 안에 있어서, 건너뛰면 그 조건들이 통째로 풀린다.
 window.repaintLists = function () {
-  ['thList', 'therapy'].forEach(id => {
-    const sc = document.getElementById(id);
-    if (sc && sc.classList.contains('on') && CACHE.providers) fillList(id, CACHE.providers);
-  });
+  if (!CACHE.providers || !CACHE.providers.length) return;
+  ['thList', 'therapy'].forEach(id => { if (document.getElementById(id)) refreshList(id); });
 };
 
 function fillList(screenId, providers) {
