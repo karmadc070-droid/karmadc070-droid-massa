@@ -1124,8 +1124,7 @@ function drawBk() {
     + ` · 진행 중 <b>${num(cnt('confirmed') + cnt('on_the_way') + cnt('in_progress'))}</b>`
     + ` · 완료 <b>${num(cnt('completed'))}</b> · 취소·노쇼 <b>${num(cnt('cancelled') + cnt('no_show'))}</b>`
     + (rows.length !== BKS.length ? ` · <b>지금 보이는 ${num(rows.length)}건</b>` : '')
-    + `<br>시각은 모두 <b>베트남 현지 시간</b>입니다 (한국보다 2시간 느립니다).`
-    + ` 머리칸을 누르면 정렬됩니다. 완료·취소는 되돌릴 수 없으니 확인하고 눌러 주세요.`;
+    + `<br>머리칸을 누르면 정렬됩니다. 완료·취소는 되돌릴 수 없으니 확인하고 눌러 주세요.`;
 
   if (!rows.length) { $('bk').innerHTML = '<div class="empty">해당하는 예약이 없습니다.</div>'; return; }
 
