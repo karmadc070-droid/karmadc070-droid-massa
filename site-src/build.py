@@ -19,6 +19,10 @@ PLAY = "https://play.google.com/store/apps/details?id=app.massa.hanoi"
 # 사이트의 '로그인' 은 앱으로 보낸다. 로그인 코드를 사이트에 다시 만들면 두 군데가 되고,
 # 이번 같은 로그인 버그가 생기면 두 번 고쳐야 한다. ?login=1 은 앱이 로그인 창을 여는 신호다.
 APP_LOGIN = "https://app.massaviet.com/?login=1"
+# 익명 조회 키 — 앱(index.html)에 이미 공개돼 있는 값이다. 두 벌로 두면 한쪽만 바뀐다.
+# 빌드할 때 거기서 읽어 쓴다. 못 찾으면 남은 자리 띠만 안 뜨고 사이트는 그대로 나온다.
+_m = re.search(r"eyJhbGciOiAiSFMyNTYi[A-Za-z0-9._-]*", open("index.html", encoding="utf-8").read())
+ANON = _m.group(0) if _m else ""
 # 폰트는 <link> 로 받는다 (style.css 의 @import 를 걷어냈다 — 직렬 로딩으로 1.4초를 잡아먹었다).
 # 굵기도 줄였다. 쓰지 않는 300 과 이탤릭을 빼서 받아야 할 폰트 파일 수를 줄인다.
 FONTS = ("https://fonts.googleapis.com/css2"
@@ -219,6 +223,7 @@ def chrome(lang, name, L, body, page):
     # 모집 페이지 자신에는 안 붙인다 — 이미 와 있는 사람에게 또 권할 이유가 없다.
     # 안쪽을 .wrap 으로 감싸야 본문과 같은 폭에서 가운데로 모인다.
     # 감싸지 않으면 넓은 화면에서 글이 왼쪽 끝에 붙어 눈에 안 들어온다.
+    slot_pre = esc(L["slot_pre"]); slot_closed = esc(L["slot_closed"])
     rbar = "" if name == "partner" else (
         f'<a class="rbar" href="{url(lang,"partner")}"><span class="wrap">'
         f'<span class="rb-tag">{esc(L["rbar_tag"])}</span>'
@@ -289,6 +294,7 @@ def chrome(lang, name, L, body, page):
   </div>
 </header>
 {rbar}
+<div class="slotbar" id="slotbar" hidden data-pre="{slot_pre}" data-closed="{slot_closed}"></div>
 {body}
 
 <footer class="site">
@@ -335,6 +341,26 @@ def chrome(lang, name, L, body, page):
       try {{ localStorage.setItem('massa_site_lang', a.getAttribute('hreflang')); }} catch(e) {{}}
     }});
   }});
+  // 창립 멤버 남은 자리 — 실제 승인 인원을 세어 보여준다.
+  // ★ 숫자를 지어내지 않는다. 못 받으면 띠를 아예 안 띄운다. 거짓 긴박감은 쓰지 않는다.
+  (function(){{
+    var box = document.getElementById('slotbar'); if (!box) return;
+    var CAP = 100;
+    fetch('https://api.massaviet.com/rest/v1/providers?select=id&is_active=eq.true'
+          + '&application_status=eq.approved', {{
+      headers: {{ 'apikey': '{ANON}', 'Authorization': 'Bearer {ANON}', 'Prefer': 'count=exact', 'Range': '0-0' }}
+    }}).then(function(r){{
+      var cr = r.headers.get('content-range') || '';
+      var total = parseInt((cr.split('/')[1] || ''), 10);
+      if (!isFinite(total)) return;                       // 못 세면 조용히 안 띄운다
+      var left = CAP - total;
+      box.textContent = left > 0
+        ? box.dataset.pre + ' ' + left + ' / ' + CAP
+        : box.dataset.closed;
+      box.hidden = false;
+    }}).catch(function(){{}});
+  }})();
+
   // 앱 설치 띠는 한 번 닫으면 다시 띄우지 않는다
   var bar = document.getElementById('smartbar');
   try {{ if (localStorage.getItem('massa_sb') === 'off') bar.style.display = 'none'; }} catch(e) {{}}

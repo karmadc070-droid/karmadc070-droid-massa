@@ -16,6 +16,8 @@ LABELS = {
     "f_service": "Dịch vụ", "f_company": "massa", "f_support": "Hỗ trợ",
     "legal": ("© 2026 massa. Nền tảng đặt lịch massage và làm đẹp tại nhà ở Việt Nam. Hiện đang hoạt động tại Hà Nội.<br>"
               "massa là nền tảng kết nối khách hàng với nhà cung cấp đã được xác minh; dịch vụ cung cấp không phải là điều trị y tế."),
+    "slot_pre": "Suất Thành viên sáng lập còn lại",
+    "slot_closed": "Đã đủ 100 Thành viên sáng lập",
     "rbar_tag": 'ĐANG TUYỂN',
     "rbar": 'Tuyển 100 Thành viên sáng lập',
     "rbar_sub": '20 ca đầu tiên — bạn giữ 100% tiền khách trả',

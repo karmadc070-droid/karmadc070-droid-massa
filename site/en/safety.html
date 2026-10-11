@@ -20,7 +20,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="/style.css?v=82f873be">
+<link rel="stylesheet" href="/style.css?v=5183423d">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Noto+Serif+KR:wght@400;500&family=Inter:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Noto+Serif+KR:wght@400;500&family=Inter:wght@400;500;600&display=swap"></noscript>
 
@@ -39,6 +39,7 @@
   </div>
 </header>
 <a class="rbar" href="/en/partner.html"><span class="wrap"><span class="rb-tag">NOW HIRING</span><span class="rb-main"><b>Looking for 100 founding therapists</b><em>Keep 100% of what the customer pays on your first 20 jobs</em></span><span class="rb-go">See details</span></span></a>
+<div class="slotbar" id="slotbar" hidden data-pre="Founding places left" data-closed="Founding member intake is closed"></div>
 <section class=""><div class="wrap"><div class="sec-head rv">
       <span class="kicker">Safety &amp; checks</span>
       <h2>You are letting a<br>stranger into your home</h2>
@@ -134,6 +135,26 @@
       try { localStorage.setItem('massa_site_lang', a.getAttribute('hreflang')); } catch(e) {}
     });
   });
+  // 창립 멤버 남은 자리 — 실제 승인 인원을 세어 보여준다.
+  // ★ 숫자를 지어내지 않는다. 못 받으면 띠를 아예 안 띄운다. 거짓 긴박감은 쓰지 않는다.
+  (function(){
+    var box = document.getElementById('slotbar'); if (!box) return;
+    var CAP = 100;
+    fetch('https://api.massaviet.com/rest/v1/providers?select=id&is_active=eq.true'
+          + '&application_status=eq.approved', {
+      headers: { 'apikey': 'eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJyb2xlIjogImFub24iLCAiaXNzIjogInN1cGFiYXNlIiwgImlhdCI6IDE3ODc0NTg4OTMsICJleHAiOiAyMTAyODE4ODkzfQ.7taJaAzxPRIkd0PeC5qnuacficFnazkBN54ttblUv-o', 'Authorization': 'Bearer eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJyb2xlIjogImFub24iLCAiaXNzIjogInN1cGFiYXNlIiwgImlhdCI6IDE3ODc0NTg4OTMsICJleHAiOiAyMTAyODE4ODkzfQ.7taJaAzxPRIkd0PeC5qnuacficFnazkBN54ttblUv-o', 'Prefer': 'count=exact', 'Range': '0-0' }
+    }).then(function(r){
+      var cr = r.headers.get('content-range') || '';
+      var total = parseInt((cr.split('/')[1] || ''), 10);
+      if (!isFinite(total)) return;                       // 못 세면 조용히 안 띄운다
+      var left = CAP - total;
+      box.textContent = left > 0
+        ? box.dataset.pre + ' ' + left + ' / ' + CAP
+        : box.dataset.closed;
+      box.hidden = false;
+    }).catch(function(){});
+  })();
+
   // 앱 설치 띠는 한 번 닫으면 다시 띄우지 않는다
   var bar = document.getElementById('smartbar');
   try { if (localStorage.getItem('massa_sb') === 'off') bar.style.display = 'none'; } catch(e) {}

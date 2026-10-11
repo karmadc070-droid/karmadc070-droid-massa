@@ -14,6 +14,8 @@ LABELS = {
     "f_service": "Service", "f_company": "massa", "f_support": "Support",
     "legal": ("© 2026 massa. Home massage and beauty booking in Vietnam. Currently operating in Hanoi.<br>"
               "massa is a platform connecting customers with verified providers. The care offered is not a medical treatment."),
+    "slot_pre": "Founding places left",
+    "slot_closed": "Founding member intake is closed",
     "rbar_tag": 'NOW HIRING',
     "rbar": 'Looking for 100 founding therapists',
     "rbar_sub": 'Keep 100% of what the customer pays on your first 20 jobs',
