@@ -13,7 +13,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>mㅏssㅏ 고객 앱 와이어프레임 v3 — 하노이 MVP</title>
+<title>massa 고객 앱 와이어프레임 v3 — 하노이 MVP</title>
 <style>
   :root {
     --navy: #1F4E5F;
@@ -71,7 +71,7 @@
   .hdot { position: absolute; top: 0; right: -1px; width: 7px; height: 7px; background: #E5484D; border-radius: 50%; }
   .langsw { font-size: 11px; font-weight: bold; color: var(--muted); border: 1px solid var(--line); border-radius: 8px; padding: 2px 6px; margin-left: 3px; cursor: pointer; }
   .langsw.on { background: var(--navy); color: #fff; border-color: var(--navy); }
-  /* 사진 4장 등록 그리드 + mㅏssㅏ 로고 유니폼 오버레이 */
+  /* 사진 4장 등록 그리드 + massa 로고 유니폼 오버레이 */
   .photogrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .photoslot { position: relative; border: 1.5px solid var(--line); border-radius: 12px; overflow: hidden; background: #FAF7F1; aspect-ratio: 1/1; }
   .photoslot img { width: 100%; height: 100%; object-fit: cover; display: none; }
@@ -427,7 +427,7 @@
   <div class="screen-scroll">
 
   <!-- 홈 -->
-  <div class="screen" id="home" data-title="mㅏssㅏ">
+  <div class="screen" id="home" data-title="massa">
     <div class="home-top">
       <div class="home-user">
         <div class="uavatar" onclick="openAccount()">👤</div>
@@ -782,14 +782,14 @@
     <div class="hint" id="apTypeHint" style="margin:4px 2px 0"></div>
     <div class="label" id="apNameLabel">활동명 (실명)</div>
     <input class="tx" id="apName" type="text" placeholder="활동명 / 실명">
-    <div class="label">사진 업로드 (최대 5장) · 첫 번째 사진은 AI가 mㅏssㅏ 유니폼 착용 모습으로 변환</div>
+    <div class="label">사진 업로드 (최대 5장) · 첫 번째 사진은 AI가 massa 유니폼 착용 모습으로 변환</div>
     <input class="tx" id="apPhoto0" type="file" accept="image/*" onchange="onApFile(this)" style="margin-bottom:6px">
     <input class="tx" id="apPhoto1" type="file" accept="image/*" onchange="onApFile(this)" style="margin-bottom:6px">
     <input class="tx" id="apPhoto2" type="file" accept="image/*" onchange="onApFile(this)" style="margin-bottom:6px">
     <input class="tx" id="apPhoto3" type="file" accept="image/*" onchange="onApFile(this)" style="margin-bottom:6px">
     <input class="tx" id="apPhoto4" type="file" accept="image/*" onchange="onApFile(this)">
     <div class="photogrid" id="apPhotoGrid" style="margin-top:10px">
-      <div class="photoslot primary"><span class="num">1 · 대표</span><span class="logopatch">mㅏssㅏ</span><img><div class="ph">대표 사진<br>(AI 유니폼 자동 적용)</div></div>
+      <div class="photoslot primary"><span class="num">1 · 대표</span><span class="logopatch">massa</span><img><div class="ph">대표 사진<br>(AI 유니폼 자동 적용)</div></div>
       <div class="photoslot"><span class="num">2</span><img><div class="ph">사진 2</div></div>
       <div class="photoslot"><span class="num">3</span><img><div class="ph">사진 3</div></div>
       <div class="photoslot"><span class="num">4</span><img><div class="ph">사진 4</div></div>
@@ -1005,7 +1005,7 @@
     <div class="notice">프리랜서·마사지샵 사장님이 <b>본인 업체</b>에 소속된 직원(제공자)을 직접 추가·관리합니다. 관리자는 등록 서류만 확인·승인합니다.</div>
     <div class="label">직원 이름</div>
     <input class="tx" id="stName" type="text" placeholder="예: Linh N.">
-    <div class="label">대표 사진 (1장 · AI가 mㅏssㅏ 유니폼으로 자동 연출)</div>
+    <div class="label">대표 사진 (1장 · AI가 massa 유니폼으로 자동 연출)</div>
     <input class="tx" id="stPhoto" type="file" accept="image/*" onchange="onStaffPhoto(this)">
     <div id="stPhotoPrev" style="margin-top:8px"></div>
     <div class="label">분류</div>
@@ -1085,7 +1085,7 @@
   <div class="screen" id="terms" data-title="약관 및 개인정보">
     <div class="notice">서비스 이용을 위해 아래 약관에 동의해 주세요. 동의 기록은 안전하게 보관됩니다.</div>
     <div class="pf-sec">이용약관 (필수)</div>
-    <div class="pf-bio" style="max-height:150px;overflow:auto">mㅏssㅏ는 고객과 검증된 제공자를 연결하는 중개 플랫폼입니다. 서비스는 의료 행위가 아닌 이완·관리 목적의 케어이며, 치료가 필요한 증상은 의료기관 이용을 권장합니다. 예약 후 무단 취소·노쇼가 반복되면 이용이 제한될 수 있습니다. 결제는 서비스 완료 후 현장에서 이루어지며, 플랫폼은 결제·정산 내역을 기록·관리합니다. 이용자는 제공자에게 성적 요구를 포함한 부적절한 요구를 할 수 없으며, 위반 시 즉시 이용이 정지되고 관계 기관에 통보될 수 있습니다.</div>
+    <div class="pf-bio" style="max-height:150px;overflow:auto">massa는 고객과 검증된 제공자를 연결하는 중개 플랫폼입니다. 서비스는 의료 행위가 아닌 이완·관리 목적의 케어이며, 치료가 필요한 증상은 의료기관 이용을 권장합니다. 예약 후 무단 취소·노쇼가 반복되면 이용이 제한될 수 있습니다. 결제는 서비스 완료 후 현장에서 이루어지며, 플랫폼은 결제·정산 내역을 기록·관리합니다. 이용자는 제공자에게 성적 요구를 포함한 부적절한 요구를 할 수 없으며, 위반 시 즉시 이용이 정지되고 관계 기관에 통보될 수 있습니다.</div>
     <div class="pf-sec">개인정보 처리방침 (필수)</div>
     <div class="pf-bio" style="max-height:150px;overflow:auto">수집 항목은 이름·연락처·국적·언어·위치(선택)이며, 예약 중개·안전 확인·정산 목적에 한해 이용합니다. 제공자에게는 서비스 수행에 필요한 최소 정보(이름·연락처·방문 주소)만 전달됩니다. 신분증·계좌 등 제공자 민감정보는 비공개 저장소에 보관되며 심사 담당자만 열람할 수 있습니다. 보관 기간은 회원 탈퇴 시까지이며, 관계 법령상 보존 의무가 있는 기록은 해당 기간 동안 보관 후 파기합니다.</div>
     <div class="pf-sec">마케팅 정보 수신 (선택)</div>
@@ -1495,9 +1495,9 @@ async function openProfile(pid) {
 
   const photos = (p.photo_urls && p.photo_urls.length) ? p.photo_urls : (p.photo_url ? [p.photo_url] : [avatarFor(p)]);
   const photoHtml = photos.length
-    ? '<div class="photoslot primary" style="width:120px;height:120px;display:inline-block;border-radius:24px"><span class="logopatch on">mㅏssㅏ</span><img style="display:block" src="' + photos[0] + '"></div>'
+    ? '<div class="photoslot primary" style="width:120px;height:120px;display:inline-block;border-radius:24px"><span class="logopatch on">massa</span><img style="display:block" src="' + photos[0] + '"></div>'
     : '<div class="pf-photo ph">' + p.display_name.slice(0, 2) + '</div>';
-  const care = '<div class="pf-care"><div style="text-align:center;flex:0 0 auto"><svg width="40" height="44" viewBox="0 0 24 26" fill="#3E7C4F"><path d="M12 1l9 4v7c0 5.5-3.8 10-9 12-5.2-2-9-6.5-9-12V5l9-4z"/></svg><div style="font-size:11px;font-weight:bold;color:#3E7C4F;margin-top:2px">mㅏssㅏ Care</div></div><div style="font-size:13.5px;line-height:2"><div>✅ 팁 없음, 이동비 없음</div></div></div>';
+  const care = '<div class="pf-care"><div style="text-align:center;flex:0 0 auto"><svg width="40" height="44" viewBox="0 0 24 26" fill="#3E7C4F"><path d="M12 1l9 4v7c0 5.5-3.8 10-9 12-5.2-2-9-6.5-9-12V5l9-4z"/></svg><div style="font-size:11px;font-weight:bold;color:#3E7C4F;margin-top:2px">massa Care</div></div><div style="font-size:13.5px;line-height:2"><div>✅ 팁 없음, 이동비 없음</div></div></div>';
 
   const { data: ps } = await sb.from('provider_services').select('service_id, services(*)').eq('provider_id', pid);
   const svcRows = (ps || []).map(r => r.services).filter(Boolean);
@@ -1693,7 +1693,7 @@ function openAuth() {
   ov.id = 'authOv';
   ov.style.cssText = 'position:fixed;inset:0;z-index:200;background:rgba(20,25,28,.55);display:flex;align-items:center;justify-content:center';
   ov.innerHTML = `<div style="width:320px;background:#fff;border-radius:18px;padding:22px">
-    <div style="font-size:17px;font-weight:bold;color:#1F4E5F;margin-bottom:4px">mㅏssㅏ 로그인</div>
+    <div style="font-size:17px;font-weight:bold;color:#1F4E5F;margin-bottom:4px">massa 로그인</div>
     <div style="font-size:12px;color:#7A8C94;margin-bottom:14px">예약하려면 로그인이 필요합니다</div>
     <input id="auEmail" placeholder="이메일" value="demo@massa.app" style="width:100%;border:1.5px solid #E2E8EA;border-radius:10px;padding:11px;font-size:14px;margin-bottom:8px">
     <input id="auPw" type="password" placeholder="비밀번호 (6자 이상)" value="massa1234" style="width:100%;border:1.5px solid #E2E8EA;border-radius:10px;padding:11px;font-size:14px">
@@ -2098,8 +2098,8 @@ function openAccount() { if (!SESSION) { openAuth(); return; } window.go('accoun
 window.openAccount = openAccount;
 
 // 등록 신청 사진 4장 미리보기(첫 사진 로고 오버레이)
-// mㅏssㅏ 유니폼 변환 프롬프트/헬퍼 (브라우저 직접 호출용)
-const UNIFORM_PROMPT = "Edit this portrait photo. Keep the person's face, hairstyle, skin tone and identity EXACTLY the same and clearly recognizable. Only replace their clothing with a professional home-massage therapist uniform: a beige/tan short-sleeve V-neck top with dark brown collar trim. Add a small, neat embroidered brand logo with the lowercase text \"mㅏssㅏ\" on the upper-left chest (the wearer's own left side), positioned slightly above chest level, in dark brown lettering, clearly legible and correctly spelled. Front-facing head-and-shoulders portrait, warm softly-lit spa background, photorealistic, natural colors, high quality.";
+// massa 유니폼 변환 프롬프트/헬퍼 (브라우저 직접 호출용)
+const UNIFORM_PROMPT = "Edit this portrait photo. Keep the person's face, hairstyle, skin tone and identity EXACTLY the same and clearly recognizable. Only replace their clothing with a professional home-massage therapist uniform: a beige/tan short-sleeve V-neck top with dark brown collar trim. Add a small, neat embroidered brand logo with the lowercase text \"massa\" on the upper-left chest (the wearer's own left side), positioned slightly above chest level, in dark brown lettering, clearly legible and correctly spelled. Front-facing head-and-shoulders portrait, warm softly-lit spa background, photorealistic, natural colors, high quality.";
 function fileToB64(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(file); }); }
 function b64ToBlob(b64, type) { const bin = atob(b64); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new Blob([u], { type: type || 'image/png' }); }
 async function geminiUniform(file) {
@@ -2114,7 +2114,7 @@ async function geminiUniform(file) {
   if (!inl || !inl.data) throw new Error('이미지 응답이 없습니다.');
   return inl.data;
 }
-// 대표(1장) 사진 → mㅏssㅏ 유니폼 연출 후 el.dataset.url 갱신 (실패 시 원본 유지)
+// 대표(1장) 사진 → massa 유니폼 연출 후 el.dataset.url 갱신 (실패 시 원본 유지)
 async function applyUniformToEl(el, file, origPath) {
   if (window.MASSA_GEMINI_KEY) {
     const outB64 = await geminiUniform(file);
@@ -2156,7 +2156,7 @@ window.onApFile = async function (el) {
   if (error) { el.disabled = false; alert('업로드 실패: ' + error.message); el.value = ''; el.dataset.url = ''; return; }
   el.dataset.path = p;
   el.dataset.url = isKyc ? p : sb.storage.from(bucket).getPublicUrl(p).data.publicUrl; // 사진=공개URL, KYC=경로
-  // 대표 사진(첫 번째): 얼굴 유지 + mㅏssㅏ 유니폼으로 AI 변환
+  // 대표 사진(첫 번째): 얼굴 유지 + massa 유니폼으로 AI 변환
   if (el.id === 'apPhoto0') {
     const patch = document.querySelector('#apPhotoGrid .photoslot.primary .logopatch');
     if (patch) { patch.classList.add('on'); patch.textContent = 'AI 변환 중…'; }
@@ -2164,7 +2164,7 @@ window.onApFile = async function (el) {
     try {
       await applyUniformToEl(el, f, p);
     } catch (e) { console.warn('유니폼 변환 실패(원본 유지):', e); alert('AI 변환 실패 — 원본 사진을 유지합니다.\n' + (e.message || e)); }
-    if (patch) patch.textContent = 'mㅏssㅏ';
+    if (patch) patch.textContent = 'massa';
   }
   el.disabled = false;
   if (!isKyc && window.renderApPhotos) renderApPhotos();
@@ -3462,7 +3462,7 @@ const DICT = {
   '홈서비스': ['Tại nhà','At Home'], '매장 방문': ['Đến cửa hàng','Visit Store'], '카테고리': ['Danh mục','Categories'],
   '소개': ['Giới thiệu','About'], '리뷰': ['Đánh giá','Reviews'], '이름': ['Tên','Name'], '활동 지역': ['Khu vực hoạt động','Service area'],
   '제공 서비스': ['Dịch vụ cung cấp','Services'], '결제 방식 — 후불 (서비스 완료 후 현장 결제)': ['Thanh toán sau khi xong','Pay after service'],
-  '사진 등록 (최대 4장) · 첫 번째 사진에 mㅏssㅏ 유니폼 로고 적용': ['Ảnh (tối đa 4) · Ảnh 1 gắn logo mㅏssㅏ','Photos (max 4) · Logo on photo 1'],
+  '사진 등록 (최대 4장) · 첫 번째 사진에 massa 유니폼 로고 적용': ['Ảnh (tối đa 4) · Ảnh 1 gắn logo massa','Photos (max 4) · Logo on photo 1'],
   // 버튼(.cta)
   '다음 — 위치 입력': ['Tiếp — Địa điểm','Next — Location'], '다음 — 시간 설정': ['Tiếp — Thời gian','Next — Time'],
   '다음 — 예약 확인': ['Tiếp — Xác nhận','Next — Confirm'], '예약 확정하기': ['Xác nhận đặt chỗ','Confirm booking'],
@@ -3494,7 +3494,7 @@ const DICT = {
   '마사지사': ['Kỹ thuật viên','Masseur','按摩师','マッサージ師'], '홈 뷰티': ['Làm đẹp tại nhà','Home Beauty','上门美容','ホームビューティー'],
   '활동명 (실명)': ['Tên hoạt động (thật)','Display name (real)','艺名（实名）','活動名（実名）'],
   '상호 (업체명)': ['Tên cửa hàng','Business name','商号（企业名）','屋号（店名）'],
-  '사진 업로드 (최대 5장) · 첫 번째 사진은 AI가 mㅏssㅏ 유니폼 착용 모습으로 변환': ['Tải ảnh (tối đa 5) · Ảnh 1 được AI chuyển thành đồng phục mㅏssㅏ','Upload photos (max 5) · AI turns photo 1 into a mㅏssㅏ uniform','上传照片（最多5张）·第1张由AI换成mㅏssㅏ制服','写真アップロード（最大5枚）·1枚目はAIがmㅏssㅏ制服に変換'],
+  '사진 업로드 (최대 5장) · 첫 번째 사진은 AI가 massa 유니폼 착용 모습으로 변환': ['Tải ảnh (tối đa 5) · Ảnh 1 được AI chuyển thành đồng phục massa','Upload photos (max 5) · AI turns photo 1 into a massa uniform','上传照片（最多5张）·第1张由AI换成massa制服','写真アップロード（最大5枚）·1枚目はAIがmassa制服に変換'],
   '연락처': ['Liên hệ','Contact','联系方式','連絡先'],
   '정산 계좌 (은행 · 계좌번호)': ['Tài khoản (ngân hàng · số TK)','Payout account (bank · number)','结算账户（银行·账号）','精算口座（銀行·口座番号）'],
   '신분증 앞면 (파일 업로드)': ['CMND mặt trước (tải tệp)','ID front (upload)','身份证正面（上传）','身分証 表面（アップロード）'],
@@ -3678,11 +3678,11 @@ window.openFilterSheet = function (screenId) {
   ov.querySelector('.flt-apply').onclick = () => { f.gender = g; f.status = st; f.tags = [...tags]; ov.style.display = 'none'; const chip = document.getElementById('fltChip_' + screenId); if (chip) chip.classList.toggle('sel', g !== '전체' || st !== '전체' || tags.size > 0); refreshList(screenId); };
 };
 
-// mㅏssㅏ봇 — FAQ + AI 자연어 검색
+// massa봇 — FAQ + AI 자연어 검색
 const BOT_QUICK = ['예약 방법','가격 안내','커플 마사지 가능한 곳','한국인이 많이 가는 곳','발마사지 잘하는 곳','10만원 이하'];
 function botAnswer(text) {
   const has = (...k) => k.some(x => text.includes(x));
-  if (has('안녕','하이','hi','hello','ㅎㅇ')) return 'mㅏssㅏ봇이에요 😊 "커플 마사지 가능한 곳", "발마사지 10만원 이하"처럼 자연어로 물어보셔도 돼요.';
+  if (has('안녕','하이','hi','hello','ㅎㅇ')) return 'massa봇이에요 😊 "커플 마사지 가능한 곳", "발마사지 10만원 이하"처럼 자연어로 물어보셔도 돼요.';
   if (has('예약','어떻게','방법','신청')) return '예약은 홈에서 서비스 선택 → 마사지사·코스 → 시간·위치 입력 → 예약 확정 순이에요. 결제는 서비스 완료 후 현장 결제(후불)입니다.';
   if (has('가격','얼마','비용','요금')) return '아로마 90분이 850,000₫(약 46,000원)부터예요. 코스와 시간에 따라 달라집니다.';
   if (has('위생','안전','청결','소독')) return '1회용 위생 키트와 신원·자격 검증(인증 마크), 앱 내 안전 버튼으로 안전을 지켜요.';
@@ -3793,7 +3793,7 @@ window.openBot = function () {
       res.slice(0, 6).forEach(addCard);
     } else { add('bot', botAnswer(v)); }
   };
-  add('bot', '안녕하세요! mㅏssㅏ봇이에요 😊 원하는 조건을 자연어로 말해보세요. 예: "커플 마사지 10만원 이하", "여성전용 네일".');
+  add('bot', '안녕하세요! massa봇이에요 😊 원하는 조건을 자연어로 말해보세요. 예: "커플 마사지 10만원 이하", "여성전용 네일".');
   BOT_QUICK.forEach(q => { const b = document.createElement('div'); b.className = 'q'; b.textContent = q; b.onclick = () => { add('me', q); setTimeout(() => respond(q), 300); }; quick.appendChild(b); });
   const send = () => { const inp = ov.querySelector('#botInput'); const v = inp.value.trim(); if (!v) return; inp.value = ''; add('me', v); setTimeout(() => respond(v), 350); };
   ov.querySelector('#botSend').onclick = send;
@@ -3928,7 +3928,7 @@ async function load() {
     const mpCountry = document.getElementById('mpCountry');
     if (mpCountry) mpCountry.onclick = () => openCountryPicker();
     const mpAbout = document.getElementById('mpAbout');
-    if (mpAbout) mpAbout.onclick = () => alert('mㅏssㅏ — 터치 한 번으로 원하는 시간과 공간으로 찾아가는 프리미엄 홈 웰니스 & 그루밍 플랫폼.');
+    if (mpAbout) mpAbout.onclick = () => alert('massa — 터치 한 번으로 원하는 시간과 공간으로 찾아가는 프리미엄 홈 웰니스 & 그루밍 플랫폼.');
     const pwRow = document.getElementById('acPwRow');
     if (pwRow) pwRow.onclick = async () => {
       const pw = prompt('새 비밀번호(6자 이상)');
