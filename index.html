@@ -2241,6 +2241,11 @@ function openAuth() {
 }
 window.openAuth = openAuth;
 
+// 거리 기준. 프엉 중심점까지의 거리라 오차가 있으니 넉넉하게 잡았다.
+// 좁히려면 이 두 숫자만 고치면 된다.
+const FAR_WARN_KM = 50;    // 이 이상이면 물어본다
+const FAR_BLOCK_KM = 150;  // 이 이상이면 막는다 — 성을 확실히 넘는 거리다
+
 // group_id 는 uuid 열이다. 아무 문자열이나 넣으면 DB 가 거절한다.
 // 구형 WebView 에 randomUUID 가 없어 직접 만드는 길을 둔다.
 function uuid4() {
@@ -2252,8 +2257,44 @@ function uuid4() {
 }
 
 // ── 예약 생성 ──
+// 이름·연락처가 없으면 예약을 받지 않는다 (2026-10-14).
+// 운영 콘솔에 '이름 없음 · 연락처 없음' 으로 뜨던 손님이 예약 6건을 했다.
+// 마사지사가 문 앞에서 연락할 방법이 없다. 안전 문제이기도 하다.
+function askContactIfMissing() {
+  return new Promise(resolve => {
+    const need = !(CUR_PROFILE && CUR_PROFILE.full_name) || !(CUR_PROFILE && CUR_PROFILE.phone);
+    if (!need) return resolve(true);
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:218;background:rgba(20,25,28,.55);display:flex;align-items:center;justify-content:center;padding:16px';
+    ov.innerHTML = '<div style="width:320px;max-width:100%;background:#fff;border-radius:18px;padding:22px">'
+      + '<div style="font-size:17px;font-weight:bold;color:#1F4E5F;margin-bottom:4px">' + T('연락처를 알려주세요') + '</div>'
+      + '<div style="font-size:12px;color:#7A8C94;margin-bottom:14px">' + T('테라피스트가 도착해서 연락드릴 때 필요합니다.') + '</div>'
+      + '<input class="tx" id="ctName" style="width:100%;margin-bottom:8px" placeholder="' + T('이름') + '" value="' + rEsc((CUR_PROFILE && CUR_PROFILE.full_name) || '') + '">'
+      + '<input class="tx" id="ctPhone" type="tel" inputmode="tel" style="width:100%;margin-bottom:6px" placeholder="' + T('전화번호') + '" value="' + rEsc((CUR_PROFILE && CUR_PROFILE.phone) || '') + '">'
+      + '<div id="ctMsg" style="font-size:12px;color:#B23A5B;min-height:18px;margin-bottom:6px"></div>'
+      + '<button class="cta" id="ctSave" style="position:static;width:100%">' + T('저장하고 계속') + '</button>'
+      + '<button id="ctCancel" style="width:100%;background:none;color:#7A8C94;border:none;padding:8px;font-size:13px">' + T('닫기') + '</button>'
+      + '</div>';
+    document.body.appendChild(ov);
+    document.getElementById('ctCancel').onclick = () => { ov.remove(); resolve(false); };
+    document.getElementById('ctSave').onclick = async () => {
+      const nm = document.getElementById('ctName').value.trim();
+      const ph = document.getElementById('ctPhone').value.trim();
+      const msg = document.getElementById('ctMsg');
+      if (nm.length < 2) { msg.textContent = T('이름을 입력해 주세요.'); return; }
+      // 베트남 번호는 보통 9~11자리다. 나라 번호를 붙이는 손님도 있어 넉넉히 본다.
+      if (ph.replace(/\D/g, '').length < 8) { msg.textContent = T('전화번호를 다시 확인해 주세요.'); return; }
+      const { error } = await sb.from('profiles').update({ full_name: nm, phone: ph }).eq('id', SESSION.user.id);
+      if (error) { msg.textContent = T('저장 실패: ') + error.message; return; }
+      if (CUR_PROFILE) { CUR_PROFILE.full_name = nm; CUR_PROFILE.phone = ph; }
+      ov.remove(); resolve(true);
+    };
+  });
+}
+
 async function submitBooking() {
   if (!SESSION) { openAuth(); return; }
+  if (!await askContactIfMissing()) return;
   // 호텔 입력란의 예시 기본값을 없앴으므로, 빈 채로 넘어가지 않도록 여기서 막는다
   const _hotelEl = document.getElementById('locHotel');
   if (!(_hotelEl?.value || '').trim()) { alert('숙소·건물 이름을 입력해 주세요.'); window.go('loc'); _hotelEl?.focus(); return; }
@@ -2264,6 +2305,22 @@ async function submitBooking() {
   const ymd = document.querySelector('#time .day.sel')?.dataset.date || hanoiWeek(new Date())[0].ymd;
   const time = document.getElementById('timeView')?.textContent || '20:00';
   const scheduled = new Date(`${ymd}T${time}:00+07:00`).toISOString();
+  // ★ 활동 지역 밖 예약 막기 (2026-10-14)
+  // 14건 중 7건이 범위 밖이었다. 하노이 마사지사가 하이퐁·람동·자라이 예약을 받고 있었다.
+  // 갔을 리가 없다. 출장 마사지는 그 지역 안에서만 성립한다.
+  // 기준은 마사지사 활동 프엉(또는 성) 중심점까지의 거리다. 집 좌표가 아니다.
+  const _pr = SEL.provider && provCoord(SEL.provider);
+  if (_pr && PLACE.lat != null && PLACE.lng != null) {
+    const km = haversineKm(PLACE.lat, PLACE.lng, Number(_pr.lat), Number(_pr.lng));
+    if (km > FAR_BLOCK_KM) {
+      alert(T('이 테라피스트의 활동 지역에서 너무 멉니다 (약 {km}km). 가까운 테라피스트를 골라 주세요.')
+        .replace('{km}', String(Math.round(km))));
+      window.go('home');
+      return;
+    }
+    if (km > FAR_WARN_KM && !confirm(T('이 테라피스트까지 약 {km}km 떨어져 있습니다. 방문이 어려울 수 있습니다. 그래도 요청할까요?')
+        .replace('{km}', String(Math.round(km))))) return;
+  }
   if (!isBookable(scheduled, new Date())) { alert('지금부터 30분 이후의 시간만 예약할 수 있습니다. 날짜나 시간을 다시 골라 주세요.'); window.go('time'); return; }
   const row = {
     customer_id: SESSION.user.id,
@@ -3682,6 +3739,16 @@ const DICT = {
   '지금 이 지역에 더 보낼 만한 테라피스트가 없습니다.': ['Hiện khu vực này không còn chuyên viên nào để gửi thêm.', 'There are no other therapists to send to in this area right now.', '目前该地区没有其他可发送的理疗师。', '現在この地域に送れるセラピストがいません。'],
   '요청': ['Gửi', 'Send', '发送', '送る'],
   '요청을 보내지 못했습니다: ': ['Không gửi được yêu cầu: ', 'Could not send the request: ', '无法发送请求：', 'リクエストを送れませんでした: '],
+  '연락처를 알려주세요': ['Cho chúng tôi biết số liên hệ', 'Please share your contact', '请提供联系方式', '連絡先を教えてください'],
+  '테라피스트가 도착해서 연락드릴 때 필요합니다.': ['Chuyên viên cần để liên hệ khi tới nơi.', 'Your therapist needs it to reach you on arrival.', '理疗师到达时需要联系您。', 'セラピストが到着時に連絡するために必要です。'],
+  '이름': ['Họ tên', 'Name', '姓名', '氏名'],
+  '전화번호': ['Số điện thoại', 'Phone number', '电话号码', '電話番号'],
+  '저장하고 계속': ['Lưu và tiếp tục', 'Save and continue', '保存并继续', '保存して続ける'],
+  '닫기': ['Đóng', 'Close', '关闭', '閉じる'],
+  '이름을 입력해 주세요.': ['Vui lòng nhập họ tên.', 'Please enter your name.', '请输入姓名。', '氏名を入力してください。'],
+  '전화번호를 다시 확인해 주세요.': ['Vui lòng kiểm tra lại số điện thoại.', 'Please check your phone number.', '请再次确认电话号码。', '電話番号をご確認ください。'],
+  '이 테라피스트의 활동 지역에서 너무 멉니다 (약 {km}km). 가까운 테라피스트를 골라 주세요.': ['Quá xa khu vực hoạt động của chuyên viên này (khoảng {km}km). Hãy chọn chuyên viên ở gần.', 'This is too far from the therapist’s service area (about {km}km). Please pick someone closer.', '距离该理疗师的服务区域太远（约{km}公里）。请选择更近的理疗师。', 'このセラピストの対応地域から離れすぎています（約{km}km）。近い方をお選びください。'],
+  '이 테라피스트까지 약 {km}km 떨어져 있습니다. 방문이 어려울 수 있습니다. 그래도 요청할까요?': ['Cách chuyên viên khoảng {km}km, có thể khó tới nơi. Vẫn gửi yêu cầu chứ?', 'This therapist is about {km}km away and may not be able to come. Send the request anyway?', '距离该理疗师约{km}公里，可能无法上门。仍要发送请求吗？', 'このセラピストまで約{km}kmあり、訪問が難しい場合があります。それでも依頼しますか。'],
   '더 잘 맞는 테라피스트를 추천해 드리는 데 씁니다.': ['Dùng để gợi ý chuyên viên phù hợp hơn với bạn.', 'Used to recommend therapists that suit you better.', '用于为您推荐更合适的理疗师。', 'より合うセラピストをおすすめするために使います。'],
   '남성': ['Nam', 'Male', '男性', '男性'],
   '여성': ['Nữ', 'Female', '女性', '女性'],
@@ -4133,8 +4200,19 @@ function computeProviders(screenId) {
     const isNew = p.review_count < 20, isQ = p.review_count > 150;
     return f.tags.some(t => (t === '신규 도착' && isNew) || (t === '품질' && isQ) || (t === '새로 업데이트' && isNew));
   });
-  // 노출 저하 등급은 목록 하단으로
-  list.sort((a, b) => ((a.penalty_level || 0) >= 2 ? 1 : 0) - ((b.penalty_level || 0) >= 2 ? 1 : 0));
+  // 가까운 사람부터 보여 준다 (2026-10-14).
+  // 전에는 거리를 재고도 정렬에 안 썼다. 그래서 하노이 손님 목록에 냐짱 마사지사가 섞여 나왔고,
+  // "Sao thấy ktv cách tận hơn 1000km" 라는 신고가 들어왔다. 계산은 맞았고 순서가 틀렸던 것이다.
+  // 거리를 모르는 사람은 버리지 않는다 — 뒤로 보낸다. '모른다'는 '멀다'가 아니다.
+  list.sort((a, b) => {
+    const pa = (a.penalty_level || 0) >= 2 ? 1 : 0, pb = (b.penalty_level || 0) >= 2 ? 1 : 0;
+    if (pa !== pb) return pa - pb;
+    const da = distOf(a), db = distOf(b);
+    if (da == null && db == null) return 0;
+    if (da == null) return 1;
+    if (db == null) return -1;
+    return da - db;
+  });
   return list;
 }
 function refreshList(screenId) { fillList(screenId, computeProviders(screenId)); }
