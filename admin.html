@@ -2066,7 +2066,10 @@ async function submitBooking() {
     // 지도에서 고른 경우에만 채워진다.
     address: PLACE.address || null,
     lat: PLACE.lat, lng: PLACE.lng, place_id: PLACE.place_id,
-    status: 'confirmed',
+    // index.html 과 맞춘다 (2026-10-14). 어느 경로로 만들어도 마사지사 수락을 거친다.
+    // 대체 제안 화면은 고객 앱(index.html)에만 둔다 — 여기는 운영 콘솔이다.
+    status: 'requested',
+    group_id: (crypto.randomUUID ? crypto.randomUUID() : null),
     payment_method: SEL.payment,
     // 서버가 예약을 받을 때 이 값을 다시 계산해 덮어쓴다.
     amount_vnd: priceOf(svc)
@@ -2771,18 +2774,32 @@ async function loadPartnerBookings() {
   if (error) { wrap.innerHTML = `<div class="notice">불러오기 실패: ${error.message}</div>`; return; }
   wrap.innerHTML = data.map(b => {
     const acts = [];
-    if (b.status === 'requested') { acts.push(['수락', 'confirmed', 'sel']); acts.push(['거절', '__reject__', '']); }
+    if (b.status === 'requested') { acts.push(['수락', '__accept__', 'sel']); acts.push(['거절', '__reject__', '']); }
     else if (b.status === 'confirmed') { acts.push(['완료 처리', 'completed', 'sel']); acts.push(['노쇼 처리', '__noshow__', '']); }
     return `<div class="card" style="cursor:default">
       <div class="trow1"><span class="t">${b.services?.name || '서비스'}</span><span style="color:#2E8B8B;font-weight:bold;font-size:12px">${STATUS_KO[b.status]}</span></div>
       <div class="d">${b.hotel_name || ''} ${b.room_number || ''} · ${new Date(b.scheduled_at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
       ${b.address ? `<div class="d" style="font-size:12px">📍 ${b.address}</div>` : ''}
-      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">${navBtn(b)}${acts.map(a => `<button class="chip ${a[2]}" onclick="${a[1] === '__reject__' ? `openReject('${b.id}','${b.provider_id || ''}')` : a[1] === '__noshow__' ? `markNoShow('${b.id}','${b.customer_id || ''}')` : `setBookingStatus('${b.id}','${a[1]}')`}">${a[0]}</button>`).join('')}</div>
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">${navBtn(b)}${acts.map(a => `<button class="chip ${a[2]}" onclick="${a[1] === '__reject__' ? `openReject('${b.id}','${b.provider_id || ''}')` : a[1] === '__noshow__' ? `markNoShow('${b.id}','${b.customer_id || ''}')` : a[1] === '__accept__' ? `acceptBooking('${b.id}')` : `setBookingStatus('${b.id}','${a[1]}')`}">${a[0]}</button>`).join('')}</div>
     </div>`;
   }).join('') || '<div class="notice">예약이 없습니다.</div>';
   wrap.innerHTML = penaltyBanner + wrap.innerHTML;
 }
 window.loadPartnerBookings = loadPartnerBookings;
+// 수락만은 update 가 아니라 서버 함수로 한다.
+// 한 손님의 같은 요청이 여러 마사지사에게 가 있을 수 있어서, 둘이 같은 순간에 누르면
+// update 로는 둘 다 확정된다. accept_booking() 이 묶음을 잠그고 한 명만 통과시킨다.
+window.acceptBooking = async (id) => {
+  const { error } = await sb.rpc('accept_booking', { p_id: id });
+  if (error) {
+    alert(/already_taken|먼저 수락/.test(error.message || '')
+      ? '다른 테라피스트가 먼저 수락했습니다.'
+      : '수락하지 못했습니다: ' + error.message);
+    loadPartnerBookings();
+    return;
+  }
+  loadPartnerBookings();
+};
 window.setBookingStatus = async (id, st) => {
   // 결과를 반드시 확인한다. RLS 가 막으면 오류 없이 0행이 바뀌고 끝나서,
   // 마사지사는 눌렀는데 아무 일도 안 일어나는 걸 그냥 보고만 있게 된다.

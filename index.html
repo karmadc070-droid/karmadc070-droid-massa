@@ -2241,6 +2241,16 @@ function openAuth() {
 }
 window.openAuth = openAuth;
 
+// group_id 는 uuid 열이다. 아무 문자열이나 넣으면 DB 가 거절한다.
+// 구형 WebView 에 randomUUID 가 없어 직접 만드는 길을 둔다.
+function uuid4() {
+  if (crypto.randomUUID) return crypto.randomUUID();
+  const b = crypto.getRandomValues(new Uint8Array(16));
+  b[6] = (b[6] & 0x0f) | 0x40; b[8] = (b[8] & 0x3f) | 0x80;
+  const h = [...b].map(x => x.toString(16).padStart(2, '0')).join('');
+  return h.slice(0, 8) + '-' + h.slice(8, 12) + '-' + h.slice(12, 16) + '-' + h.slice(16, 20) + '-' + h.slice(20);
+}
+
 // ── 예약 생성 ──
 async function submitBooking() {
   if (!SESSION) { openAuth(); return; }
@@ -2267,7 +2277,13 @@ async function submitBooking() {
     // 지도에서 고른 경우에만 채워진다. 직접 적었으면 null 이고 마사지사는 이름으로 찾는다.
     address: PLACE.address || null,
     lat: PLACE.lat, lng: PLACE.lng, place_id: PLACE.place_id,
-    status: 'confirmed',
+    // 'confirmed' 로 바로 만들던 것을 2026-10-14 에 'requested' 로 바꿨다.
+    // 파트너 앱에 수락·거절·페널티 기계가 이미 다 있는데 여기서 건너뛰고 있어서
+    // 수락 버튼이 한 번도 눌린 적이 없었다. 손님이 고르지 않은 확정을 만들던 셈이다.
+    status: 'requested',
+    // 같은 요청을 여러 마사지사에게 보낼 때 하나로 묶는 열쇠.
+    // 10분 안에 수락이 없으면 가까운 다른 사람에게 같은 group_id 로 더 보낸다.
+    group_id: uuid4(),
     payment_method: SEL.payment,
     // 서버가 예약을 받을 때 이 값을 다시 계산해 덮어쓴다. 화면과 어긋나지 않게 같은 규칙으로 보낸다.
     amount_vnd: priceOf(svc)
@@ -2288,8 +2304,10 @@ async function submitBooking() {
   const lead = document.getElementById('doneLead');
   if (lead) {
     const nm = (SEL.provider && SEL.provider.display_name) || '';
+    // 이제는 바로 확정이 아니다. 수락을 기다리는 중이라고 사실대로 적는다.
     lead.textContent = error ? '' :
-      T('{name} 테라피스트가 {time}에 출발합니다.').replace('{name}', nm).replace('{time}', time) + ' ';
+      T('{name} 테라피스트에게 요청을 보냈습니다. 수락을 기다리는 중입니다.').replace('{name}', nm)
+      + ' ' + T('10분 안에 답이 없으면 가까운 다른 테라피스트를 추천해 드립니다.');
   }
   // 예약이 잡힌 뒤부터 담당 테라피스트와 채팅할 수 있다
   const chatBtn = document.getElementById('doneChatBtn');
@@ -2384,7 +2402,11 @@ async function loadMyBookings() {
   if (error) { wrap.innerHTML = `<div class="notice">불러오기 실패: ${error.message}</div>`; return; }
   empty.style.display = data.length ? 'none' : 'block';
   window.__myBookings = data;
-  wrap.innerHTML = data.map(b => {
+  // 같은 묶음에서 이미 취소된(밀린) 건은 목록에서 숨긴다.
+  // 손님 눈에는 요청 한 건이지 네 건이 아니다.
+  const liveGroups = new Set(data.filter(x => x.group_id && x.status !== 'cancelled').map(x => x.group_id));
+  const shown = data.filter(b => !(b.status === 'cancelled' && b.cancelled_by === 'system' && liveGroups.has(b.group_id)));
+  wrap.innerHTML = shown.map(b => {
     const canCancel = ['requested', 'confirmed'].includes(b.status);
     const canReview = b.status === 'completed';
     const canPay = b.status === 'completed' && !b.is_paid;
@@ -2402,10 +2424,89 @@ async function loadMyBookings() {
         ${canCancel ? `<button class="chip" onclick="cancelBooking('${b.id}')">취소</button>` : ''}
         ${canReview ? `<button class="chip" onclick="openReview('${b.id}','${b.provider_id}')">리뷰 작성</button>` : ''}
       </div>
+      <div class="alt-box" id="alt-${b.id}"></div>
     </div>`;
   }).join('') || '';
+  renderAltPanels(shown);
 }
 window.loadMyBookings = loadMyBookings;
+
+// ── 수락이 늦을 때 가까운 다른 테라피스트 제안 ──────────────────
+// 10분을 기다려도 수락이 없으면 가까운 5명을 보여 주고, 같은 요청을 그대로 더 보낸다.
+// 원래 요청은 살려 둔다 — 먼저 수락하는 쪽이 가져가고 나머지는 DB 가 자동 취소한다.
+const ALT_WAIT_MIN = 10;
+const ALT_COUNT = 5;
+function renderAltPanels(rows) {
+  const now = Date.now();
+  rows.forEach(b => {
+    if (b.status !== 'requested') return;
+    // group_id 가 없는 건(이 기능 이전에 만든 예약)은 묶을 수가 없다.
+    // 손님은 group_id 를 못 고치므로 — guard_booking_write 가 막는다 — 제안도 하지 않는다.
+    if (!b.group_id) return;
+    const waited = (now - new Date(b.created_at).getTime()) / 60000;
+    const box = document.getElementById('alt-' + b.id);
+    if (!box) return;
+    if (waited < ALT_WAIT_MIN) {
+      box.innerHTML = '<div class="hint" style="margin-top:8px">⏳ '
+        + T('수락을 기다리는 중입니다.') + ' '
+        + T('{n}분 뒤에도 답이 없으면 가까운 다른 테라피스트를 추천해 드립니다.')
+          .replace('{n}', String(Math.max(1, Math.ceil(ALT_WAIT_MIN - waited)))) + '</div>';
+      return;
+    }
+    const alts = nearbyAlts(b);
+    if (!alts.length) {
+      box.innerHTML = '<div class="hint" style="margin-top:8px">'
+        + T('지금 이 지역에 더 보낼 만한 테라피스트가 없습니다.') + '</div>';
+      return;
+    }
+    box.innerHTML = '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line)">'
+      + '<div style="font-size:13px;font-weight:bold;color:#2E3B42;margin-bottom:6px">'
+      + T('아직 수락이 없습니다. 이분들께도 보내볼까요?') + '</div>'
+      + alts.map(p => '<div class="locrow" style="gap:8px">'
+          + '<span style="flex:1">' + dshEsc(p.display_name) + '</span>'
+          + '<span style="color:var(--muted);font-size:12px">' + distText(p).replace(/<[^>]+>/g, '') + '</span>'
+          + '<button class="chip sel" onclick="sendAlt(\'' + b.id + '\',\'' + p.id + '\')">'
+          + T('요청') + '</button></div>').join('')
+      + '</div>';
+  });
+}
+
+// 예약 장소 기준으로 가깝게 고른다. 손님의 현재 위치가 아니다 —
+// 호텔로 부르는 손님은 지금 공항에 있을 수도 있다.
+function nearbyAlts(b) {
+  const sent = new Set((window.__myBookings || [])
+    .filter(x => x.group_id && b.group_id && x.group_id === b.group_id)
+    .map(x => x.provider_id));
+  const origin = (b.lat != null && b.lng != null) ? { lat: b.lat, lng: b.lng } : MYPOS;
+  const pool = (CACHE.providers || []).filter(p =>
+    p.is_active && !sent.has(p.id) && (!b.city_code || !p.city_code || p.city_code === b.city_code));
+  const withDist = pool.map(p => {
+    const r = provCoord(p);
+    const d = (origin && r && r.lat != null) ? haversineKm(origin.lat, origin.lng, Number(r.lat), Number(r.lng)) : null;
+    return { p, d };
+  });
+  // 거리를 아는 사람 먼저, 그 안에서 가까운 순. 거리를 모르는 사람은 뒤로 보내되 버리지 않는다.
+  withDist.sort((x, y) => (x.d == null) - (y.d == null) || (x.d - y.d));
+  return withDist.slice(0, ALT_COUNT).map(x => x.p);
+}
+
+// 같은 요청을 다른 마사지사에게 하나 더 보낸다. group_id 가 같아야 먼저 수락한 쪽만 남는다.
+window.sendAlt = async function (bookingId, providerId) {
+  const src = (window.__myBookings || []).find(x => x.id === bookingId);
+  if (!src) return;
+  const row = {
+    customer_id: src.customer_id, provider_id: providerId, service_id: src.service_id,
+    scheduled_at: src.scheduled_at, location_type: src.location_type,
+    hotel_name: src.hotel_name, room_number: src.room_number,
+    front_desk_note: src.front_desk_note, address: src.address,
+    lat: src.lat, lng: src.lng, place_id: src.place_id,
+    status: 'requested', payment_method: src.payment_method,
+    amount_vnd: src.amount_vnd, group_id: src.group_id || uuid4()
+  };
+  const { error } = await sb.from('bookings').insert(row);
+  if (error) { alert(T('요청을 보내지 못했습니다: ') + error.message); return; }
+  loadMyBookings();
+};
 
 // ── 대시보드 공용 ──────────────────────────────────────────────
 // index.html 에는 전역 esc 가 없다. 서비스명·표시이름은 사람이 넣는 값이라 그대로 꽂으면 안 된다.
@@ -3573,6 +3674,14 @@ const DICT = {
   '메시지를 입력하세요': ['Nhập tin nhắn', 'Type a message', '输入消息', 'メッセージを入力'],
   '아직 주고받은 메시지가 없습니다. 먼저 말을 걸어보세요.': ['Chưa có tin nhắn nào. Hãy nhắn trước nhé.', 'No messages yet. Say hello first.', '还没有消息，先打个招呼吧。', 'まだメッセージがありません。先に話しかけてみてください。'],
   '정보 업데이트': ['Cập nhật thông tin', 'Update your info', '更新信息', '情報の更新'],
+  '{name} 테라피스트에게 요청을 보냈습니다. 수락을 기다리는 중입니다.': ['Đã gửi yêu cầu tới chuyên viên {name}. Đang chờ xác nhận.', 'Request sent to {name}. Waiting for them to accept.', '已向 {name} 发送请求，等待接受。', '{name} さんにリクエストを送りました。承諾をお待ちください。'],
+  '10분 안에 답이 없으면 가까운 다른 테라피스트를 추천해 드립니다.': ['Nếu sau 10 phút chưa có phản hồi, chúng tôi sẽ gợi ý chuyên viên khác ở gần.', 'If there is no reply within 10 minutes, we will suggest other therapists nearby.', '若10分钟内无回应，我们会推荐附近其他理疗师。', '10分以内に返事がない場合、近くの他のセラピストをご提案します。'],
+  '수락을 기다리는 중입니다.': ['Đang chờ xác nhận.', 'Waiting for the therapist to accept.', '正在等待接受。', '承諾をお待ちしています。'],
+  '{n}분 뒤에도 답이 없으면 가까운 다른 테라피스트를 추천해 드립니다.': ['Nếu sau {n} phút nữa vẫn chưa có phản hồi, chúng tôi sẽ gợi ý chuyên viên khác ở gần.', 'If there is still no reply in {n} min, we will suggest other therapists nearby.', '若 {n} 分钟后仍无回应，我们会推荐附近其他理疗师。', 'あと{n}分で返事がない場合、近くの他のセラピストをご提案します。'],
+  '아직 수락이 없습니다. 이분들께도 보내볼까요?': ['Chưa có ai nhận. Gửi thêm cho những người này nhé?', 'No one has accepted yet. Send to these therapists too?', '还没有人接受，要也发给这几位吗？', 'まだ承諾がありません。こちらの方々にも送りますか。'],
+  '지금 이 지역에 더 보낼 만한 테라피스트가 없습니다.': ['Hiện khu vực này không còn chuyên viên nào để gửi thêm.', 'There are no other therapists to send to in this area right now.', '目前该地区没有其他可发送的理疗师。', '現在この地域に送れるセラピストがいません。'],
+  '요청': ['Gửi', 'Send', '发送', '送る'],
+  '요청을 보내지 못했습니다: ': ['Không gửi được yêu cầu: ', 'Could not send the request: ', '无法发送请求：', 'リクエストを送れませんでした: '],
   '더 잘 맞는 테라피스트를 추천해 드리는 데 씁니다.': ['Dùng để gợi ý chuyên viên phù hợp hơn với bạn.', 'Used to recommend therapists that suit you better.', '用于为您推荐更合适的理疗师。', 'より合うセラピストをおすすめするために使います。'],
   '남성': ['Nam', 'Male', '男性', '男性'],
   '여성': ['Nữ', 'Female', '女性', '女性'],
