@@ -4378,3 +4378,25 @@ Codemagic **빌드 31** 시작. 커밋 `e46b4c5`, main, 워크플로
 
 **검증** — `1개의 항목 제출됨` / 사이드바 `1.0.13 심사 대기 중` /
 제출 초안에 `iOS 앱 1.0.13 (31)` 로 표시
+
+## 83. 채팅 봇 자동응답 제거 (마사지사 사칭) — 완료 2026-10-14
+- [x] index.html · admin.html 에서 chatAutoReply 와 setTimeout insert 블록 삭제
+- [x] 빈 채팅창의 "○○입니다. 무엇을 도와드릴까요?" 가짜 인사도 안내문으로 교체
+- [x] 번역 4개 언어 추가
+- 왜: 손님이 보내면 1.1초 뒤 봇이 sender_role='provider' 로 답장을 DB 에 넣었다.
+  마사지사가 파트너 채팅을 열면 자기가 한 적 없는 약속이 자기 이름으로 찍혀 있었다.
+
+## 84. 전화번호 + OTP 로그인 — 막힘
+- [ ] ★ SMS 제공자 계약이 먼저다. VPS massa-auth 의 GOTRUE_SMS_PROVIDER·TWILIO 블록이 전부 주석.
+      게다가 GOTRUE_SMS_AUTOCONFIRM=true 라 지금 켜면 인증 없이 아무 번호나 가입된다.
+- [ ] 제공자 정하고 키 받으면 openAuth 에 signInWithOtp / verifyOtp 화면 추가
+
+## 85. 가입 직후 국적·성별 — 완료 2026-10-14
+- [x] refreshSession 에서 maybeAskBasics() 호출 (성별·국적 둘 다 비었고 아직 안 물었을 때만)
+- [x] 건너뛰기 누르면 localStorage 'massa.askedBasics' 로 다시 안 묻는다
+- [x] ★ index.html 에 COUNTRIES · countryLabel 선언이 아예 없던 것 발견·복구.
+      기존 국적 선택기가 ReferenceError 로 죽고 있었다 — 국적 데이터가 0건이던 진짜 이유.
+- [ ] 목록의 '영어'(🇺🇸 English) 는 국가가 아니다 — 사장님 확인 후 수정
+
+## 87. 승인 대기 중 대체 마사지사 유도 — 설계 전
+- [ ] 사장님께 물을 것: 몇 분 뒤 / 추림 기준 / 원래 요청 취소 여부 / 둘 다 수락 시 처리

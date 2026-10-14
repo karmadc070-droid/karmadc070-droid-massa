@@ -1992,6 +1992,7 @@ async function refreshSession() {
   subscribeNotifications();
   loadBlocks();
   setupPush();
+  maybeAskBasics();   // 가입 직후 한 번만 성별·국적을 묻는다
 }
 // 제공자 연락처는 앱을 거치지 않는 직거래를 막기 위해 관리자에게만 보인다
 function isAdminUser() { return !!(CUR_PROFILE && CUR_PROFILE.role === 'admin'); }
@@ -2718,6 +2719,13 @@ window.pickLocation = function (code) {
   if (window.repaintLists) repaintLists();
 };
 
+// ★ 2026-10-14 발견 — index.html 에 COUNTRIES 와 countryLabel 이 아예 없었다.
+// 아래 openCountryPicker / renderCtry / pickCountry / loadAccount 가 전부 이걸 부르는데
+// 선언이 admin.html 에만 있어서, 고객 앱에서 국적을 고르려 하면 ReferenceError 로 죽었다.
+// 국적 데이터가 하나도 안 쌓인 진짜 이유다. admin.html 2328줄과 같은 목록을 둔다.
+const COUNTRIES = [['🇰🇷','한국','Korea'],['🇻🇳','베트남','Vietnam'],['🇺🇸','영어','English'],['🇯🇵','일본','Japan'],['🇨🇳','중국','China']];
+function countryLabel(name) { const c = COUNTRIES.find(x => x[1] === name || x[2] === name); return c ? (c[0] + ' ' + c[1]) : name; }
+
 window.openCountryPicker = function () {
   let ov = document.getElementById('ctryOv');
   if (!ov) { ov = document.createElement('div'); ov.id = 'ctryOv'; ov.style.cssText = 'position:fixed;inset:0;z-index:210;background:rgba(20,25,28,.5);display:flex;align-items:flex-end;justify-content:center'; document.body.appendChild(ov); }
@@ -2788,6 +2796,57 @@ async function editField(field) {
 window.editField = editField;
 function openAccount() { if (!SESSION) { openAuth(); return; } window.go('account'); loadAccount(); }
 window.openAccount = openAccount;
+
+// ── 가입 직후 기본 정보 (성별·국적) ──
+// 계정 탭 안쪽 '추가 정보' 에만 있을 때는 아무도 채우지 않았다. 국가별 통계가 내내 비어 있던 이유다.
+// 로그인 직후 한 번만 묻고, 건너뛰면 다시 묻지 않는다.
+const BASICS_FLAG = 'massa.askedBasics';
+const GENDERS = ['남성', '여성', '기타'];
+function maybeAskBasics() {
+  if (!SESSION || !CUR_PROFILE) return;
+  if (CUR_PROFILE.gender || CUR_PROFILE.nationality) return;   // 이미 하나라도 있으면 묻지 않는다
+  try { if (localStorage.getItem(BASICS_FLAG)) return; } catch (e) {}
+  if (document.getElementById('basicsOv')) return;
+  openBasicsSheet();
+}
+function openBasicsSheet() {
+  // 베트남·한국을 맨 위로 — 손님 대부분이 둘 중 하나다
+  const top = ['베트남', '한국'];
+  const list = COUNTRIES.slice().sort((a, b) => {
+    const ia = top.indexOf(a[1]), ib = top.indexOf(b[1]);
+    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+  });
+  const ov = document.createElement('div');
+  ov.id = 'basicsOv';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:215;background:rgba(20,25,28,.55);display:flex;align-items:center;justify-content:center;padding:16px';
+  ov.innerHTML = '<div style="width:320px;max-width:100%;background:#fff;border-radius:18px;padding:22px">'
+    + '<div style="font-size:17px;font-weight:bold;color:#1F4E5F;margin-bottom:4px">' + T('정보 업데이트') + '</div>'
+    + '<div style="font-size:12px;color:#7A8C94;margin-bottom:16px">' + T('더 잘 맞는 테라피스트를 추천해 드리는 데 씁니다.') + '</div>'
+    + '<div style="font-size:13px;font-weight:bold;color:#2E3B42;margin-bottom:6px">' + T('성별') + '</div>'
+    + '<select class="tx" id="bsGender" style="width:100%;margin-bottom:12px"><option value="">' + T('선택 안 함') + '</option>'
+    + GENDERS.map(g => '<option value="' + g + '">' + T(g) + '</option>').join('') + '</select>'
+    + '<div style="font-size:13px;font-weight:bold;color:#2E3B42;margin-bottom:6px">' + T('국적') + '</div>'
+    + '<select class="tx" id="bsNation" style="width:100%;margin-bottom:16px"><option value="">' + T('선택 안 함') + '</option>'
+    + list.map(c => '<option value="' + c[1] + '">' + c[0] + ' ' + c[1] + '</option>').join('') + '</select>'
+    + '<button id="bsSave" style="width:100%;background:#1F4E5F;color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:bold;margin-bottom:8px">' + T('저장') + '</button>'
+    + '<button id="bsSkip" style="width:100%;background:none;color:#7A8C94;border:none;padding:8px;font-size:13px">' + T('건너뛰기') + '</button>'
+    + '</div>';
+  document.body.appendChild(ov);
+  const close = () => { try { localStorage.setItem(BASICS_FLAG, '1'); } catch (e) {} ov.remove(); };
+  document.getElementById('bsSkip').onclick = close;
+  document.getElementById('bsSave').onclick = async () => {
+    const g = document.getElementById('bsGender').value;
+    const n = document.getElementById('bsNation').value;
+    if (!g && !n) { close(); return; }
+    const patch = {};
+    if (g) patch.gender = g;
+    if (n) patch.nationality = n;
+    const { error } = await sb.from('profiles').update(patch).eq('id', SESSION.user.id);
+    if (error) { alert(T('저장 실패: ') + error.message); return; }
+    Object.assign(CUR_PROFILE, patch);
+    close();
+  };
+}
 
 // 등록 신청 사진 4장 미리보기(첫 사진 로고 오버레이)
 // massa 유니폼 변환 프롬프트/헬퍼 (브라우저 직접 호출용)
@@ -3512,6 +3571,16 @@ const DICT = {
   '검색...': ['Tìm kiếm...', 'Search...', '搜索...', '検索...'],
   '홈 뷰티 검색...': ['Tìm dịch vụ làm đẹp tại nhà...', 'Search home beauty...', '搜索上门美容...', 'ホームビューティーを検索...'],
   '메시지를 입력하세요': ['Nhập tin nhắn', 'Type a message', '输入消息', 'メッセージを入力'],
+  '아직 주고받은 메시지가 없습니다. 먼저 말을 걸어보세요.': ['Chưa có tin nhắn nào. Hãy nhắn trước nhé.', 'No messages yet. Say hello first.', '还没有消息，先打个招呼吧。', 'まだメッセージがありません。先に話しかけてみてください。'],
+  '정보 업데이트': ['Cập nhật thông tin', 'Update your info', '更新信息', '情報の更新'],
+  '더 잘 맞는 테라피스트를 추천해 드리는 데 씁니다.': ['Dùng để gợi ý chuyên viên phù hợp hơn với bạn.', 'Used to recommend therapists that suit you better.', '用于为您推荐更合适的理疗师。', 'より合うセラピストをおすすめするために使います。'],
+  '남성': ['Nam', 'Male', '男性', '男性'],
+  '여성': ['Nữ', 'Female', '女性', '女性'],
+  '기타': ['Khác', 'Other', '其他', 'その他'],
+  '선택 안 함': ['Không chọn', 'Not specified', '不选择', '選択しない'],
+  '저장': ['Lưu', 'Save', '保存', '保存'],
+  '건너뛰기': ['Bỏ qua', 'Skip', '跳过', 'スキップ'],
+  '저장 실패: ': ['Lưu thất bại: ', 'Failed to save: ', '保存失败：', '保存に失敗しました: '],
   '예) 2104호': ['VD) Phòng 2104', 'e.g. Room 2104', '例) 2104房', '例) 2104号室'],
   '숙소·건물 이름': ['Tên khách sạn · tòa nhà', 'Hotel or building name', '住宿·建筑名称', '宿泊先·建物名'],
   '눌러서 검색하거나 직접 입력': ['Chạm để tìm hoặc tự nhập', 'Tap to search or type it in', '点击搜索或直接输入', 'タップして検索、または直接入力'],
@@ -4237,12 +4306,10 @@ function appendChat(m) {
   const d = document.createElement('div'); d.className = 'bmsg ' + (m.sender_role === 'customer' ? 'me' : 'bot'); d.dataset.mid = m.id; d.textContent = m.body;
   wrap.appendChild(d); wrap.scrollTop = wrap.scrollHeight;
 }
-function chatAutoReply(t) {
-  if (/가격|얼마|비용/.test(t)) return '코스와 시간에 따라 안내드릴게요. 어떤 코스를 원하세요?';
-  if (/시간|언제|가능/.test(t)) return '오늘 저녁 시간대 가능합니다. 원하시는 시간을 알려주세요.';
-  if (/주소|위치|어디/.test(t)) return '예약하신 위치로 방문드립니다. 호텔·객실 정보만 알려주세요.';
-  return '안녕하세요! 문의 주셔서 감사합니다. 편하게 말씀해 주세요 😊';
-}
+// ★ 여기 있던 chatAutoReply 를 지웠다 (2026-10-14).
+// 손님이 보내면 1.1초 뒤 봇이 sender_role:'provider' 로 가짜 답장을 DB 에 넣고 있었다.
+// "오늘 저녁 시간대 가능합니다" 같은 고정 문장이라, 마사지사가 파트너 채팅을 열면
+// 자기가 한 적 없는 약속이 자기 이름으로 찍혀 있었다. 다시 넣지 말 것.
 window.openChat = async function (pid, name) {
   if (!SESSION) { openAuth(); return; }
   // 채팅은 예약을 마친 뒤에만 연다 — 앱을 거치지 않는 직거래를 막기 위함
@@ -4258,7 +4325,14 @@ window.openChat = async function (pid, name) {
   window.go('chat');
   const wrap = document.getElementById('chatMsgs'); wrap.innerHTML = '';
   const { data } = await sb.from('messages').select('*').eq('customer_id', SESSION.user.id).eq('provider_id', pid).order('created_at');
-  if (!data || !data.length) appendChat({ id: 'welcome', sender_role: 'provider', body: name + '입니다. 무엇을 도와드릴까요?' });
+  // 비어 있을 때 띄우던 "○○입니다. 무엇을 도와드릴까요?" 를 뺐다 — 마사지사가 보낸 말이 아니다.
+  // 대신 아직 대화가 없다는 안내만 둔다.
+  if (!data || !data.length) {
+    const h = document.createElement('div');
+    h.style.cssText = 'text-align:center;color:#8A9AA2;font-size:12.5px;padding:18px 10px;line-height:1.6';
+    h.textContent = T('아직 주고받은 메시지가 없습니다. 먼저 말을 걸어보세요.');
+    wrap.appendChild(h);
+  }
   (data || []).forEach(appendChat);
   if (chatChannel) { sb.removeChannel(chatChannel); chatChannel = null; }
   chatChannel = sb.channel('chat-' + pid)
@@ -4270,10 +4344,7 @@ window.sendChat = async function () {
   const inp = document.getElementById('chatInput'); const v = inp.value.trim(); if (!v || !CHAT_PID) return; inp.value = '';
   const { data } = await sb.from('messages').insert({ customer_id: SESSION.user.id, provider_id: CHAT_PID, sender_role: 'customer', body: v }).select().single();
   if (data) appendChat(data);
-  setTimeout(async () => {
-    const { data: rep } = await sb.from('messages').insert({ customer_id: SESSION.user.id, provider_id: CHAT_PID, sender_role: 'provider', body: chatAutoReply(v) }).select().single();
-    if (rep) appendChat(rep);
-  }, 1100);
+  // 답장은 마사지사가 파트너 채팅에서 직접 보낸다. 실시간 구독(chatChannel)이 받아 띄운다.
 };
 
 window.openBot = function () {
