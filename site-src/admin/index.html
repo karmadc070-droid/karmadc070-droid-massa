@@ -439,9 +439,15 @@ svg{display:block;width:100%;height:auto;overflow:visible}
             <option value="업체">업체</option>
           </select>
           <label class="chk"><input type="checkbox" id="mbk">예약해 본 사람만</label>
+          <select id="mper" class="pick" title="한 쪽에 보일 인원">
+            <option value="10">10명씩</option>
+            <option value="30">30명씩</option>
+            <option value="50">50명씩</option>
+          </select>
         </div>
       </div>
       <div id="members"></div>
+      <div id="mpage"></div>
     </div>
   </main>
 </div>
@@ -1399,6 +1405,7 @@ function drawTraffic() {
 // ── 가입자 명단 ──────────────────────────────
 // 전화번호·이메일이 들어 있다. 화면 밖으로 새지 않도록 다른 곳에 쓰지 않는다.
 let MEMBERS = null;
+let MPAGE = 1;   // 지금 보고 있는 쪽
 async function loadMembers() {
   const box = $('members'); box.innerHTML = '<div class="empty">불러오는 중…</div>';
   const { data, error } = await sb.rpc('admin_member_list');
@@ -1439,12 +1446,24 @@ function drawMembers() {
     + (rows.length !== all.length ? ` · <b>지금 보이는 ${num(rows.length)}명</b>` : '')
     + `<br>머리칸을 누르면 정렬됩니다. 개인정보입니다. 화면 밖으로 옮기지 마세요.`;
 
-  if (!rows.length) { $('members').innerHTML = '<div class="empty">해당하는 사람이 없습니다.</div>'; return; }
+  if (!rows.length) {
+    $('members').innerHTML = '<div class="empty">해당하는 사람이 없습니다.</div>';
+    $('mpage').innerHTML = ''; return;
+  }
+
+  // ── 쪽 나누기 ──
+  // 51명이고 계속 는다. 전부 그려 놓고 끌어내리게 하지 않는다.
+  // 거르개·정렬을 바꾸면 1쪽으로 돌아간다. 2쪽을 보다 거르면 빈 화면이 뜨기 때문이다.
+  const per = Number($('mper').value) || 10;
+  const pages = Math.max(1, Math.ceil(rows.length / per));
+  if (MPAGE > pages) MPAGE = pages;
+  const from = (MPAGE - 1) * per;
+  const pageRows = rows.slice(from, from + per);
 
   const d = (v) => v ? new Date(v).toLocaleDateString('ko-KR', { timeZone: TZ, month: '2-digit', day: '2-digit' }) : '-';
   $('members').innerHTML = '<div class="scroll"><table class="tbl">'
     + thead('members', MCOLS)
-    + '<tbody>' + rows.map(r => {
+    + '<tbody>' + pageRows.map(r => {
       const blocked = r.blocked_until && new Date(r.blocked_until) > new Date();
       return `<tr>
         <td class="l"><div style="font-weight:600">${esc(r.full_name || '(이름 없음)')}</div>
@@ -1463,12 +1482,23 @@ function drawMembers() {
         <td>${num(r.cancel_count)} / ${num(r.no_show_count)}</td>
       </tr>`;
     }).join('') + '</tbody></table></div>';
+
+  $('mpage').innerHTML = pages < 2
+    ? `<div class="note" style="margin-top:8px">${num(rows.length)}명 전부 보고 있습니다.</div>`
+    : `<div style="display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <button class="mini" ${MPAGE <= 1 ? 'disabled' : ''} data-mpage="${MPAGE - 1}">‹ 이전</button>
+        <span class="note" style="margin:0">
+          <b>${MPAGE}</b> / ${pages} 쪽 · ${num(from + 1)}–${num(from + pageRows.length)}번째
+          (모두 ${num(rows.length)}명)</span>
+        <button class="mini" ${MPAGE >= pages ? 'disabled' : ''} data-mpage="${MPAGE + 1}">다음 ›</button>
+      </div>`;
 }
 
 const RCOLS = [
   { k: 'name',     h: '마사지사',    l: 1 },
   { k: 'city_name', h: '활동 지역',  l: 1 },
   { k: 'tier',     h: '등급',        l: 1 },
+  { k: 'free_left', h: '남은 무료',  t: 'n' },
   { k: 'joined',   h: '가입',        l: 1 },
   { k: 'cnt',      h: '예약',        t: 'n' },
   { k: 'fee',      h: '발생 수수료', t: 'n' },
@@ -1525,6 +1555,10 @@ function drawRoster() {
             ? esc(r.ward_names) : '성 전체'}</div></td>
         <td class="l">${tierChip(r.tier, tiers)}${r.suggest_vip
             ? '<div style="font-size:11px;color:var(--amber)">10% 후보</div>' : ''}</td>
+        <td>${r.founding_no
+            ? `<b style="color:var(--good)">${num(r.free_left)}</b> / 20
+               <div style="font-size:11px;color:var(--ink-soft)">창립 ${num(r.founding_no)}번</div>`
+            : '<span style="color:var(--ink-soft)">-</span>'}</td>
         <td class="l" style="font-size:12px;color:var(--ink-soft)">${esc(r.joined || '-')}</td>
         <td>${num(r.cnt)}</td>
         <td>${vnd(r.fee)}</td>
@@ -1768,9 +1802,20 @@ $('tabs').onclick = (e) => {
   loadData();
 };
 $('q').oninput = drawRoster;
-$('mq').oninput = drawMembers;
+// 거르개·찾기·인원수를 바꾸면 1쪽으로 돌아간다.
+// 3쪽을 보던 중에 거르면 아무것도 없는 쪽이 뜬다.
+const backToFirst = () => { MPAGE = 1; drawMembers(); };
+$('mq').oninput = backToFirst;
+$('mper').onchange = backToFirst;
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-mpage]');
+  if (!b || b.disabled) return;
+  MPAGE = Number(b.dataset.mpage) || 1;
+  drawMembers();
+  document.getElementById('s-members').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
 ['rtier', 'rowe', 'rpend', 'rlate'].forEach(id => $(id).onchange = drawRoster);
-['mtype', 'mbk'].forEach(id => $(id).onchange = drawMembers);
+['mtype', 'mbk'].forEach(id => $(id).onchange = backToFirst);
 ['apsort', 'apok'].forEach(id => $(id).onchange = drawApps);
 ['bkst', 'bkcity', 'bkunpaid', 'bknone', 'bkout'].forEach(id => $(id).onchange = drawBk);
 $('bkq').oninput = drawBk;
