@@ -780,3 +780,19 @@ Mins 는 칸호아고 ward_codes 가 비어 성 중심점(12.24,109.20)을 쓴�
 ward_codes 가 비어 성 중심점을 쓰는 마사지사 5명 —
 Lê Thúy Hiền(다낭) · Mi · Mins · Miu miu(칸호아) · Nguyễn thị thiên trang(호치민).
 프엉을 받아 채우면 거리가 정확해진다.
+
+### 2026-10-14 — 시스템 과실 신고 3건·안전 요청 1건 삭제
+
+사장님 판단: 마사지사가 시스템 문제로 요청을 못 받아 생긴 컴플레인이라
+마사지사 기록에 남길 이유가 없다. 삭제.
+
+지운 것 — reports 3건(Thế 의 'không đến'·'không thấy nhân viên đâu',
+Bem Bem 의 'Sao thấy ktv cách tận hơn 1000km'), safety_alerts 1건(share_location).
+
+되돌릴 수 있다. DB 에 백업 테이블로 떠 뒀다.
+  reports_sysfault_backup_20261014
+  safety_alerts_sysfault_backup_20261014
+복구는 insert into reports select * from reports_sysfault_backup_20261014;
+
+★ 원인은 이미 고쳤다 — 거리순 정렬 + 150km 차단 + 지역 자동 판정 크론.
+  같은 일이 또 생기면 그건 새 문제지 이 기록의 연장이 아니다.
