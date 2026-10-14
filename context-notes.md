@@ -866,3 +866,26 @@ hanoiWeek() 가 { ymd, day, dow } 만 돌려주고 월을 아예 안 만들고 �
   2) 가까운 5명(INSTANT_FANOUT)에게 동시에 보낸다. 먼저 수락하는 사람이 간다.
 10분 기다렸다 퍼뜨리던 것을 처음부터 퍼뜨리는 것뿐이라 뒤의 기계(accept_booking)는 그대로다.
 숫자 두 개만 고치면 조절된다.
+
+### 2026-10-15 — providers.phone 에는 번호를 넣지 않는다 (내 제안이 틀렸다)
+
+내가 "신청서 번호를 providers.phone 에도 같이 넣자"고 제안했는데 틀렸다.
+`strip_provider_phone` 트리거가 **일부러** 항상 null 로 지우고 있었다.
+주석: "연락처의 정본은 provider_kyc.contact 다".
+
+이유가 맞다 — providers 는 손님 앱이 읽는 테이블이고 provider_kyc 는 관리자만 읽는다.
+번호를 providers 로 옮기면 개인정보가 샌다. 백필을 시도했지만 트리거가 다 막았다(다행).
+guard_provider_kyc 에서 phone 채우는 부분도 뺐다.
+
+→ 로스터는 admin_provider_list() 안에서 kyc.contact 를 읽는다. 그게 올바른 길이다.
+→ index.html 1821줄의 `isAdminUser() && p.phone` 전화 표시는 영영 안 뜬다
+   (providers.phone 이 항상 null). 별개 문제로 남겨 둔다.
+
+### 서류 자물쇠 (sql-kyc-lock.sql)
+
+필수 네 가지 — 연락처 · 신분증 앞면 · 신분증 뒷면 · 계좌번호.
+승인으로 **바뀌는 순간**과 is_active 가 **켜지는 순간**에만 본다.
+끄기·반려는 언제나 허용한다. 기존 행은 다른 칸을 고쳐도 안 걸린다.
+Kun 은 사장님 결정으로 그대로 두되, 한 번 끄면 서류 없이는 다시 못 켠다.
+화면(심사 카드)의 lack 목록도 같은 네 가지로 맞췄다 — 기준이 다르면
+승인 버튼은 눌리는데 저장이 거부된다.

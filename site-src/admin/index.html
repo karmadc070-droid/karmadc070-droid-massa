@@ -1300,9 +1300,13 @@ async function loadApps() {
       [k.id_front_url, k.id_back_url, k.business_license_url, k.cert_url].map(signed));
     const shop = k.reg_type === 'shop';
     // 승인을 막는 것은 '없으면 안 되는 서류' 뿐이다. 자격증은 선택이라 여기 넣지 않는다.
+    // 서버 트리거(guard_provider_kyc)가 잠그는 네 가지와 같은 목록을 본다.
+    // 화면과 서버가 다른 기준을 말하면, 승인 버튼은 눌리는데 저장이 거부된다.
     const lack = [];
+    if (!(k.contact || '').trim())      lack.push('연락처');
     if (!k.id_front_url) lack.push('신분증 앞면');
     if (!k.id_back_url)  lack.push('신분증 뒷면');
+    if (!(k.bank_account || '').trim()) lack.push('계좌번호');
     if (shop && !k.business_license_url) lack.push('사업자 등록증');
     return { p, k, shop, lack, idF, idB, lic, cert };
   }));

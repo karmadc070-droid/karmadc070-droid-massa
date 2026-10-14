@@ -4479,3 +4479,12 @@ Codemagic **빌드 31** 시작. 커밋 `e46b4c5`, main, 워크플로
          베트남어 화면의 '호치민' 수정 · 베타 문구 제거
 - [ ] TestFlight 올라오면 확인
 - [ ] App Store Connect 에서 심사 제출 (codemagic 은 submit_to_app_store: false)
+
+## 100. 마사지사 명단 연락처 + 서류 자물쇠 — 완료 2026-10-15
+- [x] 로스터에 연락처 칸 (tel: + Zalo 링크), 전화로도 찾기
+      번호는 provider_kyc.contact 에 있는데 명단이 providers.phone 만 보고 있었다
+- [x] guard_provider_kyc 트리거 — 연락처·신분증 앞·뒤·계좌번호 없으면 승인·활동 불가
+- [x] 시험: 서류 없는 Kun 재활성 차단 / 서류 갖춘 Mins 통과 / 기존 행 수정 영향 없음
+- [x] 심사 화면 lack 목록을 서버 기준과 일치시킴 (연락처·계좌번호 추가)
+- [x] ★ providers.phone 백필은 취소 — strip_provider_phone 이 일부러 지운다 (개인정보)
+- 현재 서류 모자란 사람: Kun (신분증 앞·뒤·계좌번호)
