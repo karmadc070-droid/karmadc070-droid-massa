@@ -1715,6 +1715,17 @@ function fillList(screenId, providers) {
     }
   });
   screen.querySelectorAll('[data-prof]').forEach(el => el.onclick = () => openProfile(el.dataset.prof));
+  // 사진이나 이름을 정확히 눌러야만 넘어갔다. 칸 아무 데나 눌러도 열리게 한다 (2026-10-15).
+  // 하트와 예약 버튼은 각자 할 일이 있으니 그 둘만 비켜 간다.
+  screen.querySelectorAll('.tcard').forEach(card => {
+    const pid = (card.querySelector('[data-prof]') || {}).dataset?.prof;
+    if (!pid) return;
+    card.style.cursor = 'pointer';
+    card.onclick = (e) => {
+      if (e.target.closest('.card-fav') || e.target.closest('.bookbtn')) return;
+      openProfile(pid);
+    };
+  });
 }
 
 // 선택한 서비스 제공자만 필터(홈 뷰티)

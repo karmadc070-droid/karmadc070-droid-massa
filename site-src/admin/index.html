@@ -715,12 +715,71 @@ async function loadData() {
 
 // 명단은 기간과 무관하다. 한 번 받아 두고 바뀔 때만 다시 받는다.
 let ROSTER = null;
+let KYC = {};   // provider_id → { photo, idF, idB, cert, lic }
+
+// 서류는 비공개 버킷(kyc-docs)에 있다. 1시간짜리 임시 주소를 만들어야 열린다.
+// 이미 http 로 시작하면 옛 공개 주소라 그대로 쓴다.
+async function signedDoc(v) {
+  if (!v) return null;
+  if (/^https?:/.test(v)) return v;
+  const { data } = await sb.storage.from('kyc-docs').createSignedUrl(v, 3600);
+  return data ? data.signedUrl : null;
+}
+
 async function loadRoster() {
   const box = $('roster'); box.innerHTML = '<div class="empty">불러오는 중…</div>';
   const { data, error } = await sb.rpc('admin_provider_list');
   if (error) { box.innerHTML = '<div class="empty">불러오지 못했습니다 — ' + esc(error.message) + '</div>'; return; }
-  ROSTER = data; drawRoster();
+  ROSTER = data;
+  drawRoster();           // 서류를 기다리지 않고 먼저 그린다 — 표가 늦게 뜨면 안 된다
+  loadKyc();              // 서류 주소는 받아지는 대로 채운다
 }
+
+// 신분증·자격증 임시 주소를 한 번에 받아 둔다.
+async function loadKyc() {
+  const ids = (ROSTER && ROSTER.rows || []).map(r => r.id);
+  if (!ids.length) return;
+  const { data, error } = await sb.from('provider_kyc')
+    .select('provider_id, id_front_url, id_back_url, cert_url, business_license_url')
+    .in('provider_id', ids);
+  if (error) { console.warn('서류 불러오기 실패', error.message); return; }
+  const next = {};
+  await Promise.all((data || []).map(async k => {
+    const [idF, idB, cert, lic] = await Promise.all(
+      [k.id_front_url, k.id_back_url, k.cert_url, k.business_license_url].map(signedDoc));
+    next[k.provider_id] = { idF, idB, cert, lic };
+  }));
+  KYC = next;
+  drawRoster();
+}
+
+// ── 크게 보기 ────────────────────────────────
+// 신분증은 작게 보면 글자가 안 읽힌다. 눌러서 키울 수 있어야 심사가 된다.
+function openImg(url, label) {
+  if (!url) return;
+  let ov = $('lbox');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'lbox';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:400;background:rgba(14,18,20,.88);'
+      + 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px';
+    document.body.appendChild(ov);
+    ov.addEventListener('click', (e) => { if (e.target === ov || e.target.dataset.close) ov.style.display = 'none'; });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && ov.style.display !== 'none') ov.style.display = 'none'; });
+  }
+  ov.innerHTML = `<div style="color:#fff;font-size:14px;font-weight:600">${esc(label || '')}</div>
+    <img src="${esc(url)}" alt="" style="max-width:min(94vw,900px);max-height:78vh;border-radius:10px;background:#fff">
+    <div style="display:flex;gap:8px">
+      <a class="mini" href="${esc(url)}" target="_blank" rel="noopener"
+         style="text-decoration:none">새 창에서 열기</a>
+      <button class="mini" data-close="1">닫기 (Esc)</button>
+    </div>`;
+  ov.style.display = 'flex';
+}
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('[data-img]');
+  if (t && t.dataset.img) openImg(t.dataset.img, t.dataset.imglabel || '');
+});
 
 // ── 표 정렬 (두 명단이 같이 쓴다) ──────────────
 // 표마다 {key, dir} 하나만 들고 있다가 머리칸을 누르면 뒤집는다.
@@ -1499,6 +1558,7 @@ const RCOLS = [
   { k: 'city_name', h: '활동 지역',  l: 1 },
   { k: 'tier',     h: '등급',        l: 1 },
   { k: 'free_left', h: '남은 무료',  t: 'n' },
+  { k: 'docs',     h: '신분증·자격증', l: 1 },
   { k: 'joined',   h: '가입',        l: 1 },
   { k: 'cnt',      h: '예약',        t: 'n' },
   { k: 'fee',      h: '발생 수수료', t: 'n' },
@@ -1506,6 +1566,26 @@ const RCOLS = [
   { k: 'credit',   h: '선입금 잔액', t: 'n' },
   { k: 'owe',      h: '미납',        t: 'n' },
 ];
+
+// 신분증 앞·뒤·자격증을 작은 그림으로 늘어놓는다. 누르면 크게 뜬다.
+// 없는 서류는 숨기지 않고 '없음'이라고 적는다 — 빈 칸은 '안 받았다'와 구별이 안 된다.
+function docCell(pid) {
+  const k = KYC[pid];
+  if (!k) return '<span style="color:var(--ink-soft);font-size:11px">불러오는 중…</span>';
+  const one = (url, label, need) => url
+    ? `<img src="${esc(url)}" alt="${esc(label)}" title="${esc(label)}" loading="lazy"
+           data-img="${esc(url)}" data-imglabel="${esc(label)}"
+           style="width:42px;height:30px;object-fit:cover;border-radius:4px;cursor:zoom-in;
+                  border:1px solid var(--line)">`
+    : `<span title="${esc(label)}"
+           style="display:inline-flex;align-items:center;justify-content:center;width:42px;height:30px;
+                  border-radius:4px;font-size:10px;border:1px dashed ${need ? 'var(--bad)' : 'var(--line)'};
+                  color:${need ? 'var(--bad)' : 'var(--ink-soft)'}">없음</span>`;
+  return `<div style="display:flex;gap:4px;align-items:center">
+      ${one(k.idF, '신분증 앞면', true)}${one(k.idB, '신분증 뒷면', true)}${one(k.cert, '자격증')}
+    </div>
+    <div style="font-size:10px;color:var(--ink-soft);margin-top:2px">앞 · 뒤 · 자격증</div>`;
+}
 
 // 기한이 지났고 아직 낼 돈이 남은 사람. 둘 다여야 독촉할 일이 있다.
 const isLate = (r) => r.due_at && new Date(r.due_at) < new Date() && Number(r.owe || 0) > 0;
@@ -1542,7 +1622,9 @@ function drawRoster() {
       const owe = Number(r.owe || 0), cred = Number(r.credit || 0);
       return `<tr>
         <td class="l"><div class="who">${r.photo_url
-            ? `<img src="${esc(r.photo_url)}" alt="" loading="lazy">` : '<div class="ph"></div>'}
+            ? `<img src="${esc(r.photo_url)}" alt="" loading="lazy" style="cursor:zoom-in"
+                 data-img="${esc(r.photo_url)}" data-imglabel="${esc(r.name || '')} 프로필 사진">`
+            : '<div class="ph"></div>'}
           <div><div style="font-weight:600">${esc(r.name || '(이름 없음)')}</div>
             <div style="font-size:11px;color:var(--ink-soft)">
               ${esc(r.district || '-')} · ${esc(r.deposit_code || '코드 없음')}
@@ -1559,6 +1641,7 @@ function drawRoster() {
             ? `<b style="color:var(--good)">${num(r.free_left)}</b> / 20
                <div style="font-size:11px;color:var(--ink-soft)">창립 ${num(r.founding_no)}번</div>`
             : '<span style="color:var(--ink-soft)">-</span>'}</td>
+        <td class="l">${docCell(r.id)}</td>
         <td class="l" style="font-size:12px;color:var(--ink-soft)">${esc(r.joined || '-')}</td>
         <td>${num(r.cnt)}</td>
         <td>${vnd(r.fee)}</td>
