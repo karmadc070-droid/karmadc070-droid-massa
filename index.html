@@ -416,6 +416,8 @@
   .day.sel { background: var(--navy); color: #fff; border-color: var(--navy); }
   .day .dow { display: block; font-size: 10px; color: var(--muted); }
   .day.sel .dow { color: #cfe0e5; }
+  .dmon { font-size: 10.5px; color: var(--muted); }
+  .day.sel .dmon { color: #cfe0e5; }
   .timepick { display: flex; align-items: center; gap: 8px; }
   .timepick select { width: auto; flex: 1; max-width: 110px; border: 1.5px solid var(--line); border-radius: 10px; padding: 11px 10px; font-size: 15px; font-weight: bold; text-align: center; background: var(--card); color: var(--text); }
   .tsep { font-size: 13px; color: var(--muted); }
@@ -775,7 +777,10 @@
       <div class="chip sel" onclick="quickTime(20,0,this)">20:00</div>
       <div class="chip" onclick="quickTime(22,30,this)">22:30</div>
     </div>
-    <div class="notice">⚡ <b>지금 받기(즉시 매칭)</b>는 베타 오픈 후 순차 제공 예정입니다. 테라피스트의 '시작 가능' 시간 이후로 예약할 수 있습니다.</div>
+    <button class="chip" id="nowBtn" onclick="pickNow()"
+            style="width:100%;padding:13px 0;margin-top:10px;font-size:14px;font-weight:bold">
+      ⚡ <span>지금 받기 (즉시 매칭)</span></button>
+    <div class="hint" id="nowHint" style="margin:6px 2px"><span>가까운 테라피스트 여러 명에게 한 번에 보냅니다. 먼저 수락하는 분이 갑니다.</span></div>
     <button class="cta" onclick="go('loc')">다음 — 위치 입력</button>
   </div>
 
@@ -1288,7 +1293,10 @@ function hanoiWeek(now) {
   const t = new Date(now.getTime() + 7 * 3600 * 1000);   // UTC+7 (하노이는 서머타임이 없다)
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate() + i));
-    return { ymd: d.toISOString().slice(0, 10), day: d.getUTCDate(), dow: '일월화수목금토'[d.getUTCDay()] };
+    // 월도 같이 준다. 날짜만 적으면 달이 넘어가는 주에 29·30·1·2 가 나란히 떠서
+    // 손님이 몇 월인지 알 수 없다.
+    return { ymd: d.toISOString().slice(0, 10), day: d.getUTCDate(), mon: d.getUTCMonth() + 1,
+             dow: '일월화수목금토'[d.getUTCDay()] };
   });
 }
 // 시간 화면에 들어갈 때마다 다시 그린다 — 앱을 며칠 켜 둔 채 쓰면 '오늘' 이 지나가 있다. 고른 날이 아직 범위 안이면 유지한다.
@@ -1299,7 +1307,8 @@ function renderDays() {
   const week = hanoiWeek(new Date());
   const sel = week.some(w => w.ymd === keep) ? keep : week[0].ymd;
   grid.innerHTML = week.map(w => '<div class="day' + (w.ymd === sel ? ' sel' : '') + '" data-date="' + w.ymd
-    + '" onclick="pick(this)"><span class="dow">' + w.dow + '</span>' + w.day + '</div>').join('');
+    + '" onclick="pick(this)"><span class="dow">' + w.dow + '</span>'
+    + '<span class="dmon">' + w.mon + '/</span>' + w.day + '</div>').join('');
 }
 // 지금(하노이)부터 30분 안쪽이거나 이미 지난 시각은 예약할 수 없다. 마사지사가 이동할 시간이 필요하다.
 function isBookable(iso, now) { return new Date(iso).getTime() >= now.getTime() + 30 * 60 * 1000; }
@@ -1478,7 +1487,7 @@ function provCoord(p) {
   }
   return null;
 }
-const SEL = { provider: null, serviceType: 'aroma', serviceId: null, duration: 90, hotel: '', room: '', frontNote: '', payment: 'card_onsite' };
+const SEL = { provider: null, serviceType: 'aroma', serviceId: null, duration: 90, hotel: '', room: '', frontNote: '', payment: 'card_onsite', instant: false };
 
 // 마사지사가 자기 코스 가격을 따로 정했으면 그 값을, 없으면 기본가를 쓴다.
 // 화면 표시용이다. 실제로 청구되는 금액은 서버가 예약을 받을 때 다시 계산한다(freeze_booking_amount).
@@ -1545,6 +1554,28 @@ window.lbMove = lbMove;
 // 예전에는 목록 순번으로 0.6·1.2·1.8km 를 지어내 보여 줬다. 손님이 그걸 믿고 고른다.
 // 이제 위치를 허용했을 때만 진짜 거리를 계산하고, 아니면 거리를 아예 말하지 않는다.
 let MYPOS = null;
+
+// ── 지금 받기 (즉시 매칭) ──────────────────────────────────────
+// 시간을 '지금 + 60분' 으로 맞추고, 예약할 때 한 명이 아니라 가까운 여러 명에게 한 번에 보낸다.
+// 10분 기다렸다 퍼뜨리던 것을 처음부터 퍼뜨리는 것뿐이다 — 뒤의 기계는 그대로다.
+// 먼저 수락한 사람이 가고 나머지는 accept_booking() 이 자동으로 취소한다.
+const INSTANT_LEAD_MIN = 60;   // 지금부터 몇 분 뒤로 잡을지. 이동 시간이 필요하다.
+const INSTANT_FANOUT = 5;      // 한 번에 보낼 사람 수
+window.pickNow = function () {
+  SEL.instant = !SEL.instant;
+  const btn = document.getElementById('nowBtn');
+  if (btn) btn.classList.toggle('sel', SEL.instant);
+  if (!SEL.instant) return;
+  // 하노이 기준 '지금 + 60분'. 분은 10분 단위로 올린다.
+  const t = new Date(Date.now() + INSTANT_LEAD_MIN * 60000 + 7 * 3600 * 1000);
+  const ymd = t.toISOString().slice(0, 10);
+  document.querySelectorAll('#time .day').forEach(d => d.classList.toggle('sel', d.dataset.date === ymd));
+  const sh = document.getElementById('selHour'), sm = document.getElementById('selMin');
+  if (sh) sh.value = String(t.getUTCHours()).padStart(2, '0');
+  if (sm) sm.value = String(Math.floor(t.getUTCMinutes() / 10) * 10).padStart(2, '0');
+  if (window.updateTime) updateTime();
+  document.querySelectorAll('#time .chips .chip').forEach(c => c.classList.remove('sel'));
+};
 
 // 거리 기준 (km). 프엉 중심점까지 재는 값이라 오차가 있다.
 // 목록 숨김과 예약 차단이 같은 숫자를 쓴다 — 안 보이는 사람을 예약할 길이 없어야 한다.
@@ -2373,6 +2404,21 @@ async function submitBooking() {
     amount_vnd: priceOf(svc)
   };
   const { data, error } = await sb.from('bookings').insert(row).select().single();
+
+  // '지금 받기' 면 한 사람만 기다리지 않는다. 가까운 사람들에게 같은 요청을 한꺼번에 보낸다.
+  // group_id 가 같아서 먼저 수락한 한 명만 남고 나머지는 DB 가 취소한다.
+  let fanout = 0;
+  if (!error && SEL.instant && data) {
+    const extra = nearbyAlts({ ...data, group_id: row.group_id })
+      .slice(0, Math.max(0, INSTANT_FANOUT - 1));
+    if (extra.length) {
+      const { error: e2 } = await sb.from('bookings').insert(
+        extra.map(p => ({ ...row, provider_id: p.id })));
+      if (!e2) fanout = extra.length;
+      else console.warn('동시 요청 일부 실패', e2.message);
+    }
+  }
+
   const done = document.querySelector('#done .summary');
   if (error) {
     if (done) done.innerHTML = `예약 저장 실패: ${error.message}`;
@@ -2389,9 +2435,12 @@ async function submitBooking() {
   if (lead) {
     const nm = (SEL.provider && SEL.provider.display_name) || '';
     // 이제는 바로 확정이 아니다. 수락을 기다리는 중이라고 사실대로 적는다.
-    lead.textContent = error ? '' :
-      T('{name} 테라피스트에게 요청을 보냈습니다. 수락을 기다리는 중입니다.').replace('{name}', nm)
-      + ' ' + T('10분 안에 답이 없으면 가까운 다른 테라피스트를 추천해 드립니다.');
+    lead.textContent = error ? ''
+      : fanout
+        ? T('가까운 테라피스트 {n}명에게 한 번에 보냈습니다. 먼저 수락하는 분이 갑니다.')
+            .replace('{n}', String(fanout + 1))
+        : T('{name} 테라피스트에게 요청을 보냈습니다. 수락을 기다리는 중입니다.').replace('{name}', nm)
+          + ' ' + T('10분 안에 답이 없으면 가까운 다른 테라피스트를 추천해 드립니다.');
   }
   // 예약이 잡힌 뒤부터 담당 테라피스트와 채팅할 수 있다
   const chatBtn = document.getElementById('doneChatBtn');
@@ -2561,6 +2610,8 @@ function nearbyAlts(b) {
   const sent = new Set((window.__myBookings || [])
     .filter(x => x.group_id && b.group_id && x.group_id === b.group_id)
     .map(x => x.provider_id));
+  // 방금 만든 예약은 아직 __myBookings 에 없다. 같은 사람에게 두 번 보내지 않게 직접 뺀다.
+  if (b.provider_id) sent.add(b.provider_id);
   const origin = (b.lat != null && b.lng != null) ? { lat: b.lat, lng: b.lng } : MYPOS;
   const pool = (CACHE.providers || []).filter(p =>
     p.is_active && !sent.has(p.id) && (!b.city_code || !p.city_code || p.city_code === b.city_code));
@@ -3768,6 +3819,9 @@ const DICT = {
   '요청을 보내지 못했습니다: ': ['Không gửi được yêu cầu: ', 'Could not send the request: ', '无法发送请求：', 'リクエストを送れませんでした: '],
   '{km}km 안에 지금 가능한 마사지사가 없습니다.': ['Không có kỹ thuật viên nào trong bán kính {km}km.', 'No therapists available within {km}km.', '{km}公里内暂无可预约的理疗师。', '{km}km 以内に対応できるセラピストがいません。'],
   '{km}km 밖은 방문이 어려워 {n}명을 숨겼습니다.': ['Đã ẩn {n} người ở ngoài {km}km vì khó tới nơi.', 'Hid {n} therapists beyond {km}km — they cannot travel that far.', '已隐藏 {km}公里外的 {n} 位理疗师，无法上门。', '{km}km より遠い{n}名は訪問が難しいため非表示にしました。'],
+  '지금 받기 (즉시 매칭)': ['Nhận ngay (ghép tự động)', 'Get it now (instant match)', '立即预约（即时匹配）', '今すぐ受ける（即時マッチ）'],
+  '가까운 테라피스트 여러 명에게 한 번에 보냅니다. 먼저 수락하는 분이 갑니다.': ['Gửi cùng lúc tới nhiều chuyên viên ở gần. Ai nhận trước sẽ tới.', 'Sends to several nearby therapists at once. Whoever accepts first comes.', '同时发送给附近多位理疗师，先接受的人上门。', '近くの複数のセラピストに一度に送ります。先に承諾した方が伺います。'],
+  '가까운 테라피스트 {n}명에게 한 번에 보냈습니다. 먼저 수락하는 분이 갑니다.': ['Đã gửi cùng lúc tới {n} chuyên viên ở gần. Ai nhận trước sẽ tới.', 'Sent to {n} nearby therapists at once. Whoever accepts first comes.', '已同时发送给附近 {n} 位理疗师，先接受的人上门。', '近くのセラピスト{n}名に一度に送りました。先に承諾した方が伺います。'],
   '연락처를 알려주세요':['Cho chúng tôi biết số liên hệ', 'Please share your contact', '请提供联系方式', '連絡先を教えてください'],
   '테라피스트가 도착해서 연락드릴 때 필요합니다.': ['Chuyên viên cần để liên hệ khi tới nơi.', 'Your therapist needs it to reach you on arrival.', '理疗师到达时需要联系您。', 'セラピストが到着時に連絡するために必要です。'],
   '이름': ['Họ tên', 'Name', '姓名', '氏名'],
@@ -3885,7 +3939,6 @@ const DICT = {
   '(약 29,700원)': ['(khoảng 535.000₫)', '(approx. 21 USD)', '(约155元)', '(約3,200円)'],
   '아로마테라피 90분': ['Trị liệu tinh dầu 90 phút', 'Aromatherapy 90 min', '芳香疗法90分钟', 'アロマテラピー90分'],
   '예상 금액 850,000₫': ['Dự kiến 850.000₫', 'Estimated 850,000₫', '预计 850,000₫', 'お見積り 850,000₫'],
-  '는 베타 오픈 후 순차 제공 예정입니다. 테라피스트의 \'시작 가능\' 시간 이후로 예약할 수 있습니다.': ['sẽ được mở dần sau khi ra mắt bản beta. Bạn có thể đặt lịch từ sau giờ "Có thể bắt đầu" của chuyên viên.', 'will roll out gradually after the beta launch. You can book from after the therapist\'s "available from" time.', '将在Beta上线后陆续开放。可在理疗师的"可开始"时间之后预约。', 'はベータ公開後、順次提供予定です。セラピストの「開始可能」時刻以降から予約できます。'],
   '으로 즉시 연결됩니다. (Phase 1.5)': ['sẽ kết nối ngay lập tức. (Phase 1.5)', 'connects you immediately. (Phase 1.5)', '会立即接通。(Phase 1.5)', 'ですぐにつながります。(Phase 1.5)'],
   'massa는 고객과 검증된 제공자를 연결하는 중개 플랫폼입니다. 서비스는 의료 행위가 아닌 이완·관리 목적의 케어이며, 치료가 필요한 증상은 의료기관 이용을 권장합니다. 예약 후 무단 취소·노쇼가 반복되면 이용이 제한될 수 있습니다. 결제는 서비스 완료 후 현장에서 이루어지며, 플랫폼은 결제·정산 내역을 기록·관리합니다. 이용자는 제공자에게 성적 요구를 포함한 부적절한 요구를 할 수 없으며, 위반 시 즉시 이용이 정지되고 관계 기관에 통보될 수 있습니다.': ['massa là nền tảng trung gian kết nối khách hàng với các nhà cung cấp đã được xác minh. Dịch vụ là chăm sóc thư giãn, không phải hành vi y tế; với triệu chứng cần điều trị, chúng tôi khuyến nghị đến cơ sở y tế. Việc hủy không báo trước hoặc không đến nhiều lần có thể khiến tài khoản bị hạn chế. Thanh toán diễn ra tại chỗ sau khi hoàn tất dịch vụ, và nền tảng ghi nhận, quản lý lịch sử thanh toán, đối soát. Người dùng không được đưa ra yêu cầu không phù hợp, bao gồm yêu cầu mang tính tình dục; vi phạm sẽ bị đình chỉ ngay và có thể bị báo cho cơ quan chức năng.', 'massa is an intermediary platform connecting customers with verified providers. The service is relaxation and wellness care, not medical treatment; for symptoms requiring treatment we recommend seeing a medical institution. Repeated no-shows or cancellations without notice may restrict your use. Payment is made on site after the service, and the platform records and manages payment and settlement history. Users may not make inappropriate requests, including sexual ones; violations lead to immediate suspension and may be reported to the authorities.', 'massa 是连接顾客与经审核服务者的中介平台。服务为放松与保养性质的护理，并非医疗行为；需要治疗的症状建议前往医疗机构。多次无故取消或爽约可能导致使用受限。付款在服务结束后于现场完成，平台会记录并管理支付与结算明细。用户不得提出包括性要求在内的不当要求，违反者将被立即停用并可能被通报有关机关。', 'massa はお客様と審査済みの提供者をつなぐ仲介プラットフォームです。サービスは医療行為ではなくリラクゼーション・ケアを目的としており、治療が必要な症状は医療機関の受診をお勧めします。無断キャンセルや不参加が繰り返されると利用が制限される場合があります。お支払いはサービス完了後に現地で行われ、プラットフォームは決済・精算の履歴を記録・管理します。利用者は性的な要求を含む不適切な要求を行うことはできず、違反時は直ちに利用停止となり関係機関へ通報される場合があります。'],
   '수집 항목은 이름·연락처·국적·언어·위치(선택)이며, 예약 중개·안전 확인·정산 목적에 한해 이용합니다. 제공자에게는 서비스 수행에 필요한 최소 정보(이름·연락처·방문 주소)만 전달됩니다. 신분증·계좌 등 제공자 민감정보는 비공개 저장소에 보관되며 심사 담당자만 열람할 수 있습니다. 보관 기간은 회원 탈퇴 시까지이며, 관계 법령상 보존 의무가 있는 기록은 해당 기간 동안 보관 후 파기합니다.': ['Chúng tôi thu thập tên, thông tin liên hệ, quốc tịch, ngôn ngữ và vị trí (tùy chọn), chỉ dùng cho mục đích trung gian đặt lịch, xác nhận an toàn và đối soát. Nhà cung cấp chỉ nhận thông tin tối thiểu cần thiết (tên, liên hệ, địa chỉ đến). Thông tin nhạy cảm của nhà cung cấp như CMND/CCCD, tài khoản ngân hàng được lưu ở kho riêng và chỉ người phụ trách thẩm định mới xem được. Dữ liệu được lưu đến khi bạn hủy tài khoản; hồ sơ có nghĩa vụ lưu trữ theo luật sẽ được giữ trong thời hạn quy định rồi hủy.', 'We collect your name, contact details, nationality, language and location (optional), and use them only for booking, safety checks and settlement. Providers receive only the minimum needed to perform the service (name, contact, visit address). Sensitive provider data such as ID and bank details is kept in private storage viewable only by reviewers. Data is kept until you delete your account; records with a statutory retention duty are kept for the required period and then destroyed.', '收集项目为姓名、联系方式、国籍、语言及位置(可选)，仅用于预约中介、安全确认与结算。服务者仅获得执行服务所需的最少信息(姓名、联系方式、上门地址)。身份证、账户等服务者敏感信息保存在非公开存储中，仅审核人员可查阅。保存期限至会员退出为止，依法须保存的记录将在规定期限内保存后销毁。', '収集項目は氏名・連絡先・国籍・言語・位置情報(任意)で、予約仲介・安全確認・精算の目的に限り利用します。提供者にはサービス遂行に必要な最小限の情報(氏名・連絡先・訪問先住所)のみが伝わります。身分証・口座など提供者の機微情報は非公開ストレージに保管され、審査担当者のみが閲覧できます。保管期間は退会時までで、法令上の保存義務がある記録は当該期間の保管後に破棄します。'],
