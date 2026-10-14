@@ -1546,6 +1546,12 @@ window.lbMove = lbMove;
 // 이제 위치를 허용했을 때만 진짜 거리를 계산하고, 아니면 거리를 아예 말하지 않는다.
 let MYPOS = null;
 
+// 거리 기준 (km). 프엉 중심점까지 재는 값이라 오차가 있다.
+// 목록 숨김과 예약 차단이 같은 숫자를 쓴다 — 안 보이는 사람을 예약할 길이 없어야 한다.
+// ★ fillList 가 쓰므로 그 앞에 둔다.
+const FAR_WARN_KM = 15;   // 이 이상이면 예약 전에 물어본다
+const FAR_BLOCK_KM = 30;  // 이 이상이면 목록에서 숨기고 예약도 막는다 (2026-10-15)
+
 function haversineKm(la1, ln1, la2, ln2) {
   const R = 6371, rad = Math.PI / 180;
   const dLa = (la2 - la1) * rad, dLn = (ln2 - ln1) * rad;
@@ -1673,11 +1679,26 @@ function fillList(screenId, providers) {
   // 고른 성에서 활동하는 사람만 보여준다. 성을 안 골랐으면(MYCITY null) 전부 보여준다.
   // ★ 지역이 아직 안 정해진 사람은 거르지 않는다. '다르다' 가 아니라 '모른다' 라서,
   //    걸러 버리면 멀쩡한 마사지사가 아무에게도 안 보이게 된다.
-  const shown = MYCITY ? providers.filter(p => !p.city_code || p.city_code === MYCITY) : providers;
+  let shown = MYCITY ? providers.filter(p => !p.city_code || p.city_code === MYCITY) : providers;
+  // 위치를 켠 손님에게는 30km 넘는 사람을 아예 안 보여준다 (2026-10-15).
+  // 그 거리면 마사지사가 안 간다. 보여 주면 손님이 기다리다 펑크를 맞는다.
+  // ★ 거리를 모르는 사람은 거르지 않는다. '모른다'는 '멀다'가 아니다.
+  let hiddenFar = 0;
+  if (MYPOS) {
+    const near = shown.filter(p => { const d = distOf(p); return d == null || d <= FAR_BLOCK_KM; });
+    hiddenFar = shown.length - near.length;
+    shown = near;
+  }
   shown.forEach((p, i) => notice.insertAdjacentHTML('beforebegin', providerCard(p, i)));
   if (!shown.length) {
     notice.insertAdjacentHTML('beforebegin',
-      '<div class="notice">' + rEsc(T('이 지역에는 아직 마사지사가 없습니다. 다른 지역을 골라 보세요.')) + '</div>');
+      '<div class="notice">' + rEsc(hiddenFar
+        ? T('{km}km 안에 지금 가능한 마사지사가 없습니다.').replace('{km}', String(FAR_BLOCK_KM))
+        : T('이 지역에는 아직 마사지사가 없습니다. 다른 지역을 골라 보세요.')) + '</div>');
+  } else if (hiddenFar) {
+    notice.insertAdjacentHTML('beforebegin',
+      '<div class="hint" style="margin:6px 2px">' + rEsc(T('{km}km 밖은 방문이 어려워 {n}명을 숨겼습니다.')
+        .replace('{km}', String(FAR_BLOCK_KM)).replace('{n}', String(hiddenFar))) + '</div>');
   }
   if (window.applyLang && LANG !== 'ko') applyLang(LANG);
   screen.querySelectorAll('.bookbtn').forEach(b => b.onclick = () => {
@@ -2240,11 +2261,6 @@ function openAuth() {
   };
 }
 window.openAuth = openAuth;
-
-// 거리 기준. 프엉 중심점까지의 거리라 오차가 있으니 넉넉하게 잡았다.
-// 좁히려면 이 두 숫자만 고치면 된다.
-const FAR_WARN_KM = 15;   // 이 이상이면 물어본다
-const FAR_BLOCK_KM = 30;  // 이 이상이면 막는다 (2026-10-15, 사장님 지시로 150 → 30)
 
 // group_id 는 uuid 열이다. 아무 문자열이나 넣으면 DB 가 거절한다.
 // 구형 WebView 에 randomUUID 가 없어 직접 만드는 길을 둔다.
@@ -3739,7 +3755,9 @@ const DICT = {
   '지금 이 지역에 더 보낼 만한 테라피스트가 없습니다.': ['Hiện khu vực này không còn chuyên viên nào để gửi thêm.', 'There are no other therapists to send to in this area right now.', '目前该地区没有其他可发送的理疗师。', '現在この地域に送れるセラピストがいません。'],
   '요청': ['Gửi', 'Send', '发送', '送る'],
   '요청을 보내지 못했습니다: ': ['Không gửi được yêu cầu: ', 'Could not send the request: ', '无法发送请求：', 'リクエストを送れませんでした: '],
-  '연락처를 알려주세요': ['Cho chúng tôi biết số liên hệ', 'Please share your contact', '请提供联系方式', '連絡先を教えてください'],
+  '{km}km 안에 지금 가능한 마사지사가 없습니다.': ['Không có kỹ thuật viên nào trong bán kính {km}km.', 'No therapists available within {km}km.', '{km}公里内暂无可预约的理疗师。', '{km}km 以内に対応できるセラピストがいません。'],
+  '{km}km 밖은 방문이 어려워 {n}명을 숨겼습니다.': ['Đã ẩn {n} người ở ngoài {km}km vì khó tới nơi.', 'Hid {n} therapists beyond {km}km — they cannot travel that far.', '已隐藏 {km}公里外的 {n} 位理疗师，无法上门。', '{km}km より遠い{n}名は訪問が難しいため非表示にしました。'],
+  '연락처를 알려주세요':['Cho chúng tôi biết số liên hệ', 'Please share your contact', '请提供联系方式', '連絡先を教えてください'],
   '테라피스트가 도착해서 연락드릴 때 필요합니다.': ['Chuyên viên cần để liên hệ khi tới nơi.', 'Your therapist needs it to reach you on arrival.', '理疗师到达时需要联系您。', 'セラピストが到着時に連絡するために必要です。'],
   '이름': ['Họ tên', 'Name', '姓名', '氏名'],
   '전화번호': ['Số điện thoại', 'Phone number', '电话号码', '電話番号'],
