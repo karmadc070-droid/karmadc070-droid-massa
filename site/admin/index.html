@@ -408,7 +408,7 @@ svg{display:block;width:100%;height:auto;overflow:visible}
           <p class="note" id="roster-note"></p>
         </div>
         <div class="tools">
-          <input id="q" placeholder="이름·지역·코드로 찾기" class="find">
+          <input id="q" placeholder="이름·지역·코드·전화로 찾기" class="find">
           <select id="rtier" class="pick">
             <option value="">등급 전체</option>
             <option value="vip">우대</option>
@@ -1555,6 +1555,7 @@ function drawMembers() {
 
 const RCOLS = [
   { k: 'name',     h: '마사지사',    l: 1 },
+  { k: 'phone',    h: '연락처',      l: 1 },
   { k: 'city_name', h: '활동 지역',  l: 1 },
   { k: 'tier',     h: '등급',        l: 1 },
   { k: 'free_left', h: '남은 무료',  t: 'n' },
@@ -1566,6 +1567,18 @@ const RCOLS = [
   { k: 'credit',   h: '선입금 잔액', t: 'n' },
   { k: 'owe',      h: '미납',        t: 'n' },
 ];
+
+// 연락처. 번호는 신청서(provider_kyc.contact)에 들어가고 providers.phone 은 비어 있다 —
+// 그래서 지금까지 명단에 전화가 하나도 안 보였다. 서버 함수에서 셋 중 있는 것을 골라 준다.
+// 베트남은 같은 번호가 Zalo 계정이라 Zalo 링크도 같이 건다. 급할 때 바로 눌러야 한다.
+function phoneCell(r) {
+  const p = (r.phone || '').trim();
+  if (!p) return '<span style="color:var(--bad);font-size:12px">연락처 없음</span>';
+  const digits = p.replace(/\D/g, '');
+  return `<a href="tel:${esc(p)}" style="font-size:13px">${esc(p)}</a>
+    <div style="font-size:11px"><a href="https://zalo.me/${esc(digits)}" target="_blank"
+       rel="noopener" style="color:var(--ink-soft)">Zalo 열기</a></div>`;
+}
 
 // 신분증 앞·뒤·자격증을 작은 그림으로 늘어놓는다. 누르면 크게 뜬다.
 // 없는 서류는 숨기지 않고 '없음'이라고 적는다 — 빈 칸은 '안 받았다'와 구별이 안 된다.
@@ -1597,7 +1610,7 @@ function drawRoster() {
   const tier = $('rtier').value;
   const all = ROSTER.rows || [];
   let rows = all;
-  if (q) rows = rows.filter(r => [r.name, r.district, r.deposit_code]
+  if (q) rows = rows.filter(r => [r.name, r.district, r.deposit_code, r.phone]
     .some(v => String(v || '').toLowerCase().includes(q)));
   if (tier) rows = rows.filter(r => r.tier === tier);
   if ($('rowe').checked) rows = rows.filter(r => Number(r.owe || 0) > 0);
@@ -1631,6 +1644,7 @@ function drawRoster() {
               ${r.status === 'pending' ? ' · 심사 대기' : ''}
               ${r.pending_cnt ? ` · <b style="color:var(--amber)">확인 대기 ${r.pending_cnt}</b>` : ''}
             </div></div></div></td>
+        <td class="l">${phoneCell(r)}</td>
         <td class="l">${r.city_name ? esc(r.city_name)
             : '<span style="color:var(--bad)">지역 없음</span>'}
           <div style="font-size:11px;color:var(--ink-soft)">${r.ward_names
