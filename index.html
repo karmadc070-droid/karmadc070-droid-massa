@@ -2723,7 +2723,7 @@ window.pickLocation = function (code) {
 // 아래 openCountryPicker / renderCtry / pickCountry / loadAccount 가 전부 이걸 부르는데
 // 선언이 admin.html 에만 있어서, 고객 앱에서 국적을 고르려 하면 ReferenceError 로 죽었다.
 // 국적 데이터가 하나도 안 쌓인 진짜 이유다. admin.html 2328줄과 같은 목록을 둔다.
-const COUNTRIES = [['🇰🇷','한국','Korea'],['🇻🇳','베트남','Vietnam'],['🇺🇸','영어','English'],['🇯🇵','일본','Japan'],['🇨🇳','중국','China']];
+const COUNTRIES = [['🇰🇷','한국','Korea'],['🇻🇳','베트남','Vietnam'],['🇺🇸','미국','USA'],['🇯🇵','일본','Japan'],['🇨🇳','중국','China']];
 function countryLabel(name) { const c = COUNTRIES.find(x => x[1] === name || x[2] === name); return c ? (c[0] + ' ' + c[1]) : name; }
 
 window.openCountryPicker = function () {

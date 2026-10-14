@@ -2325,7 +2325,7 @@ window.pickLocation = function (city) {
 };
 
 // 국가 선택(스크롤 목록)
-const COUNTRIES = [['🇰🇷','한국','Korea'],['🇻🇳','베트남','Vietnam'],['🇺🇸','영어','English'],['🇯🇵','일본','Japan'],['🇨🇳','중국','China']];
+const COUNTRIES = [['🇰🇷','한국','Korea'],['🇻🇳','베트남','Vietnam'],['🇺🇸','미국','USA'],['🇯🇵','일본','Japan'],['🇨🇳','중국','China']];
 function countryLabel(name) { const c = COUNTRIES.find(x => x[1] === name || x[2] === name); return c ? (c[0] + ' ' + c[1]) : name; }
 window.openCountryPicker = function () {
   let ov = document.getElementById('ctryOv');
