@@ -2243,8 +2243,8 @@ window.openAuth = openAuth;
 
 // 거리 기준. 프엉 중심점까지의 거리라 오차가 있으니 넉넉하게 잡았다.
 // 좁히려면 이 두 숫자만 고치면 된다.
-const FAR_WARN_KM = 50;    // 이 이상이면 물어본다
-const FAR_BLOCK_KM = 150;  // 이 이상이면 막는다 — 성을 확실히 넘는 거리다
+const FAR_WARN_KM = 15;   // 이 이상이면 물어본다
+const FAR_BLOCK_KM = 30;  // 이 이상이면 막는다 (2026-10-15, 사장님 지시로 150 → 30)
 
 // group_id 는 uuid 열이다. 아무 문자열이나 넣으면 DB 가 거절한다.
 // 구형 WebView 에 randomUUID 가 없어 직접 만드는 길을 둔다.
