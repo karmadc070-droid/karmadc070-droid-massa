@@ -4470,3 +4470,12 @@ Codemagic **빌드 31** 시작. 커밋 `e46b4c5`, main, 워크플로
 - [x] 남은 무료 20/20 · 창립 N번 표시됨
 - [x] 신분증 앞·뒤·자격증 썸네일 뜨고, 눌러서 크게 보기 동작 (글자 읽힘)
 - [x] 가입자 명단 "1 / 6 쪽 · 1–10번째 (모두 51명)" + 이전·다음 동작
+
+## 99. iOS 1.0.14 빌드 — 2026-10-15 시작
+- [x] capacitor/package.json version 1.0.13 → 1.0.14
+- [x] Codemagic build #32 시작 (commit 366c1ed, branch main)
+- 담긴 것: 봇 답장 제거 · 마사지사 수락제 · 30km 숨김·차단 · 즉시 매칭 ·
+         날짜 월 표시 · 가입 직후 국적·성별 · 예약 전 연락처 · 카드 전체 클릭 ·
+         베트남어 화면의 '호치민' 수정 · 베타 문구 제거
+- [ ] TestFlight 올라오면 확인
+- [ ] App Store Connect 에서 심사 제출 (codemagic 은 submit_to_app_store: false)
