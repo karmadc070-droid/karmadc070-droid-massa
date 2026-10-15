@@ -726,14 +726,6 @@
       <span class="tsep">분</span>
       <div class="tview" id="timeView">20:00</div>
     </div>
-    <div class="label">빠른 선택</div>
-    <div class="chips">
-      <div class="chip" onclick="quickTime(10,0,this)">10:00</div>
-      <div class="chip" onclick="quickTime(14,30,this)">14:30</div>
-      <div class="chip" onclick="quickTime(17,0,this)">17:00</div>
-      <div class="chip sel" onclick="quickTime(20,0,this)">20:00</div>
-      <div class="chip" onclick="quickTime(22,30,this)">22:30</div>
-    </div>
     <button class="cta" onclick="go('loc')">다음 — 위치 입력</button>
   </div>
 
@@ -1369,11 +1361,7 @@ function updateTime() {
   const conf = document.querySelector('#confirm .summary');
   if (conf) conf.innerHTML = conf.innerHTML.replace(/\d{2}:\d{2}/, h + ':' + m);
 }
-function quickTime(h, m, el) {
-  selHour.value = h; selMin.value = m;
-  updateTime();
-  pick(el);
-}
+// quickTime 은 '빠른 선택' 칩과 함께 지웠다 (2026-10-15). 시간은 손님이 고른다.
 
 function pick(el) {
   const scope = el.closest('.screen');
@@ -2823,19 +2811,16 @@ window.openFirstMsg = function (pid, cid, bookingNo) {
   if (!pid || !cid) return;
   const ov = document.createElement('div');
   ov.style.cssText = 'position:fixed;inset:0;z-index:230;background:rgba(20,25,28,.55);display:flex;align-items:center;justify-content:center;padding:16px';
-  const draft = 'Chào bạn, mình là kỹ thuật viên của massa.\n'
-    + 'Mình đã nhận lịch ' + (bookingNo || '') + '. Mình sẽ tới đúng giờ.\n'
-    + 'Bạn cho mình hỏi lại địa chỉ và số phòng nhé?';
   ov.innerHTML = '<div style="width:340px;max-width:100%;background:#fff;border-radius:18px;padding:22px">'
     + '<div style="font-size:16px;font-weight:bold;color:#1F4E5F;margin-bottom:4px">손님에게 확인 메시지 보내기</div>'
     + '<div style="font-size:12px;color:#7A8C94;margin-bottom:12px">손님은 이 메시지를 받아야 채팅을 열 수 있습니다. 꼭 보내 주세요.</div>'
-    + '<textarea id="fmBody" style="width:100%;height:120px;border:1.5px solid #E2E8EA;border-radius:10px;padding:10px;font-size:13.5px"></textarea>'
+    + '<textarea id="fmBody" placeholder="손님에게 보낼 말을 적어 주세요" style="width:100%;height:120px;border:1.5px solid #E2E8EA;border-radius:10px;padding:10px;font-size:13.5px"></textarea>'
     + '<div id="fmMsg" style="font-size:12px;color:#B23A5B;min-height:18px;margin:4px 0"></div>'
     + '<button class="cta" id="fmSend" style="position:static;width:100%">보내기</button>'
     + '<button id="fmLater" style="width:100%;background:none;color:#7A8C94;border:none;padding:8px;font-size:13px">나중에</button>'
     + '</div>';
   document.body.appendChild(ov);
-  document.getElementById('fmBody').value = draft;
+  document.getElementById('fmBody').focus();
   document.getElementById('fmLater').onclick = () => ov.remove();
   document.getElementById('fmSend').onclick = async () => {
     const body = (document.getElementById('fmBody').value || '').trim();

@@ -416,8 +416,16 @@
   .day.sel { background: var(--navy); color: #fff; border-color: var(--navy); }
   .day .dow { display: block; font-size: 10px; color: var(--muted); }
   .day.sel .dow { color: #cfe0e5; }
-  .dmon { font-size: 10.5px; color: var(--muted); }
-  .day.sel .dmon { color: #cfe0e5; }
+  .day.off { color: #C7D0D4; border-style: dashed; cursor: default; background: #FAFBFB; }
+  .day.today { border-color: var(--navy); font-weight: bold; }
+  .day.pad { border: none; background: none; cursor: default; }
+  .calbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .calbar b { font-size: 15px; color: var(--text); }
+  .calbar button { border: 1.5px solid var(--line); background: var(--card); border-radius: 9px;
+                   width: 36px; height: 32px; font-size: 15px; cursor: pointer; color: var(--text); }
+  .calbar button:disabled { color: #C7D0D4; cursor: default; }
+  .dowhead { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 4px; }
+  .dowhead span { text-align: center; font-size: 11px; color: var(--muted); }
   .timepick { display: flex; align-items: center; gap: 8px; }
   .timepick select { width: auto; flex: 1; max-width: 110px; border: 1.5px solid var(--line); border-radius: 10px; padding: 11px 10px; font-size: 15px; font-weight: bold; text-align: center; background: var(--card); color: var(--text); }
   .tsep { font-size: 13px; color: var(--muted); }
@@ -761,21 +769,13 @@
   <div class="screen" id="time" data-title="언제 받을까요?">
     <div class="label">날짜</div>
     <div class="grid7" id="dayGrid"></div>
-    <div class="label">시작 시간 — 원하는 시간과 분을 직접 선택하세요</div>
+    <div class="label">방문 시각 — 테라피스트가 도착해 시작하는 시각입니다</div>
     <div class="timepick">
       <select id="selHour" onchange="updateTime()"></select>
       <span class="tsep">시</span>
       <select id="selMin" onchange="updateTime()"></select>
       <span class="tsep">분</span>
       <div class="tview" id="timeView">20:00</div>
-    </div>
-    <div class="label">빠른 선택</div>
-    <div class="chips">
-      <div class="chip" onclick="quickTime(10,0,this)">10:00</div>
-      <div class="chip" onclick="quickTime(14,30,this)">14:30</div>
-      <div class="chip" onclick="quickTime(17,0,this)">17:00</div>
-      <div class="chip sel" onclick="quickTime(20,0,this)">20:00</div>
-      <div class="chip" onclick="quickTime(22,30,this)">22:30</div>
     </div>
     <button class="chip" id="nowBtn" onclick="pickNow()"
             style="width:100%;padding:13px 0;margin-top:10px;font-size:14px;font-weight:bold">
@@ -1270,11 +1270,8 @@ function updateTime() {
   const conf = document.querySelector('#confirm .summary');
   if (conf) conf.innerHTML = conf.innerHTML.replace(/\d{2}:\d{2}/, h + ':' + m);
 }
-function quickTime(h, m, el) {
-  selHour.value = h; selMin.value = m;
-  updateTime();
-  pick(el);
-}
+// quickTime 은 '빠른 선택' 칩과 함께 지웠다 (2026-10-15).
+// 10시·14시반·17시·20시·22시반을 우리가 정해 둘 이유가 없다. 손님이 고른다.
 
 function pick(el) {
   const scope = el.closest('.screen');
@@ -1289,27 +1286,69 @@ function toggleKind(el) { el.classList.toggle('sel'); const box = el.parentEleme
 // 날짜 칩 — 하노이 기준 오늘부터 7일. 요일은 한국어로 넣고 번역 엔진(DICT 의 월~일)이 화면 언어로 바꾼다.
 // 칩마다 data-date(YYYY-MM-DD)를 달아 예약 저장은 화면 글자가 아니라 이 값으로 한다.
 // 이전에는 2026년 6월 6~12일이 마크업에 박혀 있어 언제 예약해도 6월 날짜로 저장됐다.
-function hanoiWeek(now) {
-  const t = new Date(now.getTime() + 7 * 3600 * 1000);   // UTC+7 (하노이는 서머타임이 없다)
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate() + i));
-    // 월도 같이 준다. 날짜만 적으면 달이 넘어가는 주에 29·30·1·2 가 나란히 떠서
-    // 손님이 몇 월인지 알 수 없다.
-    return { ymd: d.toISOString().slice(0, 10), day: d.getUTCDate(), mon: d.getUTCMonth() + 1,
-             dow: '일월화수목금토'[d.getUTCDay()] };
-  });
+// hanoiWeek 은 지웠다 — 7일짜리 가로줄을 그리던 함수다. 달력(renderDays)이 대신한다.
+// ── 날짜 고르기 — 달력 ──────────────────────────────────────
+// 7일짜리 가로줄이었다. 다음 주를 잡고 싶은 손님은 아예 예약을 못 했다.
+// 달을 넘겨 가며 고를 수 있는 달력으로 바꿨다 (2026-10-15).
+// ★ 고른 날짜의 정본은 PICKED_DATE 다. 화면의 .sel 이 아니다 —
+//   달을 넘기면 그 칸이 사라져서 선택이 날아간다.
+let PICKED_DATE = null;
+let CAL_Y = null, CAL_M = null;   // 지금 보고 있는 달 (하노이 기준, m 은 0~11)
+
+function hanoiToday() {
+  const t = new Date(Date.now() + 7 * 3600 * 1000);
+  return { y: t.getUTCFullYear(), m: t.getUTCMonth(), d: t.getUTCDate(),
+           ymd: t.toISOString().slice(0, 10) };
 }
-// 시간 화면에 들어갈 때마다 다시 그린다 — 앱을 며칠 켜 둔 채 쓰면 '오늘' 이 지나가 있다. 고른 날이 아직 범위 안이면 유지한다.
+
 function renderDays() {
-  const grid = document.getElementById('dayGrid');
-  if (!grid) return;
-  const keep = grid.querySelector('.day.sel')?.dataset.date;
-  const week = hanoiWeek(new Date());
-  const sel = week.some(w => w.ymd === keep) ? keep : week[0].ymd;
-  grid.innerHTML = week.map(w => '<div class="day' + (w.ymd === sel ? ' sel' : '') + '" data-date="' + w.ymd
-    + '" onclick="pick(this)"><span class="dow">' + w.dow + '</span>'
-    + '<span class="dmon">' + w.mon + '/</span>' + w.day + '</div>').join('');
+  const box = document.getElementById('dayGrid');
+  if (!box) return;
+  const today = hanoiToday();
+  if (!PICKED_DATE) PICKED_DATE = today.ymd;
+  if (CAL_Y == null) { CAL_Y = today.y; CAL_M = today.m; }
+
+  const first = new Date(Date.UTC(CAL_Y, CAL_M, 1));
+  const pad = first.getUTCDay();                                    // 1일 앞의 빈 칸
+  const days = new Date(Date.UTC(CAL_Y, CAL_M + 1, 0)).getUTCDate(); // 이 달의 날 수
+  const atStart = (CAL_Y === today.y && CAL_M === today.m);          // 지난 달로는 못 간다
+
+  let html = '<div class="calbar">'
+    + '<button type="button" onclick="calMove(-1)"' + (atStart ? ' disabled' : '') + '>‹</button>'
+    + '<b>' + CAL_Y + '. ' + (CAL_M + 1) + '</b>'
+    + '<button type="button" onclick="calMove(1)">›</button></div>'
+    + '<div class="dowhead">' + ['일','월','화','수','목','금','토']
+        .map(d => '<span>' + d + '</span>').join('') + '</div>'
+    + '<div class="grid7">';
+
+  for (let i = 0; i < pad; i++) html += '<div class="day pad"></div>';
+  for (let d = 1; d <= days; d++) {
+    const ymd = new Date(Date.UTC(CAL_Y, CAL_M, d)).toISOString().slice(0, 10);
+    const past = ymd < today.ymd;
+    const cls = 'day' + (past ? ' off' : '')
+      + (ymd === PICKED_DATE ? ' sel' : '')
+      + (ymd === today.ymd ? ' today' : '');
+    html += '<div class="' + cls + '" data-date="' + ymd + '"'
+      + (past ? '' : ' onclick="pickDay(this)"') + '>' + d + '</div>';
+  }
+  box.innerHTML = html + '</div>';
 }
+
+window.calMove = function (step) {
+  const t = hanoiToday();
+  let y = CAL_Y, m = CAL_M + step;
+  if (m < 0) { m = 11; y--; }
+  if (m > 11) { m = 0; y++; }
+  if (y < t.y || (y === t.y && m < t.m)) return;   // 지난 달은 보여 주지 않는다
+  CAL_Y = y; CAL_M = m;
+  renderDays();
+};
+
+window.pickDay = function (el) {
+  PICKED_DATE = el.dataset.date;
+  const box = document.getElementById('dayGrid');
+  box.querySelectorAll('.day').forEach(d => d.classList.toggle('sel', d === el));
+};
 // 지금(하노이)부터 30분 안쪽이거나 이미 지난 시각은 예약할 수 없다. 마사지사가 이동할 시간이 필요하다.
 function isBookable(iso, now) { return new Date(iso).getTime() >= now.getTime() + 30 * 60 * 1000; }
 renderDays();
@@ -1569,7 +1608,9 @@ window.pickNow = function () {
   // 하노이 기준 '지금 + 60분'. 분은 10분 단위로 올린다.
   const t = new Date(Date.now() + INSTANT_LEAD_MIN * 60000 + 7 * 3600 * 1000);
   const ymd = t.toISOString().slice(0, 10);
-  document.querySelectorAll('#time .day').forEach(d => d.classList.toggle('sel', d.dataset.date === ymd));
+  PICKED_DATE = ymd;
+  CAL_Y = t.getUTCFullYear(); CAL_M = t.getUTCMonth();   // 달이 넘어가도 그 달을 펴 준다
+  renderDays();
   const sh = document.getElementById('selHour'), sm = document.getElementById('selMin');
   if (sh) sh.value = String(t.getUTCHours()).padStart(2, '0');
   if (sm) sm.value = String(Math.floor(t.getUTCMinutes() / 10) * 10).padStart(2, '0');
@@ -1999,15 +2040,8 @@ function currentService() {
   return CACHE.services.find(s => s.massage_type === SEL.serviceType && s.duration_min === SEL.duration) || null;
 }
 
-// 날짜 칩에서 '일(날짜)' 숫자만 읽는다.
-// 요일 라벨이 번역되면 숫자가 섞일 수 있다 (베트남어 수요일 = T4 → '410' 이 되는 사고가 있었다)
-function selectedDayNum() {
-  const el = document.querySelector('#time .day.sel');
-  if (!el) return '7';
-  const dow = el.querySelector('.dow');
-  const txt = [...el.childNodes].filter(nd => nd !== dow).map(nd => nd.textContent).join('');
-  return txt.replace(/\D/g, '') || '7';
-}
+// selectedDayNum 은 지웠다 — 화면 글자에서 날짜를 긁어내던 함수다.
+// 이제 고른 날짜의 정본은 PICKED_DATE 하나다.
 
 // 예약 확인 화면의 요약을 실제 선택값으로 채운다.
 // 이전에는 마크업의 예시 값이 그대로 남아, 다른 제공자·시간·호텔을 골라도 화면이 바뀌지 않았다.
@@ -2017,9 +2051,11 @@ function fillConfirm() {
   if (!box) return;
   const svc = currentService();
   const p = SEL.provider;
-  const day = document.querySelector('#time .day.sel');
-  const dow = day ? (day.querySelector('.dow')?.textContent || '').trim() : '';
-  const dayNum = day ? selectedDayNum() : '';
+  // ★ 여기가 '06/' 으로 박혀 있었다 — 몇 월에 예약하든 확인 화면은 6월을 보여 줬다.
+  const ymd = PICKED_DATE || hanoiToday().ymd;
+  const dt = new Date(ymd + 'T00:00:00Z');
+  const dateTxt = (dt.getUTCMonth() + 1) + '/' + String(dt.getUTCDate()).padStart(2, '0');
+  const dow = '일월화수목금토'[dt.getUTCDay()];
   const time = document.getElementById('timeView')?.textContent || '';
   const hotel = (document.getElementById('locHotel')?.value || '').trim();
   const room = (document.getElementById('locRoom')?.value || '').trim();
@@ -2034,7 +2070,7 @@ function fillConfirm() {
       + (p.credential_verified ? ' ★ <span>자격 확인</span>' : '')
       + (p.rating ? ' · ★ ' + Number(p.rating).toFixed(1) : ''));
   }
-  if (dayNum) rows.push('06/' + dayNum.padStart(2, '0') + ' (<span>' + dow + '</span>) ' + time);
+  rows.push(dateTxt + ' (<span>' + dow + '</span>) ' + time);
   const place = [hotel, room].filter(Boolean).join(' · ');
   if (place) rows.push(place);
   rows.push('<b><span>예상 금액</span> ' + price.toLocaleString() + '₫</b> '
@@ -2362,7 +2398,7 @@ async function submitBooking() {
   // 예전에는 코스를 못 찾으면 850,000₫ 을 임의로 물렸다. 손님이 고르지 않은 금액이 청구된다.
   if (!svc) { alert('코스를 다시 골라 주세요. 선택하신 시간에 맞는 코스가 없습니다.'); window.go('menu'); return; }
   // 고른 칩의 실제 연-월-일(하노이)로 만든다. 칩이 없으면 하노이 오늘
-  const ymd = document.querySelector('#time .day.sel')?.dataset.date || hanoiWeek(new Date())[0].ymd;
+  const ymd = PICKED_DATE || hanoiToday().ymd;
   const time = document.getElementById('timeView')?.textContent || '20:00';
   const scheduled = new Date(`${ymd}T${time}:00+07:00`).toISOString();
   // ★ 활동 지역 밖 예약 막기 (2026-10-14)
@@ -3829,7 +3865,8 @@ const DICT = {
   '요청을 보내지 못했습니다: ': ['Không gửi được yêu cầu: ', 'Could not send the request: ', '无法发送请求：', 'リクエストを送れませんでした: '],
   '{km}km 안에 지금 가능한 마사지사가 없습니다.': ['Không có kỹ thuật viên nào trong bán kính {km}km.', 'No therapists available within {km}km.', '{km}公里内暂无可预约的理疗师。', '{km}km 以内に対応できるセラピストがいません。'],
   '{km}km 밖은 방문이 어려워 {n}명을 숨겼습니다.': ['Đã ẩn {n} người ở ngoài {km}km vì khó tới nơi.', 'Hid {n} therapists beyond {km}km — they cannot travel that far.', '已隐藏 {km}公里外的 {n} 位理疗师，无法上门。', '{km}km より遠い{n}名は訪問が難しいため非表示にしました。'],
-  '테라피스트가 먼저 연락드립니다.': ['Chuyên viên sẽ nhắn cho bạn trước.', 'Your therapist will message you first.', '理疗师会先联系您。', 'セラピストから先にご連絡します。'],
+  '방문 시각 — 테라피스트가 도착해 시작하는 시각입니다': ['Giờ tới — là lúc chuyên viên có mặt và bắt đầu', 'Arrival time — when your therapist arrives and starts', '上门时间 — 理疗师到达并开始的时间', '訪問時刻 — セラピストが到着して始める時刻'],
+  '테라피스트가 먼저 연락드립니다.':['Chuyên viên sẽ nhắn cho bạn trước.', 'Your therapist will message you first.', '理疗师会先联系您。', 'セラピストから先にご連絡します。'],
   '지금 받기 (즉시 매칭)':['Nhận ngay (ghép tự động)', 'Get it now (instant match)', '立即预约（即时匹配）', '今すぐ受ける（即時マッチ）'],
   '가까운 테라피스트 여러 명에게 한 번에 보냅니다. 먼저 수락하는 분이 갑니다.': ['Gửi cùng lúc tới nhiều chuyên viên ở gần. Ai nhận trước sẽ tới.', 'Sends to several nearby therapists at once. Whoever accepts first comes.', '同时发送给附近多位理疗师，先接受的人上门。', '近くの複数のセラピストに一度に送ります。先に承諾した方が伺います。'],
   '가까운 테라피스트 {n}명에게 한 번에 보냈습니다. 먼저 수락하는 분이 갑니다.': ['Đã gửi cùng lúc tới {n} chuyên viên ở gần. Ai nhận trước sẽ tới.', 'Sent to {n} nearby therapists at once. Whoever accepts first comes.', '已同时发送给附近 {n} 位理疗师，先接受的人上门。', '近くのセラピスト{n}名に一度に送りました。先に承諾した方が伺います。'],
