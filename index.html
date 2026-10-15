@@ -2444,13 +2444,11 @@ async function submitBooking() {
         : T('{name} 테라피스트에게 요청을 보냈습니다. 수락을 기다리는 중입니다.').replace('{name}', nm)
           + ' ' + T('10분 안에 답이 없으면 가까운 다른 테라피스트를 추천해 드립니다.');
   }
-  // 예약이 잡힌 뒤부터 담당 테라피스트와 채팅할 수 있다
+  // 채팅 버튼을 내놓지 않는다 (2026-10-15 방침).
+  // 방금 보낸 요청이라 테라피스트는 아직 수락도, 말도 하지 않았다.
+  // 테라피스트가 먼저 연락하면 '내 예약' 목록에 채팅 버튼이 생긴다.
   const chatBtn = document.getElementById('doneChatBtn');
-  if (chatBtn) {
-    const pid = data && data.provider_id;
-    chatBtn.style.display = pid ? 'block' : 'none';
-    if (pid) chatBtn.onclick = () => openChat(pid, SEL.provider?.display_name || '테라피스트');
-  }
+  if (chatBtn) chatBtn.style.display = 'none';
   window.go('done');
 }
 window.submitBooking = submitBooking;
@@ -2537,6 +2535,14 @@ async function loadMyBookings() {
   if (error) { wrap.innerHTML = `<div class="notice">불러오기 실패: ${error.message}</div>`; return; }
   empty.style.display = data.length ? 'none' : 'block';
   window.__myBookings = data;
+  // 채팅은 테라피스트가 먼저 건다 (2026-10-15 방침). 그 전에는 버튼을 내놓지 않는다.
+  // 서버도 막지만(guard_first_message), 눌러도 거절당하는 버튼을 보여 주면 안 된다.
+  let opened = new Set();
+  try {
+    const { data: oc } = await sb.rpc('chats_opened');
+    (oc || []).forEach(v => opened.add(typeof v === 'string' ? v : v.chats_opened));
+  } catch (e) { console.warn('채팅 가능 목록', e); }
+
   // 같은 묶음에서 이미 취소된(밀린) 건은 목록에서 숨긴다.
   // 손님 눈에는 요청 한 건이지 네 건이 아니다.
   const liveGroups = new Set(data.filter(x => x.group_id && x.status !== 'cancelled').map(x => x.group_id));
@@ -2545,8 +2551,9 @@ async function loadMyBookings() {
     const canCancel = ['requested', 'confirmed'].includes(b.status);
     const canReview = b.status === 'completed';
     const canPay = b.status === 'completed' && !b.is_paid;
-    // 취소된 예약이 아니고 담당 테라피스트가 정해진 건에 한해 채팅을 연다
-    const canChat = b.provider_id && b.status !== 'cancelled';
+    // 테라피스트가 먼저 말을 건 뒤에만 채팅을 연다
+    const canChat = b.provider_id && b.status !== 'cancelled' && opened.has(b.provider_id);
+    const waitChat = b.provider_id && b.status !== 'cancelled' && !opened.has(b.provider_id);
     const stColor = b.status === 'cancelled' ? '#B23A5B' : b.status === 'completed' ? '#1E6B45' : '#2E8B8B';
     const payTxt = b.is_paid ? ' · <b style="color:#1E6B45">결제완료</b>' : ' (후불)';
     return `<div class="card" style="cursor:default">
@@ -2555,6 +2562,7 @@ async function loadMyBookings() {
       <div class="d">${b.hotel_name || ''} ${b.room_number || ''} · ${b.amount_vnd.toLocaleString()}₫${payTxt}</div>
       <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
         ${canChat ? `<button class="chip sel" onclick="openChat('${b.provider_id}','${(b.providers?.display_name || '테라피스트').replace(/'/g, "\\'")}')">💬 채팅</button>` : ''}
+        ${waitChat ? `<span class="hint" style="align-self:center"><span>${T('테라피스트가 먼저 연락드립니다.')}</span></span>` : ''}
         ${canPay ? `<button class="chip sel" onclick="openPayment('${b.id}',${b.amount_vnd})">결제하기</button>` : ''}
         ${canCancel ? `<button class="chip" onclick="cancelBooking('${b.id}')">취소</button>` : ''}
         ${canReview ? `<button class="chip" onclick="openReview('${b.id}','${b.provider_id}')">리뷰 작성</button>` : ''}
@@ -3821,7 +3829,8 @@ const DICT = {
   '요청을 보내지 못했습니다: ': ['Không gửi được yêu cầu: ', 'Could not send the request: ', '无法发送请求：', 'リクエストを送れませんでした: '],
   '{km}km 안에 지금 가능한 마사지사가 없습니다.': ['Không có kỹ thuật viên nào trong bán kính {km}km.', 'No therapists available within {km}km.', '{km}公里内暂无可预约的理疗师。', '{km}km 以内に対応できるセラピストがいません。'],
   '{km}km 밖은 방문이 어려워 {n}명을 숨겼습니다.': ['Đã ẩn {n} người ở ngoài {km}km vì khó tới nơi.', 'Hid {n} therapists beyond {km}km — they cannot travel that far.', '已隐藏 {km}公里外的 {n} 位理疗师，无法上门。', '{km}km より遠い{n}名は訪問が難しいため非表示にしました。'],
-  '지금 받기 (즉시 매칭)': ['Nhận ngay (ghép tự động)', 'Get it now (instant match)', '立即预约（即时匹配）', '今すぐ受ける（即時マッチ）'],
+  '테라피스트가 먼저 연락드립니다.': ['Chuyên viên sẽ nhắn cho bạn trước.', 'Your therapist will message you first.', '理疗师会先联系您。', 'セラピストから先にご連絡します。'],
+  '지금 받기 (즉시 매칭)':['Nhận ngay (ghép tự động)', 'Get it now (instant match)', '立即预约（即时匹配）', '今すぐ受ける（即時マッチ）'],
   '가까운 테라피스트 여러 명에게 한 번에 보냅니다. 먼저 수락하는 분이 갑니다.': ['Gửi cùng lúc tới nhiều chuyên viên ở gần. Ai nhận trước sẽ tới.', 'Sends to several nearby therapists at once. Whoever accepts first comes.', '同时发送给附近多位理疗师，先接受的人上门。', '近くの複数のセラピストに一度に送ります。先に承諾した方が伺います。'],
   '가까운 테라피스트 {n}명에게 한 번에 보냈습니다. 먼저 수락하는 분이 갑니다.': ['Đã gửi cùng lúc tới {n} chuyên viên ở gần. Ai nhận trước sẽ tới.', 'Sent to {n} nearby therapists at once. Whoever accepts first comes.', '已同时发送给附近 {n} 位理疗师，先接受的人上门。', '近くのセラピスト{n}名に一度に送りました。先に承諾した方が伺います。'],
   '연락처를 알려주세요':['Cho chúng tôi biết số liên hệ', 'Please share your contact', '请提供联系方式', '連絡先を教えてください'],

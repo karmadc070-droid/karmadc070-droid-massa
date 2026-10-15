@@ -2771,14 +2771,28 @@ async function loadPartnerBookings() {
     .select('*, services(name), profiles!bookings_customer_id_fkey(full_name)')
     .order('created_at', { ascending: false }).limit(30);
   if (error) { wrap.innerHTML = `<div class="notice">불러오기 실패: ${error.message}</div>`; return; }
+  // 확인 메시지를 이미 보낸 손님. 안 보낸 예약에는 눈에 띄게 표시한다.
+  const sent = new Set();
+  try {
+    const { data: ms } = await sb.from('messages')
+      .select('provider_id, customer_id').neq('sender_role', 'customer').limit(500);
+    (ms || []).forEach(m => sent.add(m.provider_id + '|' + m.customer_id));
+  } catch (e) {}
   wrap.innerHTML = data.map(b => {
     const acts = [];
+    const needMsg = b.status === 'confirmed' && b.provider_id && b.customer_id
+                    && !sent.has(b.provider_id + '|' + b.customer_id);
     if (b.status === 'requested') { acts.push(['수락', '__accept__', 'sel']); acts.push(['거절', '__reject__', '']); }
     else if (b.status === 'confirmed') { acts.push(['완료 처리', 'completed', 'sel']); acts.push(['노쇼 처리', '__noshow__', '']); }
     return `<div class="card" style="cursor:default">
       <div class="trow1"><span class="t">${b.services?.name || '서비스'}</span><span style="color:#2E8B8B;font-weight:bold;font-size:12px">${STATUS_KO[b.status]}</span></div>
       <div class="d">${b.hotel_name || ''} ${b.room_number || ''} · ${new Date(b.scheduled_at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
       ${b.address ? `<div class="d" style="font-size:12px">📍 ${b.address}</div>` : ''}
+      ${needMsg ? `<div class="notice" style="border-color:#E8A33D;color:#8A5A14;margin:8px 0">
+          ⚠ 손님에게 확인 메시지를 아직 안 보냈습니다.
+          <button class="chip sel" style="margin-left:6px"
+            onclick="openFirstMsg('${b.provider_id}','${b.customer_id}','${b.booking_no || ''}')">지금 보내기</button>
+        </div>` : ''}
       <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">${navBtn(b)}${acts.map(a => `<button class="chip ${a[2]}" onclick="${a[1] === '__reject__' ? `openReject('${b.id}','${b.provider_id || ''}')` : a[1] === '__noshow__' ? `markNoShow('${b.id}','${b.customer_id || ''}')` : a[1] === '__accept__' ? `acceptBooking('${b.id}')` : `setBookingStatus('${b.id}','${a[1]}')`}">${a[0]}</button>`).join('')}</div>
     </div>`;
   }).join('') || '<div class="notice">예약이 없습니다.</div>';
@@ -2789,7 +2803,7 @@ window.loadPartnerBookings = loadPartnerBookings;
 // 한 손님의 같은 요청이 여러 마사지사에게 가 있을 수 있어서, 둘이 같은 순간에 누르면
 // update 로는 둘 다 확정된다. accept_booking() 이 묶음을 잠그고 한 명만 통과시킨다.
 window.acceptBooking = async (id) => {
-  const { error } = await sb.rpc('accept_booking', { p_id: id });
+  const { data, error } = await sb.rpc('accept_booking', { p_id: id });
   if (error) {
     alert(/already_taken|먼저 수락/.test(error.message || '')
       ? '다른 테라피스트가 먼저 수락했습니다.'
@@ -2797,7 +2811,41 @@ window.acceptBooking = async (id) => {
     loadPartnerBookings();
     return;
   }
+  // 수락했으면 손님에게 먼저 연락한다 (2026-10-15 방침).
+  // 손님은 '올까 안 올까'를 모른 채 기다린다. 한 줄이면 그 불안이 없어진다.
+  // 손님 쪽은 이 메시지가 가기 전까지 채팅을 열 수 없다.
+  if (data) openFirstMsg(data.provider_id, data.customer_id, data.booking_no);
   loadPartnerBookings();
+};
+
+// 수락 직후 띄우는 확인 메시지 창. 문구는 미리 채워 두고 고칠 수 있게 한다.
+window.openFirstMsg = function (pid, cid, bookingNo) {
+  if (!pid || !cid) return;
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:230;background:rgba(20,25,28,.55);display:flex;align-items:center;justify-content:center;padding:16px';
+  const draft = 'Chào bạn, mình là kỹ thuật viên của massa.\n'
+    + 'Mình đã nhận lịch ' + (bookingNo || '') + '. Mình sẽ tới đúng giờ.\n'
+    + 'Bạn cho mình hỏi lại địa chỉ và số phòng nhé?';
+  ov.innerHTML = '<div style="width:340px;max-width:100%;background:#fff;border-radius:18px;padding:22px">'
+    + '<div style="font-size:16px;font-weight:bold;color:#1F4E5F;margin-bottom:4px">손님에게 확인 메시지 보내기</div>'
+    + '<div style="font-size:12px;color:#7A8C94;margin-bottom:12px">손님은 이 메시지를 받아야 채팅을 열 수 있습니다. 꼭 보내 주세요.</div>'
+    + '<textarea id="fmBody" style="width:100%;height:120px;border:1.5px solid #E2E8EA;border-radius:10px;padding:10px;font-size:13.5px"></textarea>'
+    + '<div id="fmMsg" style="font-size:12px;color:#B23A5B;min-height:18px;margin:4px 0"></div>'
+    + '<button class="cta" id="fmSend" style="position:static;width:100%">보내기</button>'
+    + '<button id="fmLater" style="width:100%;background:none;color:#7A8C94;border:none;padding:8px;font-size:13px">나중에</button>'
+    + '</div>';
+  document.body.appendChild(ov);
+  document.getElementById('fmBody').value = draft;
+  document.getElementById('fmLater').onclick = () => ov.remove();
+  document.getElementById('fmSend').onclick = async () => {
+    const body = (document.getElementById('fmBody').value || '').trim();
+    if (!body) { document.getElementById('fmMsg').textContent = '내용을 입력해 주세요.'; return; }
+    const { error } = await sb.from('messages')
+      .insert({ provider_id: pid, customer_id: cid, sender_role: 'provider', body });
+    if (error) { document.getElementById('fmMsg').textContent = '보내지 못했습니다: ' + error.message; return; }
+    ov.remove();
+    loadPartnerBookings();
+  };
 };
 window.setBookingStatus = async (id, st) => {
   // 결과를 반드시 확인한다. RLS 가 막으면 오류 없이 0행이 바뀌고 끝나서,
