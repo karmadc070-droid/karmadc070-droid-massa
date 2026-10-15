@@ -1764,7 +1764,7 @@ async function openProfile(pid) {
   body.innerHTML = '<div class="pf-photo-wrap">' + photoHtml + '</div>'
     + '<div class="pf-name">' + p.display_name + (p.is_verified ? ' <span class="badge">✓ 인증</span>' : '') + '<span class="pf-fav" id="pfFav" onclick="toggleFavorite(\'' + pid + '\')">' + ((CACHE.favorites && CACHE.favorites.has(pid)) ? '♥' : '♡') + '</span></div>'
     + '<div class="pf-meta"><span id="pfDist" data-pid="' + pid + '">' + distText(p) + '</span><span class="star">★ ' + Number(p.rating).toFixed(1) + '</span><span>(' + p.review_count + ' 리뷰)</span></div>'
-    + '<div style="margin:10px 0"><button class="chip sel" style="width:100%;padding:11px 0;font-size:14px" onclick="openChat(\'' + pid + '\',\'' + p.display_name + '\')">💬 예약 후 채팅하기</button></div>'
+    // index.html 과 같이 뺐다 (2026-10-15) — 예약 전에는 알림만 뜨던 막다른 버튼.
     + care
     + '<div class="pf-bio">' + (p.bio || '소개가 아직 없습니다.') + '</div>'
     + contactHtml + facilityHtml + videoHtml

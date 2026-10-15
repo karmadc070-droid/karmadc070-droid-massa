@@ -1894,7 +1894,9 @@ async function openProfile(pid) {
       + ((!p.is_verified && !p.credential_verified) ? ' <span class="badge" style="background:#8A8A8A">•<span>아직 확인 전</span></span>' : '')
       + '<span class="pf-fav" id="pfFav" onclick="toggleFavorite(\'' + pid + '\')">' + ((CACHE.favorites && CACHE.favorites.has(pid)) ? '♥' : '♡') + '</span></div>'
     + '<div class="pf-meta"><span id="pfDist" data-pid="' + pid + '">' + distText(p) + '</span>' + (Number(p.review_count) > 0 ? '<span class="star">★ ' + Number(p.rating).toFixed(1) + '</span><span>(' + p.review_count + ' <span>리뷰</span>)</span>' : '<span>아직 후기 없음</span>') + '</div>'
-    + '<div style="margin:10px 0"><button class="chip sel" style="width:100%;padding:11px 0;font-size:14px" onclick="openChat(\'' + pid + '\',\'' + p.display_name + '\')">💬 예약 후 채팅하기</button></div>'
+    // '💬 예약 후 채팅하기' 버튼을 뺐다 (2026-10-15).
+    // 예약 전에는 눌러도 "예약을 완료하시면…" 알림만 떴다. 누를 수 있는데 아무 일도 안 나는
+    // 버튼은 없느니만 못하다. 채팅은 예약 완료 화면과 내 예약 목록에서 연다.
     + care
     + '<div class="pf-bio">' + (p.bio || '소개가 아직 없습니다.') + '</div>'
     + contactHtml + facilityHtml + videoHtml
