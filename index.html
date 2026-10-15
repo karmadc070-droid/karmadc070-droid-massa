@@ -2404,6 +2404,16 @@ async function submitBooking() {
   const ymd = PICKED_DATE || hanoiToday().ymd;
   const time = document.getElementById('timeView')?.textContent || '20:00';
   const scheduled = new Date(`${ymd}T${time}:00+07:00`).toISOString();
+  // 좌표가 없으면 서버가 받지 않는다 (guard_booking_distance). 여기서 먼저 안내한다 —
+  // 서버 오류를 그대로 보여 주면 손님은 무엇을 고쳐야 할지 모른다.
+  // 좌표는 거리 검사에도, 마사지사 길찾기에도 필요하다.
+  if (PLACE.lat == null || PLACE.lng == null) {
+    alert(T('지도에서 숙소·건물을 골라 주세요. 위치를 알아야 테라피스트가 찾아갑니다.'));
+    window.go('loc');
+    openPlaceSheet();
+    return;
+  }
+
   // ★ 활동 지역 밖 예약 막기 (2026-10-14)
   // 14건 중 7건이 범위 밖이었다. 하노이 마사지사가 하이퐁·람동·자라이 예약을 받고 있었다.
   // 갔을 리가 없다. 출장 마사지는 그 지역 안에서만 성립한다.
@@ -3872,6 +3882,7 @@ const DICT = {
   '요청을 보내지 못했습니다: ': ['Không gửi được yêu cầu: ', 'Could not send the request: ', '无法发送请求：', 'リクエストを送れませんでした: '],
   '{km}km 안에 지금 가능한 마사지사가 없습니다.': ['Không có kỹ thuật viên nào trong bán kính {km}km.', 'No therapists available within {km}km.', '{km}公里内暂无可预约的理疗师。', '{km}km 以内に対応できるセラピストがいません。'],
   '{km}km 밖은 방문이 어려워 {n}명을 숨겼습니다.': ['Đã ẩn {n} người ở ngoài {km}km vì khó tới nơi.', 'Hid {n} therapists beyond {km}km — they cannot travel that far.', '已隐藏 {km}公里外的 {n} 位理疗师，无法上门。', '{km}km より遠い{n}名は訪問が難しいため非表示にしました。'],
+  '지도에서 숙소·건물을 골라 주세요. 위치를 알아야 테라피스트가 찾아갑니다.': ['Vui lòng chọn nơi ở trên bản đồ. Có vị trí thì chuyên viên mới tới đúng chỗ.', 'Please pick your place on the map so your therapist can find you.', '请在地图上选择住处，理疗师才能找到您。', '地図から滞在先を選んでください。場所がわかればセラピストが伺えます。'],
   '신청 완료': ['Đã gửi yêu cầu', 'Request sent', '申请已发送', '申請完了'],
   '신청을 보냈습니다': ['Đã gửi yêu cầu của bạn', 'Your request has been sent', '已发送您的申请', 'リクエストを送りました'],
   '신청 확인': ['Xác nhận yêu cầu', 'Review request', '确认申请', '申請の確認'],
