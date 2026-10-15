@@ -807,11 +807,11 @@
       <option>테라피스트가 프론트에 문의 후 연락</option>
     </select>
     <div class="notice">🏨 호텔별 외부 방문자 정책이 다릅니다. 출입이 제한되는 호텔은 검색 단계에서 미리 안내됩니다.</div>
-    <button class="cta" onclick="fillConfirm();go('confirm')">다음 — 예약 확인</button>
+    <button class="cta" onclick="fillConfirm();go('confirm')">다음 — 신청 확인</button>
   </div>
 
   <!-- 예약 확인 (후불) -->
-  <div class="screen" id="confirm" data-title="예약 확인">
+  <div class="screen" id="confirm" data-title="신청 확인">
     <div class="summary" id="cfSummary"></div>
     <div class="label">결제 방식 — 후불 (서비스 완료 후 현장 결제)</div>
     <div class="card sel" onclick="pick(this)"><span class="t">현장 카드 결제</span><div class="d">테라피스트 휴대 단말로 Visa·Mastercard 결제</div></div>
@@ -822,10 +822,10 @@
   </div>
 
   <!-- 완료 -->
-  <div class="screen" id="done" data-title="예약 완료">
+  <div class="screen" id="done" data-title="신청 완료">
     <div class="done-wrap">
       <div class="done-ico">✓</div>
-      <div style="font-size:18px;font-weight:bold;color:var(--navy)">예약이 확정되었습니다</div>
+      <div style="font-size:18px;font-weight:bold;color:var(--navy)">신청을 보냈습니다</div>
       <!-- 윗줄은 예약할 때마다 채운다. 전에는 'Linh N. ... 6월 7일 19:40' 이 그대로 박혀 있어서
            누가 무엇을 예약하든 남의 예약 내용이 떴다. 비워 두고 submitBooking 이 채운다. -->
       <div style="font-size:13px;color:var(--muted);margin-top:8px;line-height:1.7">
@@ -853,7 +853,7 @@
     <div id="myDashBody"><div class="hint">불러오는 중…</div></div>
   </div>
 
-  <div class="screen" id="myBookings" data-title="내 예약">
+  <div class="screen" id="myBookings" data-title="내 신청·예약">
     <div id="myBookingsList"></div>
     <div class="notice" id="myBookingsEmpty" style="display:none">아직 예약이 없습니다. 홈에서 서비스를 예약해 보세요.</div>
   </div>
@@ -1064,7 +1064,7 @@ if (window.DEV_FORCED) document.body.classList.add('devmode');
 const MAIN_FLOW = ['home', 'thList', 'menu', 'time', 'loc', 'confirm', 'done'];
 const NAMES = { home: '홈', thList: '마사지 홈서비스', therapy: '홈 뷰티', spa: '스파 안내',
                 stores: '매장 리스트', storeDtl: '매장 상세', provDtl: '프로필', menu: '코스', time: '시간', loc: '위치', confirm: '확인(후불)', done: '완료',
-                myBookings: '내 예약', myDash: '내 이용 현황', applyForm: '제공자 등록',
+                myBookings: '내 신청·예약', myDash: '내 이용 현황', applyForm: '제공자 등록',
                 location: '지역 선택', account: '계정 정보', profileInfo: '개인 정보', notifications: '알림', map: '지도 검색', favorites: '즐겨찾기', coupons: '쿠폰함', chat: '채팅' };
 let stack = ['home'];
 
@@ -1447,7 +1447,8 @@ const MASSAGE_MENU = [
   ['cupping',       '오일 마사지 + 부항', '오일 마사지에 부항을 더합니다', ''],
   ['no_oil',        '오일 없는 마사지',   '옷 위로 · 오일이 부담스러운 분', ''],
 ];
-const STATUS_KO = { requested: '요청됨', confirmed: '확정', on_the_way: '이동 중', in_progress: '진행 중', completed: '완료', cancelled: '취소됨', no_show: '노쇼' };
+// 손님이 넣으면 '신청', 마사지사가 수락해야 '예약 확정' 이다 (2026-10-15).
+const STATUS_KO = { requested: '신청 (수락 대기)', confirmed: '예약 확정', on_the_way: '이동 중', in_progress: '진행 중', completed: '완료', cancelled: '취소됨', no_show: '노쇼' };
 const setStatus = (t, ok) => {
   const el = document.getElementById('dbStatus');
   el.textContent = t;
@@ -3604,7 +3605,7 @@ async function openMenu() {
   const roleLabel = isAdmin ? ' · 앱 관리자' : (role === 'reviewer' ? ' · 등록 심사 관리자' : '');
   const items = [
     SESSION ? ['로그아웃', 'logout'] : ['로그인 / 회원가입', 'login'],
-    ['내 예약', 'myBookings'],
+    ['내 신청·예약', 'myBookings'],
     ['홈 뷰티 등록 신청', 'applyForm'],
   ];
   const ov = document.getElementById('menuOv') || (() => {
@@ -3642,6 +3643,10 @@ const TITLE_I18N = {
   '스파 안내': ['Spa','Spa','水疗','スパ'], '매장 찾기': ['Tìm cửa hàng','Find Stores','找店铺','店舗を探す'], '매장 상세': ['Cửa hàng','Store','店铺','店舗'],
   '프로필': ['Hồ sơ','Profile','个人资料','プロフィール'], '코스 선택': ['Chọn liệu trình','Choose Course','选择套餐','コース選択'], '언제 받을까요?': ['Chọn thời gian','Pick a time','选择时间','時間を選ぶ'],
   '어디로 갈까요?': ['Địa điểm','Location','选择地点','場所'], '예약 확인': ['Xác nhận đặt chỗ','Confirm','确认预约','予約確認'], '예약 완료': ['Hoàn tất','Completed','预约完成','予約完了'],
+  // 손님이 넣으면 '신청', 마사지사가 수락해야 '예약' 이다 (2026-10-15).
+  '신청 확인': ['Xác nhận yêu cầu','Review request','确认申请','申請の確認'],
+  '신청 완료': ['Đã gửi yêu cầu','Request sent','申请已发送','申請完了'],
+  '내 신청·예약': ['Yêu cầu & lịch của tôi','My requests & bookings','我的申请与预约','申請・予約'],
   '내 예약': ['Đặt chỗ của tôi','My Bookings','我的预约','マイ予約'], '내 이용 현황': ['Hoạt động của tôi','My Activity','我的使用情况','利用状況'], '홈 뷰티 등록 신청': ['Đăng ký Home Beauty','Beauty Registration','美容入驻申请','ビューティー登録'],
   '예약 관리 (파트너)': ['Quản lý đặt chỗ','Manage Bookings','预约管理','予約管理'], '홈 뷰티 신청 (관리자)': ['Duyệt đăng ký','Approvals','入驻审核','登録審査'],
   '즐겨찾기': ['Yêu thích','Favorites','收藏','お気に入り'], '쿠폰함': ['Ví coupon','Coupons','优惠券','クーポン'], '내 입금 현황': ['Khoản phải nộp','My Payments','我的应缴','入金状況'],
@@ -3867,7 +3872,14 @@ const DICT = {
   '요청을 보내지 못했습니다: ': ['Không gửi được yêu cầu: ', 'Could not send the request: ', '无法发送请求：', 'リクエストを送れませんでした: '],
   '{km}km 안에 지금 가능한 마사지사가 없습니다.': ['Không có kỹ thuật viên nào trong bán kính {km}km.', 'No therapists available within {km}km.', '{km}公里内暂无可预约的理疗师。', '{km}km 以内に対応できるセラピストがいません。'],
   '{km}km 밖은 방문이 어려워 {n}명을 숨겼습니다.': ['Đã ẩn {n} người ở ngoài {km}km vì khó tới nơi.', 'Hid {n} therapists beyond {km}km — they cannot travel that far.', '已隐藏 {km}公里外的 {n} 位理疗师，无法上门。', '{km}km より遠い{n}名は訪問が難しいため非表示にしました。'],
-  '방문 시각 — 테라피스트가 도착해 시작하는 시각입니다': ['Giờ tới — là lúc chuyên viên có mặt và bắt đầu', 'Arrival time — when your therapist arrives and starts', '上门时间 — 理疗师到达并开始的时间', '訪問時刻 — セラピストが到着して始める時刻'],
+  '신청 완료': ['Đã gửi yêu cầu', 'Request sent', '申请已发送', '申請完了'],
+  '신청을 보냈습니다': ['Đã gửi yêu cầu của bạn', 'Your request has been sent', '已发送您的申请', 'リクエストを送りました'],
+  '신청 확인': ['Xác nhận yêu cầu', 'Review request', '确认申请', '申請の確認'],
+  '다음 — 신청 확인': ['Tiếp — Xác nhận yêu cầu', 'Next — Review request', '下一步 — 确认申请', '次へ — 申請の確認'],
+  '내 신청·예약': ['Yêu cầu & lịch của tôi', 'My requests & bookings', '我的申请与预约', '申請・予約'],
+  '신청 (수락 대기)': ['Đã gửi (chờ nhận)', 'Sent (awaiting accept)', '已申请（等待接受）', '申請（承諾待ち）'],
+  '예약 확정': ['Đã xác nhận', 'Confirmed', '已确认', '予約確定'],
+  '방문 시각 — 테라피스트가 도착해 시작하는 시각입니다':['Giờ tới — là lúc chuyên viên có mặt và bắt đầu', 'Arrival time — when your therapist arrives and starts', '上门时间 — 理疗师到达并开始的时间', '訪問時刻 — セラピストが到着して始める時刻'],
   '테라피스트가 먼저 연락드립니다.':['Chuyên viên sẽ nhắn cho bạn trước.', 'Your therapist will message you first.', '理疗师会先联系您。', 'セラピストから先にご連絡します。'],
   '지금 받기 (즉시 매칭)':['Nhận ngay (ghép tự động)', 'Get it now (instant match)', '立即预约（即时匹配）', '今すぐ受ける（即時マッチ）'],
   '가까운 테라피스트 여러 명에게 한 번에 보냅니다. 먼저 수락하는 분이 갑니다.': ['Gửi cùng lúc tới nhiều chuyên viên ở gần. Ai nhận trước sẽ tới.', 'Sends to several nearby therapists at once. Whoever accepts first comes.', '同时发送给附近多位理疗师，先接受的人上门。', '近くの複数のセラピストに一度に送ります。先に承諾した方が伺います。'],

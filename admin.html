@@ -754,7 +754,7 @@
   </div>
 
   <!-- 예약 확인 (후불) -->
-  <div class="screen" id="confirm" data-title="예약 확인">
+  <div class="screen" id="confirm" data-title="신청 확인">
     <div class="summary">
       <b>아로마테라피 90분</b><br>
       Linh N. ✓ 인증 테라피스트 · ★ 5.0<br>
@@ -771,10 +771,10 @@
   </div>
 
   <!-- 완료 -->
-  <div class="screen" id="done" data-title="예약 완료">
+  <div class="screen" id="done" data-title="신청 완료">
     <div class="done-wrap">
       <div class="done-ico">✓</div>
-      <div style="font-size:18px;font-weight:bold;color:var(--navy)">예약이 확정되었습니다</div>
+      <div style="font-size:18px;font-weight:bold;color:var(--navy)">신청을 보냈습니다</div>
       <div style="font-size:13px;color:var(--muted);margin-top:8px;line-height:1.7">
         Linh N. 테라피스트가 6월 7일(일) 19:40에 출발합니다.<br>
         출발·도착 시 푸시 알림을 보내드립니다.
@@ -796,7 +796,7 @@
   </div>
 
   <!-- 내 예약 -->
-  <div class="screen" id="myBookings" data-title="내 예약">
+  <div class="screen" id="myBookings" data-title="내 신청·예약">
     <div id="myBookingsList"></div>
     <div class="notice" id="myBookingsEmpty" style="display:none">아직 예약이 없습니다. 홈에서 서비스를 예약해 보세요.</div>
   </div>
@@ -1201,7 +1201,7 @@ if (window.DEV_FORCED) document.body.classList.add('devmode');
 const MAIN_FLOW = ['home', 'thList', 'menu', 'time', 'loc', 'confirm', 'done'];
 const NAMES = { home: '홈', thList: '마사지 홈서비스', therapy: '홈 뷰티', spa: '스파 안내',
                 stores: '매장 리스트', storeDtl: '매장 상세', provDtl: '프로필', menu: '코스', time: '시간', loc: '위치', confirm: '확인(후불)', done: '완료',
-                myBookings: '내 예약', applyForm: '제공자 등록', partnerBookings: '예약 관리', partnerDash: '내 현황', adminApps: '관리자 승인',
+                myBookings: '내 신청·예약', applyForm: '제공자 등록', partnerBookings: '예약 관리', partnerDash: '내 현황', adminApps: '관리자 승인',
                 location: '지역 선택', account: '계정 정보', profileInfo: '개인 정보', notifications: '알림', map: '지도 검색', favorites: '즐겨찾기', coupons: '쿠폰함', adminStats: '관리자 통계', adminReports: '신고 관리', adminMembers: '회원 관리', partnerRevenue: '매출 관리', partnerSchedule: '스케줄 관리', chat: '채팅', partnerEvents: '이벤트 관리', adminSettlement: '정산 관리', adminAds: '광고 관리', partnerStaff: '직원 관리' };
 // 운영 콘솔은 계정(운영 메뉴) 화면에서 시작한다
 let stack = ['account'];
@@ -1456,7 +1456,8 @@ sb.auth.onAuthStateChange((event) => {
 const RESET_REDIRECT = new URL('reset.html', location.href).href;
 
 const TYPE_KO = { aroma: '아로마', swedish: '스웨디시', thai: '타이', deep_tissue: '딥티슈', nail: '네일', wax: '왁싱', exfoliation: '각질 제거' };
-const STATUS_KO = { requested: '요청됨', confirmed: '확정', on_the_way: '이동 중', in_progress: '진행 중', completed: '완료', cancelled: '취소됨', no_show: '노쇼' };
+// 손님이 넣으면 '신청', 마사지사가 수락해야 '예약 확정' 이다 (2026-10-15).
+const STATUS_KO = { requested: '신청 (수락 대기)', confirmed: '예약 확정', on_the_way: '이동 중', in_progress: '진행 중', completed: '완료', cancelled: '취소됨', no_show: '노쇼' };
 const setStatus = (t, ok) => {
   const el = document.getElementById('dbStatus');
   el.textContent = t;
@@ -4513,7 +4514,7 @@ async function openMenu() {
   const roleLabel = isAdmin ? ' · 앱 관리자' : (role === 'reviewer' ? ' · 등록 심사 관리자' : '');
   const items = [
     SESSION ? ['로그아웃', 'logout'] : ['로그인 / 회원가입', 'login'],
-    ['내 예약', 'myBookings'],
+    ['내 신청·예약', 'myBookings'],
     ['홈 뷰티 등록 신청', 'applyForm'],
     ['예약 관리 (파트너)', 'partnerBookings'],
   ];
