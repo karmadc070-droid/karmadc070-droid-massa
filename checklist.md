@@ -4510,3 +4510,10 @@ Codemagic **빌드 31** 시작. 커밋 `e46b4c5`, main, 워크플로
 - [x] 앱에서도 먼저 안내 (서버 오류를 그대로 보여 주지 않게)
 - [x] 알림 문구 '새 신청이 들어왔습니다 — 수락해 주세요' 로
 - [ ] 프엉 빈 마사지사 5명 — 성 중심점이라 30km 에 걸릴 수 있다
+
+## 104. 거리 상한 50km + iOS 1.0.15 — 2026-10-16
+- [x] app_settings.booking.far_block_km = 50 (서버)
+- [x] index.html FAR_BLOCK_KM 30 → 50, FAR_WARN_KM 15 → 25
+      ★ 서버와 같은 숫자여야 한다. 다르면 앱은 보여 주는데 서버가 거부한다.
+- [x] capacitor/package.json 1.0.14 → 1.0.15
+- [ ] Codemagic 빌드 · TestFlight · 심사 제출

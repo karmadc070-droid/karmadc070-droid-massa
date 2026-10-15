@@ -1624,8 +1624,10 @@ window.pickNow = function () {
 // 거리 기준 (km). 프엉 중심점까지 재는 값이라 오차가 있다.
 // 목록 숨김과 예약 차단이 같은 숫자를 쓴다 — 안 보이는 사람을 예약할 길이 없어야 한다.
 // ★ fillList 가 쓰므로 그 앞에 둔다.
-const FAR_WARN_KM = 15;   // 이 이상이면 예약 전에 물어본다
-const FAR_BLOCK_KM = 30;  // 이 이상이면 목록에서 숨기고 예약도 막는다 (2026-10-15)
+// ★ 서버(app_settings.booking.far_block_km)와 같은 숫자를 써야 한다.
+//   다르면 앱은 보여 주는데 서버가 거부하는, 손님이 이유를 모르는 상황이 된다.
+const FAR_WARN_KM = 25;   // 이 이상이면 신청 전에 물어본다
+const FAR_BLOCK_KM = 50;  // 이 이상이면 목록에서 숨기고 신청도 막는다 (2026-10-16, 30 → 50)
 
 function haversineKm(la1, ln1, la2, ln2) {
   const R = 6371, rad = Math.PI / 180;
