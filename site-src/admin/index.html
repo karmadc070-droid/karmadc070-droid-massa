@@ -439,11 +439,6 @@ svg{display:block;width:100%;height:auto;overflow:visible}
             <option value="업체">업체</option>
           </select>
           <label class="chk"><input type="checkbox" id="mbk">예약해 본 사람만</label>
-          <select id="mper" class="pick" title="한 쪽에 보일 인원">
-            <option value="10">10명씩</option>
-            <option value="30">30명씩</option>
-            <option value="50">50명씩</option>
-          </select>
         </div>
       </div>
       <div id="members"></div>
@@ -797,6 +792,52 @@ function thead(tbl, cols, tail) {
     + (tail ? '<th></th>' : '') + '</tr></thead>';
 }
 
+// ── 쪽 나누기 (표들이 같이 쓴다) ────────────────────────────
+// 가입자 명단에만 넣었던 것을 함수로 뺐다 (2026-10-16).
+// 표마다 같은 코드를 베끼면 한 곳 고칠 때 나머지를 빼먹는다.
+const PAGE = {};                       // 표 이름 → { page, per }
+const PAGE_DRAW = {};                  // 표 이름 → 다시 그리는 함수
+function pageOf(key, rows) {
+  const st = PAGE[key] || (PAGE[key] = { page: 1, per: 10 });
+  const pages = Math.max(1, Math.ceil(rows.length / st.per));
+  if (st.page > pages) st.page = pages;     // 거르고 나니 그 쪽이 사라진 경우
+  const from = (st.page - 1) * st.per;
+  return { rows: rows.slice(from, from + st.per), page: st.page, pages,
+           from, total: rows.length, per: st.per };
+}
+function pageBar(key, p) {
+  if (p.pages < 2 && p.total <= 10) return '';   // 적으면 군더더기만 된다
+  const opts = [10, 30, 50].map(n =>
+    `<option value="${n}"${n === p.per ? ' selected' : ''}>${n}개씩</option>`).join('');
+  return `<div style="display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap">
+      <button class="mini" ${p.page <= 1 ? 'disabled' : ''} data-pg="${key}:${p.page - 1}">‹ 이전</button>
+      <span class="note" style="margin:0"><b>${p.page}</b> / ${p.pages} 쪽 ·
+        ${num(p.from + 1)}–${num(p.from + p.rows.length)}번째 (모두 ${num(p.total)}건)</span>
+      <button class="mini" ${p.page >= p.pages ? 'disabled' : ''} data-pg="${key}:${p.page + 1}">다음 ›</button>
+      <select class="pick" data-pgper="${key}" style="margin-left:auto">${opts}</select>
+    </div>`;
+}
+// 찾기·거르개를 바꾸면 1쪽으로 돌아간다. 3쪽을 보던 중에 거르면 빈 화면이 뜬다.
+function pageReset(key) { if (PAGE[key]) PAGE[key].page = 1; }
+
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-pg]');
+  if (!b || b.disabled) return;
+  const [key, n] = b.dataset.pg.split(':');
+  if (!PAGE[key]) return;
+  // 다시 그리면 버튼이 사라진다. 올라갈 자리를 미리 잡아 둔다.
+  const sec = b.closest('section, .card');
+  PAGE[key].page = Number(n) || 1;
+  (PAGE_DRAW[key] || (() => {}))();
+  if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+document.addEventListener('change', (e) => {
+  const s = e.target.closest('[data-pgper]');
+  if (!s) return;
+  const key = s.dataset.pgper;
+  if (PAGE[key]) { PAGE[key].per = Number(s.value) || 10; PAGE[key].page = 1; (PAGE_DRAW[key] || (() => {}))(); }
+});
+
 function sortRows(tbl, rows, cols) {
   const s = SORT[tbl];
   if (!s || !s.key) return rows;
@@ -821,6 +862,7 @@ document.addEventListener('click', (e) => {
   if (!th) return;
   const t = th.dataset.tbl, k = th.dataset.k, s = SORT[t] || {};
   SORT[t] = { key: k, dir: s.key === k ? -s.dir : 1 };
+  pageReset(t);   // 정렬이 바뀌면 3쪽에 있던 줄이 1쪽으로 온다
   ({ members: drawMembers, roster: drawRoster, traffic: drawTraffic, bk: drawBk })[t]();
 });
 
@@ -849,7 +891,8 @@ function drawPrices() {
   const rows = PRICES.slice().sort((a, b) =>
     (b.pending_vnd / b.base_vnd) - (a.pending_vnd / a.base_vnd));
 
-  $('price').innerHTML = rows.map(r => {
+  const pg = pageOf('price', rows);
+  $('price').innerHTML = pg.rows.map(r => {
     const up = Math.round((r.pending_vnd / r.base_vnd - 1) * 100);
     const now = r.current_vnd != null ? vnd(r.current_vnd) : '기본가 ' + vnd(r.base_vnd);
     const near = r.cap_vnd && r.pending_vnd >= r.cap_vnd * 0.9;
@@ -863,6 +906,7 @@ function drawPrices() {
         <button class="btn-no" data-pno="${esc(r.provider_id)}" data-psvc2="${esc(r.service_id)}">반려</button>
       </div></div>`;
   }).join('');
+  $('price').insertAdjacentHTML('beforeend', pageBar('price', pg));
 }
 
 async function reviewPrice(pid, sid, ok) {
@@ -930,7 +974,8 @@ function drawFraud() {
     + `<br>점수는 '한번 봐야 할 것' 을 고르는 기준일 뿐입니다. 판단은 직접 해 주세요.`;
   if (!rows.length) { $('fraud').innerHTML = '<div class="empty">눈에 띄는 예약이 없습니다.</div>'; return; }
 
-  $('fraud').innerHTML = rows.slice(0, 50).map(f => {
+  const pg = pageOf('fraud', rows);
+  $('fraud').innerHTML = pg.rows.map(f => {
     const b = f.b;
     const t = f.score >= 70 ? ['높음', 'var(--bad)'] : f.score >= 55 ? ['중간', 'var(--amber)'] : ['낮음', 'var(--ink-soft)'];
     return `<div class="apc">
@@ -941,6 +986,7 @@ function drawFraud() {
       <div class="meta" style="color:var(--bad)">${esc(f.why.join(' · '))}</div>
     </div>`;
   }).join('');
+  $('fraud').insertAdjacentHTML('beforeend', pageBar('fraud', pg));
 }
 
 // ── 쿠폰 ─────────────────────────────────────
@@ -964,10 +1010,11 @@ function drawCps() {
   if (!CPS.length) { $('cp').innerHTML = ''; return; }
 
   const d = (v) => v ? new Date(v).toLocaleDateString('ko-KR', { timeZone: TZ, month:'2-digit', day:'2-digit' }) : '-';
+  const pg = pageOf('cp', CPS);
   $('cp').innerHTML = '<div class="scroll"><table class="tbl"><thead><tr>'
     + ['이름','코드','할인','상태','발행'].map((h, i) => `<th class="${i < 3 ? 'l' : ''}">${esc(h)}</th>`).join('')
     + '<th></th></tr></thead><tbody>'
-    + CPS.map(c => `<tr>
+    + pg.rows.map(c => `<tr>
         <td class="l" style="font-weight:600">${esc(c.title)}</td>
         <td class="l" style="font-family:monospace;font-size:12px">${esc(c.code || '-')}</td>
         <td class="l"><b style="color:var(--amber)">${c.discount_type === 'percent'
@@ -978,6 +1025,7 @@ function drawCps() {
         <td><button class="mini" data-cptog="${esc(c.id)}" data-on="${c.is_active ? '1' : ''}">
           ${c.is_active ? '멈추기' : '다시 쓰기'}</button></td>
       </tr>`).join('') + '</tbody></table></div>';
+  $('cp').insertAdjacentHTML('beforeend', pageBar('cp', pg));
 }
 
 document.addEventListener('click', async (e) => {
@@ -1060,7 +1108,8 @@ function drawReps() {
 
   if (!rows.length) { $('rep').innerHTML = '<div class="empty">해당하는 신고가 없습니다.</div>'; return; }
 
-  $('rep').innerHTML = rows.map(r => {
+  const pg = pageOf('rep', rows);
+  $('rep').innerHTML = pg.rows.map(r => {
     const st = REP_ST[r.status] || [r.status, 'var(--ink-soft)'];
     return `<div class="apc">
       <h4>${esc(r.target_name || '대상 미상')}
@@ -1074,6 +1123,7 @@ function drawReps() {
         : ''}
     </div>`;
   }).join('');
+  $('rep').insertAdjacentHTML('beforeend', pageBar('rep', pg));
 }
 
 async function resolveReport(id, targetId, name) {
@@ -1219,9 +1269,10 @@ function drawBk() {
   const dt = (v) => v ? new Date(v).toLocaleString('ko-KR',
     { timeZone: TZ, month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : '-';
 
+  const pg = pageOf('bk', rows);
   $('bk').innerHTML = '<div class="scroll"><table class="tbl">'
     + thead('bk', BCOLS, true)
-    + '<tbody>' + rows.map(b => {
+    + '<tbody>' + pg.rows.map(b => {
       const st = BK_ST[b.status] || [b.status, 'var(--ink-soft)'];
       const done = b.status === 'completed', canc = b.status === 'cancelled';
       return `<tr>
@@ -1251,6 +1302,7 @@ function drawBk() {
         </div></td>
       </tr>`;
     }).join('') + '</tbody></table></div>';
+  $('bk').insertAdjacentHTML('beforeend', pageBar('bk', pg));
 }
 
 async function setBooking(id, status) {
@@ -1452,9 +1504,10 @@ function drawTraffic() {
   rows = sortRows('traffic', rows, TCOLS);
   if (!rows.length) { $('traffic-tbl').innerHTML = '<div class="empty">해당하는 날이 없습니다.</div>'; return; }
 
+  const pg = pageOf('traffic', rows);
   $('traffic-tbl').innerHTML = '<div class="scroll"><table class="tbl">'
     + thead('traffic', TCOLS)
-    + '<tbody>' + rows.map(r => `<tr>
+    + '<tbody>' + pg.rows.map(r => `<tr>
         <td class="l">${esc(r.k)}</td>
         <td>${num(Number(r.v_cust||0) + Number(r.v_prov||0) + Number(r.v_anon||0))}</td>
         <td>${num(r.v_cust)}</td>
@@ -1463,12 +1516,12 @@ function drawTraffic() {
         <td>${num(r.newbies)}</td>
         <td>${num(r.signups)}</td>
       </tr>`).join('') + '</tbody></table></div>';
+  $('traffic-tbl').insertAdjacentHTML('beforeend', pageBar('traffic', pg));
 }
 
 // ── 가입자 명단 ──────────────────────────────
 // 전화번호·이메일이 들어 있다. 화면 밖으로 새지 않도록 다른 곳에 쓰지 않는다.
 let MEMBERS = null;
-let MPAGE = 1;   // 지금 보고 있는 쪽
 async function loadMembers() {
   const box = $('members'); box.innerHTML = '<div class="empty">불러오는 중…</div>';
   const { data, error } = await sb.rpc('admin_member_list');
@@ -1514,19 +1567,12 @@ function drawMembers() {
     $('mpage').innerHTML = ''; return;
   }
 
-  // ── 쪽 나누기 ──
-  // 51명이고 계속 는다. 전부 그려 놓고 끌어내리게 하지 않는다.
-  // 거르개·정렬을 바꾸면 1쪽으로 돌아간다. 2쪽을 보다 거르면 빈 화면이 뜨기 때문이다.
-  const per = Number($('mper').value) || 10;
-  const pages = Math.max(1, Math.ceil(rows.length / per));
-  if (MPAGE > pages) MPAGE = pages;
-  const from = (MPAGE - 1) * per;
-  const pageRows = rows.slice(from, from + per);
-
+  // 쪽 나누기는 다른 표들과 같은 helper 를 쓴다 (2026-10-16).
+  const pg = pageOf('members', rows);
   const d = (v) => v ? new Date(v).toLocaleDateString('ko-KR', { timeZone: TZ, month: '2-digit', day: '2-digit' }) : '-';
   $('members').innerHTML = '<div class="scroll"><table class="tbl">'
     + thead('members', MCOLS)
-    + '<tbody>' + pageRows.map(r => {
+    + '<tbody>' + pg.rows.map(r => {
       const blocked = r.blocked_until && new Date(r.blocked_until) > new Date();
       return `<tr>
         <td class="l"><div style="font-weight:600">${esc(r.full_name || '(이름 없음)')}</div>
@@ -1546,15 +1592,7 @@ function drawMembers() {
       </tr>`;
     }).join('') + '</tbody></table></div>';
 
-  $('mpage').innerHTML = pages < 2
-    ? `<div class="note" style="margin-top:8px">${num(rows.length)}명 전부 보고 있습니다.</div>`
-    : `<div style="display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap">
-        <button class="mini" ${MPAGE <= 1 ? 'disabled' : ''} data-mpage="${MPAGE - 1}">‹ 이전</button>
-        <span class="note" style="margin:0">
-          <b>${MPAGE}</b> / ${pages} 쪽 · ${num(from + 1)}–${num(from + pageRows.length)}번째
-          (모두 ${num(rows.length)}명)</span>
-        <button class="mini" ${MPAGE >= pages ? 'disabled' : ''} data-mpage="${MPAGE + 1}">다음 ›</button>
-      </div>`;
+  $('mpage').innerHTML = pageBar('members', pg);
 }
 
 const RCOLS = [
@@ -1633,9 +1671,10 @@ function drawRoster() {
 
   if (!rows.length) { $('roster').innerHTML = '<div class="empty">해당하는 사람이 없습니다.</div>'; return; }
 
+  const pg = pageOf('roster', rows);
   $('roster').innerHTML = '<div class="scroll"><table class="tbl">'
     + thead('roster', RCOLS, true)
-    + '<tbody>' + rows.map(r => {
+    + '<tbody>' + pg.rows.map(r => {
       const owe = Number(r.owe || 0), cred = Number(r.credit || 0);
       return `<tr>
         <td class="l"><div class="who">${r.photo_url
@@ -1679,6 +1718,7 @@ function drawRoster() {
         </div></td>
       </tr>`;
     }).join('') + '</tbody></table></div>';
+  $('roster').insertAdjacentHTML('beforeend', pageBar('roster', pg));
 }
 
 // ── 마사지사 인증 · 제재 · 노출 · 등급 ─────────────
@@ -1902,28 +1942,31 @@ $('tabs').onclick = (e) => {
   STATE = { bucket: b.dataset.b, periods: Number(b.dataset.n) };
   loadData();
 };
-$('q').oninput = drawRoster;
-// 거르개·찾기·인원수를 바꾸면 1쪽으로 돌아간다.
+// 쪽 나누기를 쓰는 표들. 이전·다음 단추가 이 짝을 보고 다시 그린다.
+PAGE_DRAW.members = drawMembers;
+PAGE_DRAW.roster  = drawRoster;
+PAGE_DRAW.rep     = drawReps;
+PAGE_DRAW.bk      = drawBk;
+PAGE_DRAW.price   = drawPrices;
+PAGE_DRAW.fraud   = drawFraud;
+PAGE_DRAW.cp      = drawCps;
+PAGE_DRAW.traffic = drawTraffic;
+
+// 거르개·찾기를 바꾸면 1쪽으로 돌아간다.
 // 3쪽을 보던 중에 거르면 아무것도 없는 쪽이 뜬다.
-const backToFirst = () => { MPAGE = 1; drawMembers(); };
-$('mq').oninput = backToFirst;
-$('mper').onchange = backToFirst;
-document.addEventListener('click', (e) => {
-  const b = e.target.closest('[data-mpage]');
-  if (!b || b.disabled) return;
-  MPAGE = Number(b.dataset.mpage) || 1;
-  drawMembers();
-  document.getElementById('s-members').scrollIntoView({ behavior: 'smooth', block: 'start' });
-});
-['rtier', 'rowe', 'rpend', 'rlate'].forEach(id => $(id).onchange = drawRoster);
-['mtype', 'mbk'].forEach(id => $(id).onchange = backToFirst);
+const refilter = (key) => () => { pageReset(key); PAGE_DRAW[key](); };
+
+$('q').oninput = refilter('roster');
+['rtier', 'rowe', 'rpend', 'rlate'].forEach(id => $(id).onchange = refilter('roster'));
+$('mq').oninput = refilter('members');
+['mtype', 'mbk'].forEach(id => $(id).onchange = refilter('members'));
 ['apsort', 'apok'].forEach(id => $(id).onchange = drawApps);
-['bkst', 'bkcity', 'bkunpaid', 'bknone', 'bkout'].forEach(id => $(id).onchange = drawBk);
-$('bkq').oninput = drawBk;
-$('repst').onchange = drawReps;
-$('repq').oninput = drawReps;
-$('frlv').onchange = drawFraud;
-$('tzero').onchange = drawTraffic;
+['bkst', 'bkcity', 'bkunpaid', 'bknone', 'bkout'].forEach(id => $(id).onchange = refilter('bk'));
+$('bkq').oninput = refilter('bk');
+$('repst').onchange = refilter('rep');
+$('repq').oninput = refilter('rep');
+$('frlv').onchange = refilter('fraud');
+$('tzero').onchange = refilter('traffic');
 $('rf').onclick = () => { loadData(); loadRoster(); loadMembers(); loadApps();
                           loadBk(); loadReps(); loadPrices(); loadFraud(); loadCps(); };
 $('out').onclick = async () => { await sb.auth.signOut(); location.reload(); };
