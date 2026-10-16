@@ -189,7 +189,10 @@ def chrome(lang, name, L, body, page):
     alts = "".join(
         f'<link rel="alternate" hreflang="{l}" href="{SITE}{url(l,name)}">' for l in LANGS
     ) + f'<link rel="alternate" hreflang="x-default" href="{SITE}{url("ko",name)}">'
-    verify = '<meta name="msvalidate.01" content="0B78D4CC15B1549A5F90A122DD123EAC">' if (lang=="ko" and name=="index") else ""
+    # 검색엔진 소유 확인 메타. 루트(massaviet.com = ko/index)만 보므로 거기에만 넣는다.
+    verify = ('<meta name="msvalidate.01" content="0B78D4CC15B1549A5F90A122DD123EAC">'
+              '<meta name="naver-site-verification" content="8b5230440cfac17b5ac2953976ea3b080f095706">'
+              ) if (lang=="ko" and name=="index") else ""
     # 손님 대부분이 베트남 분들인데 루트(massaviet.com)는 한국어다. 처음 들어온 사람을
     # 자기 언어로 보내 준다. 한국어 기기는 그대로 두고, 영어 기기는 /en/, 나머지는 전부 /vi/.
     #
@@ -454,7 +457,12 @@ def build():
         "# 관리자 화면은 색인할 이유가 없다 (보안 장치는 아니다 — 권한은 DB 가 본다)\n"
         "Disallow: /admin/\n\nSitemap: https://massaviet.com/sitemap.xml\n")
 
-    print(f"HTML {len(written)}개 + admin + sitemap + robots 생성")
+    # 네이버 소유확인 파일. 메타태그 방식과 둘 다 깔아 둔다 — 네이버가 어느 쪽을 보든 통과한다.
+    # 내용은 파일 이름(확장자 제외)이어야 한다.
+    nv = "naver107fcbfe0e4530f07911cbc3e3f54337"
+    open(f"{OUT}/{nv}.html", "w", encoding="utf-8", newline="\n").write(nv)
+
+    print(f"HTML {len(written)}개 + admin + sitemap + robots + 네이버 확인파일 생성")
     return written
 
 if __name__ == "__main__":
