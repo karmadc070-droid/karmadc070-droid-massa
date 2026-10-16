@@ -1,6 +1,6 @@
 {
   "routes": [
     { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "https://app.massaviet.com/$1" }
+    { "src": "/(.*)", "status": 301, "headers": { "Location": "https://app.massaviet.com/$1" } }
   ]
 }
