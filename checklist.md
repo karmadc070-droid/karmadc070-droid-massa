@@ -4603,3 +4603,4 @@ iOS 를 지금 따로 올리지 않고, 안드로이드 1.1.101 심사 결과를
 - [ ] 테라피스트 개인 페이지는 만들지 않음 — 개인(방문형) 노동자 이름·사진이고 is_verified=false 라 공개 웹 노출은 안전·개인정보 위험
 - [ ] 지역 페이지는 보류 — 승인 테라피스트가 도시당 1~5명이라 내용이 거의 같은 얇은 페이지가 된다. 도시별 인원이 늘면 다시 검토
 - [ ] (사용자) Search Console·Bing·네이버에서 https://massaviet.com/sitemap.xml 다시 제출(IndexNow 키 없음)
+- [x] (10/19) IndexNow: 키는 site-src/indexnow-key.txt, build.py 가 site/<키>.txt 로 넣는다(배포가 docroot 를 갈아 끼워도 남게). vps-deploy-massaviet.sh 가 비우기 전 옛 sitemap 을 남겨 두고, 복사 뒤 site-src/indexnow.py 로 새 주소·lastmod 변경분만 api.indexnow.org 에 보낸다. 첫 전체 제출(--all) 결과는 context-notes 참고

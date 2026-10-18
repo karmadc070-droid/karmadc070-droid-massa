@@ -538,6 +538,11 @@ def build():
     nv = "naver107fcbfe0e4530f07911cbc3e3f54337"
     open(f"{OUT}/{nv}.html", "w", encoding="utf-8", newline="\n").write(nv)
 
+    # IndexNow 키 파일. 배포가 docroot 를 통째로 갈아 끼우므로 빌드 산출물에 넣어야 남는다.
+    # 키는 공개 값이다(검색엔진이 이 주소로 확인한다). 알림은 배포 스크립트가 site-src/indexnow.py 로 한다.
+    ik = open(f"{SRC}/indexnow-key.txt", encoding="utf-8").read().strip()
+    open(f"{OUT}/{ik}.txt", "w", encoding="utf-8", newline="\n").write(ik)
+
     print(f"HTML {len(written)}개 + admin + sitemap + robots + 네이버 확인파일 생성")
     return written
 

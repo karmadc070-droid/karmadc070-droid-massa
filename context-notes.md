@@ -1433,3 +1433,6 @@ VIBI·KBizV 처럼 VPS cron 으로 돌리지 않은 이유: 이 사이트는 Git
 - 서버 백업: `/root/backup-digest-20261019080311/` (700, 안의 파일 600. 옛 값이 들어 있다).
 - 검증: action 만 `__auth_check` 로 바꾼 임시 복사본 → `알 수 없는 action`(인증 통과, 메일 없음), 틀린 시크릿 → 401. crontab `0 0 * * * /root/massa_digest.sh` 그대로.
 - 참고: 서버 시계가 KST 라 이 크론은 00:00 KST 에 돈다(스크립트 주석의 "09:00 KST" 와 다름). 동작은 그대로 뒀다.
+
+### IndexNow (2026-10-19)
+키 파일은 공개 값이다(검색엔진이 https://massaviet.com/<키>.txt 로 확인). site-src/indexnow-key.txt 를 지우거나 바꾸면 build.py 가 멈추거나 키가 바뀐다 — 바꾸지 말 것. 알림은 배포 때만 간다: 옛 sitemap 과 비교해 바뀐 주소만 보내므로 문구만 고친 페이지는 massage_content.UPDATED 처럼 lastmod 를 올려야 알림이 간다. 전부 다시 보내려면 VPS 에서 `python3 indexnow.py /없는경로 /srv/massaviet-web --all`.

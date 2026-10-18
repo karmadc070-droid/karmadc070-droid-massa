@@ -15,6 +15,8 @@ tar -xzf "$TMP/m.tgz" -C "$TMP"
 SRC=$(find "$TMP" -maxdepth 1 -mindepth 1 -type d | head -1)
 # img/ · en/ · vi/ 같은 하위 폴더가 생겼으므로 통째로 복사한다.
 # 지워진 파일이 남지 않도록 먼저 비운다 (배포본 = 저장소 상태).
+# 비우기 전에 옛 sitemap 을 남겨 둔다 — 아래 IndexNow 가 바뀐 주소만 알리려고 비교한다.
+cp "$DIR/sitemap.xml" "$TMP/old-sitemap.xml" 2>/dev/null || true
 rm -rf "$DIR"/*
 cp -R "$SRC"/site/. "$DIR"/
 
@@ -31,6 +33,9 @@ for f in icon-192.png 11.jpg 22.jpg 33.jpg 44.jpg 55.jpg 66.jpg \
          banner1.png banner2.png banner3.png masaage1_b.png wag1_b.png; do
   cp "$SRC/$f" "$DIR/admin/console/$f" 2>/dev/null || echo "  (없음: $f)"
 done
+
+# IndexNow(Bing 등): 새 주소·lastmod 가 바뀐 주소만. 실패해도 배포는 계속한다.
+python3 "$SRC"/site-src/indexnow.py "$TMP/old-sitemap.xml" "$DIR" || echo "indexnow 실행 실패(배포는 계속)"
 
 rm -rf "$TMP"
 ls -la "$DIR"
