@@ -1146,3 +1146,23 @@ Firebase 콘솔도 프로젝트도 필요 없다. 키 한 쌍만 만들면 된�
 - `bookings` 에 전화번호 칼럼 자체가 없다. 파트너 화면은 주소·호실·시간만 보여준다.
 - 남은 누수는 두 개뿐: ① 채팅 본문에 번호를 적는 것 ② 현장 대면. ①만 막을 수 있다 (4번 항목).
 - 앱 내 채팅은 **이미 있다** (마사지사 선발신 강제). 새로 만들 필요 없다.
+
+### 진행 결과 (2026-10-18)
+- N1 안드로이드 웹푸시: sw.js push/notificationclick 핸들러 + index.html setupWebPush() +
+  send-push 에 sendWebPush() 추가. VAPID 키를 .env 와 docker-compose(functions) 에 넣고 재기동.
+  배포본 확인: app.massaviet.com/sw.js 에 push 핸들러 있음, 컨테이너에 VAPID 3개 들어감.
+- N3 '안 보냈는데 보냄' 버그: notifications.push_result 추가. 받을 기기가 없으면 'no_device' 로 남긴다.
+  검증: 테스트 알림 1건 → push_result='no_device'. 예전처럼 조용히 '발송'으로 남지 않는다.
+- N4 채팅 연락처 차단: guard_no_contact_in_message 트리거. 12가지 문장으로 검증 12/12 통과
+  (번호·zalo·wa.me 는 차단, 가격 300.000 VND·시간 14:30·호실 1203 은 통과).
+  ★ 숫자만 뽑아 붙이는 방식은 버렸다 — 무관한 숫자가 이어 붙어 멀쩡한 대화를 막는다.
+- N5 주소 수락 후 노출: **화면만 고쳤다. 아직 진짜 막은 게 아니다.**
+  `bookings_provider_read` RLS 가 행 전체를 허용해서 REST 로 주소를 그냥 읽을 수 있다.
+  제대로 막으려면 마스킹하는 SECURITY DEFINER 읽기 경로로 바꾸고 직접 SELECT 를 걷어내야 한다.
+  ★ 화면에만 둔 규칙은 규칙이 아니다 — 이번 세션에서 이미 두 번 겪었다. 미완으로 남긴다.
+
+### 함정 두 개 (다음에 또 걸린다)
+1. PowerShell 에서 SQL 을 base64 로 넘기면 `$fn$` 달러 인용이 깨진다. 함수 본문이 통째로
+   SQL 로 파싱돼 "syntax error at or near if" 가 난다. **SQL 파일은 scp 로 올릴 것.**
+2. PowerShell here-string `@"..."@` 는 `$` 를 확장한다. 정규식의 `$` 가 사라져 테스트가
+   거짓 통과했다. 변수 확장이 필요 없으면 `@'...'@` 를 쓸 것.
