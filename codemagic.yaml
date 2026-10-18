@@ -189,6 +189,10 @@ workflows:
       # 받으면 CM_KEYSTORE_PATH · CM_KEYSTORE_PASSWORD · CM_KEY_ALIAS · CM_KEY_PASSWORD 가 생긴다.
       android_signing:
         - massa_upload_key
+      # Play 업로드용 서비스 계정 열쇠 (massa-play-publisher@massa-36da8).
+      # Codemagic 의 Environment variables 에 google_play 그룹으로 넣어 둔다.
+      groups:
+        - google_play
       vars:
         PACKAGE_NAME: "app.massa.hanoi"
       node: 22
@@ -250,3 +254,11 @@ workflows:
     artifacts:
       - android/app/build/outputs/**/*.aab
       - android/app/build/outputs/**/*.apk
+    # 크롬이 .aab 를 끝까지 안 받아 줘서 손으로 올리는 길이 막혔다 (2026-10-19).
+    # Codemagic 이 Play 에 직접 올린다. submit_as_draft 라서 자동으로 공개되지는 않고,
+    # 프로덕션에 초안으로 올라간다. 게시 버튼은 사람이 누른다.
+    publishing:
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: production
+        submit_as_draft: true
