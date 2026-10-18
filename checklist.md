@@ -4542,3 +4542,13 @@ Codemagic **빌드 31** 시작. 커밋 `e46b4c5`, main, 워크플로
 - [~] N10. 안드로이드 네이티브 전환 (Capacitor + FCM) — 소리·헤드업 채널을 직접 만든다
       · 사장님: Firebase 프로젝트 1개 생성 (무료, 베트남 사업자 불필요) → google-services.json
 - [x] N11. 활동 중 마사지사 12명에게 '알림 켜기' 안내 발송 (베트남어, 2026-10-18)
+
+## N10 안드로이드 네이티브 (알림 소리·배너)
+- [x] FCM 서버 연동 검증 (OAuth 성공, FCM 인증 통과)
+- [x] 저장소 접근 복구 (비공개 전환으로 끊겼던 것 → 공개로 되돌림)
+- [x] Codemagic 에 키스토어 등록 (massa_upload_key)
+- [x] codemagic.yaml 수정 3건 — 키스토어 참조·mac_mini_m2·perl 치환·artifact 경로
+- [x] android-play 빌드 성공 (AAB 6.85MB + APK 7.14MB)
+- [ ] 폰에 APK 설치 (기존 앱 삭제 후)
+- [ ] 실제 소리 + 헤드업 배너 확인  ← 최종 검증
+- [ ] 확인되면 AAB 를 Play 내부 테스트로 올리기

@@ -1265,3 +1265,18 @@ Play 앱 서명은 켜져 있다(진짜 키는 구글 보관, 로컬은 업로�
   저장소 목록이 비어 있었다. GitHub 연동으로 갈아타려면 계정 정리가 필요하다.
 - 애초에 비공개로 바꾼 이유(내가 "서명 키가 공개 저장소에 있다"고 한 것)는 오판이었다.
   keystore · FCM 키 · .env 모두 추적된 적 없다. 사용자 판단으로 공개로 되돌렸다.
+
+## 2026-10-18 안드로이드 빌드를 macOS 로 옮기면서 생긴 함정 세 가지
+1. `linux_x2` 는 현재 Codemagic 요금제에서 막혀 있다 → `mac_mini_m2` 로 바꿨다 (iOS 가 이미 쓰고 있어 검증됨).
+2. **`sed -i` 를 macOS 에서 쓰면 안 된다.** BSD sed 는 `-i` 뒤에 백업 확장자를 요구해서
+   치환식이 확장자로, 파일명이 스크립트로 해석된다. 실제 오류는 `sed: ww/index.html: No such file or directory`
+   (`www` 의 첫 `w` 가 sed 의 쓰기 명령으로 먹혔다). → `perl -pi -e` 로 교체. 리눅스·macOS 둘 다 돈다.
+   세 군데였다 (index.html 주입 1, versionCode·versionName 2). 하나만 고쳤으면 다음 단계에서 또 죽었다.
+3. artifact 경로는 **working_directory 기준**이다. `capacitor/android/...` 로 적었더니 하나도 안 잡혔다.
+   → `android/app/build/outputs/**/*.aab|apk`.
+
+그리고 AAB 는 폰에 직접 설치할 수 없다. 소리·배너를 실제로 확인하려면 APK 가 필요해서
+`bundleRelease assembleRelease` 로 둘 다 만든다.
+
+주의 — 이 APK 는 업로드 키로 서명돼 있고, Play 에서 받은 기존 앱은 구글 키로 서명돼 있다.
+패키지(app.massa.hanoi)가 같아서 **기존 앱을 지우고 설치해야 한다** (서명 불일치로 덮어쓰기 거부).
