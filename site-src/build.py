@@ -2,6 +2,7 @@
 # 10페이지 x 3언어 = 30개를 손으로 관리할 수 없어서 만들었다. 실행: python3 site-src/build.py
 import os, re, shutil, html as H
 from social import SOCIAL
+import massage_content as mc
 
 SITE = "https://massaviet.com"
 OUT  = "site"
@@ -139,9 +140,17 @@ def r_stores(b, L, lang):
       <span><b>Google Play</b><small>{esc(b["soon"])}</small></span></span>'''
     return f'<div class="stores rv">{ios}{and_}</div>'
 
+def r_ul(b, L, lang):
+    """글머리 목록. 항목은 글자만 받는다(링크는 links 블록)."""
+    return '<ul class="rv">' + "".join(f"<li>{esc(x)}</li>" for x in b["items"]) + "</ul>"
+
+def r_links(b, L, lang):
+    """다른 페이지로 가는 링크 목록 (마사지 종류 페이지끼리, 서비스 페이지 → 종류 페이지)."""
+    return '<ul class="rv">' + "".join(f'<li><a href="{h}">{esc(t)}</a></li>' for t, h in b["items"]) + "</ul>"
+
 R = {"hero": r_hero, "section": r_section, "grid": r_grid, "pcards": r_pcards,
      "steps": r_steps, "table": r_table, "faq": r_faq, "pull": r_pull,
-     "note": r_note, "stores": r_stores, "cta": r_cta}
+     "note": r_note, "stores": r_stores, "cta": r_cta, "ul": r_ul, "links": r_links}
 
 def render(b, L, lang): return R[b["type"]](b, L, lang)
 
@@ -406,6 +415,52 @@ def chrome(lang, name, L, body, page):
 </body>
 </html>'''
 
+# ── 마사지 종류별 페이지 ───────────────────────────────────
+def massage_types():
+    """DB(services)에서 활성 마사지 코스를 읽어 종류 → 시간 목록을 만든다.
+    못 읽으면 빌드를 멈춘다 — 그대로 배포하면 종류 페이지가 사이트에서 사라진다."""
+    import json, urllib.request
+    q = ("https://api.massaviet.com/rest/v1/services?select=massage_type,duration_min,created_at"
+         "&category=eq.massage&is_active=eq.true")
+    try:
+        req = urllib.request.Request(q, headers={"apikey": ANON, "Authorization": f"Bearer {ANON}"})
+        rows = json.load(urllib.request.urlopen(req, timeout=20))
+    except Exception as e:
+        raise SystemExit(f"services 조회 실패 — 빌드 중단: {e}")
+    dur, last = {}, {}
+    for r in rows:
+        t = r.get("massage_type")
+        if t not in mc.TYPES["ko"]:
+            continue
+        dur.setdefault(t, set()).add(int(r["duration_min"]))
+        last[t] = max(last.get(t, mc.UPDATED), (r.get("created_at") or "")[:10])
+    order = [t for t in mc.ORDER if t in dur]
+    return order, {t: sorted(dur[t]) for t in order}, last
+
+def massage_list_section(lang, types):
+    """서비스 페이지 맨 아래에 붙는 종류별 페이지 링크."""
+    M, T = mc.LABELS[lang], mc.TYPES[lang]
+    return {"type": "section", "kicker": M["list_kicker"], "h2": M["list_h2"], "lead": M["list_lead"],
+            "blocks": [{"type": "links", "items": [(T[t]["name"], url(lang, f"massage/{mc.slug(t)}")) for t in types]}]}
+
+def massage_page(lang, t, types, durations):
+    M, c = mc.LABELS[lang], mc.TYPES[lang][t]
+    others = [(mc.TYPES[lang][o]["name"], url(lang, f"massage/{mc.slug(o)}")) for o in types if o != t]
+    return {
+        "title": M["title"].format(name=c["name"]), "desc": c["desc"],
+        "blocks": [
+            {"type": "section", "kicker": M["kicker"], "h2": esc(c["name"]), "lead": c["lead"],
+             "body": [esc(c["how"]), esc(M["visit"])]},
+            {"type": "section", "soft": True, "h2": esc(M["h_for"]), "blocks": [{"type": "ul", "items": c["suits"]}]},
+            {"type": "section", "h2": esc(M["h_note"]),
+             "blocks": [{"type": "ul", "items": c["notes"]}, {"type": "note", "text": M["disclaimer"]}]},
+            {"type": "section", "soft": True, "h2": esc(M["h_dur"]),
+             "blocks": [{"type": "table", "rows": [(M["min"].format(n=n), esc(c["name"])) for n in durations]},
+                        {"type": "note", "text": M["dur_note"]},
+                        {"type": "cta", "btns": [(M["cta_app"], url(lang, "download")), (M["cta_guide"], url(lang, "guide"))]}]},
+            {"type": "section", "h2": esc(M["others"]), "blocks": [{"type": "links", "items": others}]},
+        ]}
+
 # ── 빌드 ───────────────────────────────────────────────────
 def build():
     import importlib, sys
@@ -419,6 +474,7 @@ def build():
     # 접근 통제는 여기가 아니라 DB 함수(admin_dashboard)가 한다.
     shutil.copytree(f"{SRC}/admin", f"{OUT}/admin", dirs_exist_ok=True)
 
+    MT, DUR, MT_LASTMOD = massage_types()
     written = []
     for lang in LANGS:
         mod = importlib.import_module(f"content_{lang}")
@@ -431,8 +487,19 @@ def build():
             page = P[name]
             # play_pending 블록은 '안드로이드 아직 안 나왔다'는 안내다. 출시되면 사라져야 한다.
             blocks = [b for b in page["blocks"] if not (PLAY_LIVE and b.get("play_pending"))]
+            if name == "services":
+                blocks = blocks + [massage_list_section(lang, MT)]
             body = "".join(render(b, L, lang) for b in blocks)
             path = f"{d}/{'index' if name=='index' else name}.html"
+            open(path, "w", encoding="utf-8", newline="\n").write(chrome(lang, name, L, body, page))
+            written.append(path)
+        # 마사지 종류별 페이지 — DB 에 활성 코스가 있는 종류만
+        os.makedirs(f"{d}/massage", exist_ok=True)
+        for t in MT:
+            name = f"massage/{mc.slug(t)}"
+            page = massage_page(lang, t, MT, DUR[t])
+            body = "".join(render(b, L, lang) for b in page["blocks"])
+            path = f"{d}/{name}.html"
             open(path, "w", encoding="utf-8", newline="\n").write(chrome(lang, name, L, body, page))
             written.append(path)
 
@@ -446,6 +513,15 @@ def build():
             pr = "1.0" if name == "index" else ("0.9" if name in ("services","guide","download") else "0.6")
             us += (f'  <url>\n    <loc>{SITE}{url(lang,name)}</loc>{alts}\n'
                    f'    <changefreq>monthly</changefreq>\n    <priority>{pr}</priority>\n  </url>\n')
+    for t in MT:
+        name = f"massage/{mc.slug(t)}"
+        for lang in LANGS:
+            alts = "".join(
+                f'\n      <xhtml:link rel="alternate" hreflang="{l}" href="{SITE}{url(l,name)}"/>'
+                for l in LANGS)
+            us += (f'  <url>\n    <loc>{SITE}{url(lang,name)}</loc>{alts}\n'
+                   f'    <lastmod>{MT_LASTMOD[t]}</lastmod>\n'
+                   f'    <changefreq>monthly</changefreq>\n    <priority>0.7</priority>\n  </url>\n')
     open(f"{OUT}/sitemap.xml", "w", encoding="utf-8", newline="\n").write(
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n'

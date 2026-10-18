@@ -265,4 +265,301 @@
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
+  <url>
+    <loc>https://massaviet.com/massage/aroma.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/aroma.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/aroma.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/aroma.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/en/massage/aroma.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/aroma.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/aroma.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/aroma.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/vi/massage/aroma.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/aroma.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/aroma.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/aroma.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/massage/swedish.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/swedish.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/swedish.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/swedish.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/en/massage/swedish.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/swedish.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/swedish.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/swedish.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/vi/massage/swedish.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/swedish.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/swedish.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/swedish.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/massage/thai.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/thai.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/thai.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/thai.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/en/massage/thai.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/thai.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/thai.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/thai.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/vi/massage/thai.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/thai.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/thai.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/thai.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/massage/hot-stone.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/hot-stone.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/hot-stone.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/hot-stone.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/en/massage/hot-stone.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/hot-stone.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/hot-stone.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/hot-stone.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/vi/massage/hot-stone.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/hot-stone.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/hot-stone.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/hot-stone.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/massage/foot.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/foot.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/foot.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/foot.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/en/massage/foot.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/foot.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/foot.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/foot.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/vi/massage/foot.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/foot.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/foot.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/foot.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/massage/head.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/head.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/head.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/head.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/en/massage/head.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/head.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/head.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/head.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/vi/massage/head.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/head.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/head.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/head.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/massage/neck-shoulder.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/neck-shoulder.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/neck-shoulder.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/neck-shoulder.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/en/massage/neck-shoulder.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/neck-shoulder.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/neck-shoulder.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/neck-shoulder.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/vi/massage/neck-shoulder.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/neck-shoulder.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/neck-shoulder.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/neck-shoulder.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/massage/back.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/back.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/back.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/back.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/en/massage/back.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/back.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/back.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/back.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/vi/massage/back.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/back.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/back.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/back.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/massage/sports.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/sports.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/sports.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/sports.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/en/massage/sports.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/sports.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/sports.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/sports.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/vi/massage/sports.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/sports.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/sports.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/sports.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/massage/cupping.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/cupping.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/cupping.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/cupping.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/en/massage/cupping.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/cupping.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/cupping.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/cupping.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/vi/massage/cupping.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/cupping.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/cupping.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/cupping.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/massage/no-oil.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/no-oil.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/no-oil.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/no-oil.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/en/massage/no-oil.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/no-oil.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/no-oil.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/no-oil.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/vi/massage/no-oil.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/no-oil.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/no-oil.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/massage/no-oil.html"/>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
 </urlset>
