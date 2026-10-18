@@ -8,12 +8,15 @@ mkdir -p "$DIR"
 
 echo "=== 최신 소스 내려받기 (raw CDN 캐시 우회) ==="
 TMP=$(mktemp -d)
-curl -s --location codeload.github.com/karmadc070-droid/massa/tar.gz/refs/heads/main -o "$TMP/m.tgz"
+curl -s --location codeload.github.com/karmadc070-droid/karmadc070-droid-massa/tar.gz/refs/heads/main -o "$TMP/m.tgz"
 tar -xzf "$TMP/m.tgz" -C "$TMP"
+# 저장소 이름이 바뀌면(massa -> karmadc070-droid-massa) 압축 안 폴더명도 바뀐다.
+# 이름을 박아 두지 않고 풀린 폴더를 찾아 SRC 에 담는다 (2026-10-18).
+SRC=$(find "$TMP" -maxdepth 1 -mindepth 1 -type d | head -1)
 # img/ · en/ · vi/ 같은 하위 폴더가 생겼으므로 통째로 복사한다.
 # 지워진 파일이 남지 않도록 먼저 비운다 (배포본 = 저장소 상태).
 rm -rf "$DIR"/*
-cp -R "$TMP"/massa-main/site/. "$DIR"/
+cp -R "$SRC"/site/. "$DIR"/
 
 # 관리자 화면은 massaviet.com/admin 아래 하나로 모았다 (2026-10-10).
 #   /admin/          지표    (site/admin/index.html — build.py 산출물)
@@ -21,12 +24,12 @@ cp -R "$TMP"/massa-main/site/. "$DIR"/
 # 이 스크립트가 위에서 docroot 를 통째로 비우므로, 콘솔도 **여기서** 같이 넣어야 한다.
 # 다른 스크립트에 맡기면 이 배포가 돌 때마다 콘솔이 사라진다.
 mkdir -p "$DIR/admin/console"
-cp "$TMP"/massa-main/admin.html "$DIR/admin/console/index.html"
-cp "$TMP"/massa-main/reset.html "$DIR/admin/console/reset.html"
+cp "$SRC"/admin.html "$DIR/admin/console/index.html"
+cp "$SRC"/reset.html "$DIR/admin/console/reset.html"
 # 콘솔이 상대경로로 부르는 그림들. 빠지면 화면이 깨진 채로 돈다.
 for f in icon-192.png 11.jpg 22.jpg 33.jpg 44.jpg 55.jpg 66.jpg \
          banner1.png banner2.png banner3.png masaage1_b.png wag1_b.png; do
-  cp "$TMP/massa-main/$f" "$DIR/admin/console/$f" 2>/dev/null || echo "  (없음: $f)"
+  cp "$SRC/$f" "$DIR/admin/console/$f" 2>/dev/null || echo "  (없음: $f)"
 done
 
 rm -rf "$TMP"

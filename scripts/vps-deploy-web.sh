@@ -7,19 +7,22 @@ mkdir -p "$DIR"
 
 echo "=== 최신 소스 내려받기 (raw CDN 캐시 우회) ==="
 TMP=$(mktemp -d)
-curl -s --location codeload.github.com/karmadc070-droid/massa/tar.gz/refs/heads/main -o "$TMP/m.tgz"
+curl -s --location codeload.github.com/karmadc070-droid/karmadc070-droid-massa/tar.gz/refs/heads/main -o "$TMP/m.tgz"
 tar -xzf "$TMP/m.tgz" -C "$TMP"
-cp "$TMP"/massa-main/index.html "$DIR/index.html"
-cp "$TMP"/massa-main/reset.html "$DIR/reset.html"
+# 저장소 이름이 바뀌면(massa -> karmadc070-droid-massa) 압축 안 폴더명도 바뀐다.
+# 이름을 박아 두지 않고 풀린 폴더를 찾아 SRC 에 담는다 (2026-10-18).
+SRC=$(find "$TMP" -maxdepth 1 -mindepth 1 -type d | head -1)
+cp "$SRC"/index.html "$DIR/index.html"
+cp "$SRC"/reset.html "$DIR/reset.html"
 # 결제창을 여는 페이지와 돌아오는 중계 페이지. 앱은 이 두 주소를 앱 내 브라우저로 연다
-cp "$TMP"/massa-main/pay-start.html "$DIR/pay-start.html"
-cp "$TMP"/massa-main/pay-return.html "$DIR/pay-return.html"
+cp "$SRC"/pay-start.html "$DIR/pay-start.html"
+cp "$SRC"/pay-return.html "$DIR/pay-return.html"
 # 구글 OAuth 게시·앱스토어 심사에서 공개 URL 로 요구하는 문서들
-cp "$TMP"/massa-main/privacy.html "$DIR/privacy.html"
-cp "$TMP"/massa-main/terms.html "$DIR/terms.html"
-cp "$TMP"/massa-main/delete-account.html "$DIR/delete-account.html"
+cp "$SRC"/privacy.html "$DIR/privacy.html"
+cp "$SRC"/terms.html "$DIR/terms.html"
+cp "$SRC"/delete-account.html "$DIR/delete-account.html"
 for f in masaage1_b.png wag1_b.png banner1.png banner2.png banner3.png; do
-  cp "$TMP"/massa-main/"$f" "$DIR/$f" 2>/dev/null || true
+  cp "$SRC"/"$f" "$DIR/$f" 2>/dev/null || true
 done
 rm -rf "$TMP"
 ls -la "$DIR"

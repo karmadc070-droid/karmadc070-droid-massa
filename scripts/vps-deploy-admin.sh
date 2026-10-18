@@ -23,13 +23,16 @@ mkdir -p "$DIR"
 echo "=== admin.html 내려받기 (raw CDN 캐시 우회) ==="
 # raw.githubusercontent.com 은 최대 5분 캐시된다. codeload 는 항상 최신 커밋을 준다.
 TMP=$(mktemp -d)
-curl -s --location codeload.github.com/karmadc070-droid/massa/tar.gz/refs/heads/main -o "$TMP/m.tgz"
+curl -s --location codeload.github.com/karmadc070-droid/karmadc070-droid-massa/tar.gz/refs/heads/main -o "$TMP/m.tgz"
 tar -xzf "$TMP/m.tgz" -C "$TMP"
-cp "$TMP"/massa-main/admin.html "$DIR/index.html"
+# 저장소 이름이 바뀌면(massa -> karmadc070-droid-massa) 압축 안 폴더명도 바뀐다.
+# 이름을 박아 두지 않고 풀린 폴더를 찾아 SRC 에 담는다 (2026-10-18).
+SRC=$(find "$TMP" -maxdepth 1 -mindepth 1 -type d | head -1)
+cp "$SRC"/admin.html "$DIR/index.html"
 # 비밀번호 재설정 페이지도 같이 올린다.
 # 2026-10-05: 이게 빠져 있어서 admin.massaviet.com/reset.html 이 404 였고,
 # 콘솔의 재설정 메일 링크가 죽어 있었다. 콘솔 재설정은 콘솔 도메인에서 끝나야 한다.
-cp "$TMP"/massa-main/reset.html "$DIR/reset.html"
+cp "$SRC"/reset.html "$DIR/reset.html"
 # 지표는 massaviet.com/admin 하나로 모았다 (2026-10-10).
 # 여기 있던 /metrics/ 사본은 지운다. 안 지우면 Caddy 가 리다이렉트를 걷는 날 되살아난다.
 rm -rf "$DIR/metrics"
