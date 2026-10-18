@@ -32,8 +32,11 @@ a{color:inherit;text-decoration:none}
 nav.side{width:224px;flex:none;background:var(--ink);color:#D7E4E7;padding:22px 16px;
          position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:4px}
 nav.side .logo{font-family:var(--serif);font-size:25px;color:#fff;padding:0 10px 4px}
-nav.side .tag{font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:#B0742F;
-              padding:0 10px 22px}
+/* 좌측 '지표' 라벨. 일반 뱃지(.tag)의 테두리를 물려받는데 아래 여백(22px)까지 겹쳐
+   속이 빈 큰 칸처럼 보였다. 글자를 키우고 칸을 글자에 맞춘다 (2026-10-18). */
+nav.side .tag{display:inline-block;font-size:15px;letter-spacing:.1em;text-transform:uppercase;
+              color:#D9A24B;background:transparent;border-color:rgba(255,255,255,.22);
+              padding:7px 13px;margin:0 0 18px}
 nav.side a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;
            font-size:14.5px;color:#A9C0C6}
 nav.side a:hover{background:rgba(255,255,255,.06);color:#fff}
