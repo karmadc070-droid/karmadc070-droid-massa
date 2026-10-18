@@ -31,10 +31,28 @@ function shimGeolocation() {
   return navigator.geolocation === impl;
 }
 
-// APNs 푸시 등록. 권한 허용 시 onToken(디바이스 토큰) 을 호출한다.
+// 푸시 등록 (아이폰 APNs · 안드로이드 FCM). 권한 허용 시 onToken(디바이스 토큰) 을 호출한다.
 async function registerPush(onToken, onNotification) {
   const perm = await PushNotifications.requestPermissions();
   if (perm.receive !== "granted") return false;
+
+  // ★ 안드로이드는 '알림 채널'이 소리·헤드업 배너를 정한다. 중요도 5(긴급)로 채널을 직접 만든다.
+  //   웹푸시(TWA)로는 이걸 못 해서 알림이 조용히 떴다 — 네이티브로 옮긴 이유가 이것이다.
+  //   서버는 FCM 에 channel_id 를 같이 실어 보내야 이 채널이 쓰인다.
+  //   채널은 한 번 만들어지면 설정이 고정된다. 바꾸려면 id 를 올려야 한다(massa_booking_v2 …).
+  if (Capacitor.getPlatform() === "android") {
+    try {
+      await PushNotifications.createChannel({
+        id: "massa_booking",
+        name: "새 신청",
+        description: "손님이 신청하면 바로 알립니다",
+        importance: 5,        // IMPORTANCE_HIGH — 소리 + 화면 위 배너
+        visibility: 1,        // 잠금화면에도 보임
+        vibration: true,
+      });
+    } catch (e) { console.warn("알림 채널 생성 실패", e); }
+  }
+
   PushNotifications.addListener("registration", (t) => onToken(t.value));
   if (onNotification) {
     PushNotifications.addListener("pushNotificationReceived", onNotification);

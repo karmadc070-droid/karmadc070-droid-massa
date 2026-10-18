@@ -170,3 +170,62 @@ workflows:
         submit_to_testflight: true
         # 첫 심사 제출은 App Store Connect 웹에서 수동으로 진행
         submit_to_app_store: false
+
+  # ── 안드로이드 ───────────────────────────────────────────────
+  # TWA(웹 껍데기)를 Capacitor 네이티브로 바꾼다. 이유는 하나다 —
+  # 웹푸시는 소리·헤드업 배너를 못 낸다. 안드로이드는 '알림 채널'이 그걸 정하는데
+  # 웹페이지는 채널 중요도를 건드릴 수 없다. 네이티브면 직접 만들 수 있다.
+  # 채널 생성은 앱에서 한다 (native.js registerPush → createChannel, importance 5).
+  android-play:
+    name: massa Android Play 빌드
+    instance_type: linux_x2
+    max_build_duration: 60
+    working_directory: capacitor
+    environment:
+      groups:
+        - android_signing          # KEYSTORE_PASSWORD · KEY_ALIAS · KEY_PASSWORD
+      vars:
+        PACKAGE_NAME: "app.massa.hanoi"
+      node: 22
+      java: 21
+    scripts:
+      - name: 웹 자산을 저장소 루트에서 가져오기
+        script: |
+          rm -rf www && mkdir -p www
+          cp ../index.html ../manifest.webmanifest ../sw.js ../privacy.html ../terms.html ../delete-account.html www/
+          cp ../*.png ../*.jpg www/ 2>/dev/null || true
+          cp -r ../icons www/icons
+          rm -f www/masaage1.png www/wag1.png
+      - name: 의존성 설치
+        script: npm install
+      - name: 네이티브 기능 번들 생성 + index.html에 주입
+        script: |
+          npm run build:native
+          test -s www/capacitor-native.js || { echo "번들 생성 실패"; exit 1; }
+          grep -q capacitor-native.js www/index.html || sed -i 's#</head>#<script src="capacitor-native.js"></script></head>#' www/index.html
+      - name: 안드로이드 네이티브 프로젝트 생성 + 자산 동기화
+        script: |
+          npx cap add android
+          npx cap sync android
+      - name: Firebase 설정 넣기
+        script: |
+          test -f ../google-services.json || { echo "★ google-services.json 이 없다 - 중단"; exit 1; }
+          cp ../google-services.json android/app/google-services.json
+          grep -q 'app.massa.hanoi' android/app/google-services.json || { echo "★ 패키지 이름 불일치 - 중단"; exit 1; }
+      - name: 서명 설정
+        script: |
+          printf 'MASSA_STORE_FILE=%s\n' "$CM_BUILD_DIR/android-package/signing.keystore" >> android/gradle.properties
+          printf 'MASSA_STORE_PASSWORD=%s\n' "$KEYSTORE_PASSWORD" >> android/gradle.properties
+          printf 'MASSA_KEY_ALIAS=%s\n' "$KEY_ALIAS" >> android/gradle.properties
+          printf 'MASSA_KEY_PASSWORD=%s\n' "$KEY_PASSWORD" >> android/gradle.properties
+          python3 ../scripts/android-gradle-patch.py
+      - name: 버전 코드 설정
+        script: |
+          VC=$(( 100 + ${CM_BUILD_NUMBER:-1} ))
+          sed -i "s/versionCode .*/versionCode $VC/" android/app/build.gradle
+          sed -i "s/versionName .*/versionName \"1.1.$VC\"/" android/app/build.gradle
+          grep -n "versionCode\|versionName" android/app/build.gradle
+      - name: AAB 빌드
+        script: cd android && ./gradlew bundleRelease
+    artifacts:
+      - capacitor/android/app/build/outputs/**/*.aab

@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "29459584304",
+    "project_id": "massa-36da8",
+    "storage_bucket": "massa-36da8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:29459584304:android:084dee82d138abd4c464f5",
+        "android_client_info": {
+          "package_name": "app.massa.hanoi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBbk4-zdtLvhOGnI4m4HMByLAM5dS3FMwM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:29459584304:android:9f00600e6decd84ec464f5",
+        "android_client_info": {
+          "package_name": "app.massa.vietnam"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBbk4-zdtLvhOGnI4m4HMByLAM5dS3FMwM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

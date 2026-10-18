@@ -2159,8 +2159,10 @@ function savePushToken() {
 function setupPush() {
   const N = window.MassaNative;
   if (!SESSION) return;
-  // 아이폰 앱은 APNs. 그 외(안드로이드 TWA·웹)는 웹푸시로 간다.
-  if (!N || N.platform !== 'ios') return setupWebPush();
+  // 네이티브 앱(아이폰 APNs · 안드로이드 FCM)이면 네이티브 경로.
+  // 그 외(브라우저·옛 TWA)는 웹푸시. 웹푸시는 소리를 못 내므로 네이티브가 우선이다.
+  if (!N || (N.platform !== 'ios' && N.platform !== 'android')) return setupWebPush();
+  PUSH_PLATFORM = N.platform;
   if (PUSH_TOKEN) return savePushToken();
   if (PUSH_ASKED) return;
   PUSH_ASKED = true;
