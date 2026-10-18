@@ -1234,3 +1234,15 @@ TWA → Capacitor 네이티브. **이유는 하나뿐이다** — 웹푸시는 �
 `android-package/` · `*.keystore` · `signing-key-info.txt` 가 있고 git 추적 대상이 아니다.
 로컬 폴더에 파일이 보인다고 저장소에 있다고 단정했다. `git ls-files` 로 먼저 확인할 것.
 Play 앱 서명은 켜져 있다(진짜 키는 구글 보관, 로컬은 업로드 키).
+
+### FCM 서버 연동 완료 (2026-10-18)
+- 서비스 계정 키를 VPS `.env` 의 `FCM_SERVICE_ACCOUNT` 에 **한 줄 JSON**으로 넣었다.
+  저장소에는 없다 — `.gitignore` 에 `*firebase-adminsdk*.json` 추가함.
+- ★ 함정: PowerShell `Set-Content -Encoding UTF8` 이 **BOM** 을 붙인다. .env 에 그대로 들어가
+  JSON.parse 가 깨진다. 서버에서 `FCM_SERVICE_ACCOUNT='\xef\xbb\xbf` 를 잘라냈다.
+  다음엔 `-Encoding utf8NoBOM` 을 쓰거나 서버에서 거를 것.
+- 검증: 가짜 토큰으로 실제 FCM 엔드포인트 호출 →
+  OAuth 토큰 발급 성공, FCM 이 400 INVALID_ARGUMENT("not a valid FCM registration token").
+  **인증·권한·프로젝트 연결 정상.** 진짜 기기 토큰만 있으면 바로 간다.
+- 참고: `push_tokens.token` 에 형식 검사(check)가 있어서 아무 문자열이나 못 넣는다.
+  가짜 토큰으로 end-to-end 시험이 안 되니, FCM 경로는 위처럼 직접 호출로 확인할 것.

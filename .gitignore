@@ -20,3 +20,8 @@ site-src/__pycache__/
 massa-backup-private.asc
 *.private.asc
 
+
+# FCM 서비스 계정 키 — 서버에서 푸시를 보낼 권한이 들어 있다. 절대 커밋 금지.
+# 값은 VPS .env 의 FCM_SERVICE_ACCOUNT 에만 둔다.
+*firebase-adminsdk*.json
+*service-account*.json
