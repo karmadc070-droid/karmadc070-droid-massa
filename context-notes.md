@@ -1327,3 +1327,32 @@ Play 앱 서명은 켜져 있다(진짜 키는 구글 보관, 로컬은 업로�
 바뀌어 압축 안 폴더명도 바뀌었다. → `find -maxdepth 1 -type d | head -1` 로 찾아 쓰도록 수정.
 그리고 **PowerShell 파이프로 셸 스크립트를 보내면 한글이 깨져** 문법 오류가 난다(따옴표가 깨진다).
 반드시 scp 로 파일 그대로 보낸다 — .sql 때와 같은 함정이다.
+
+## 2026-10-18 수락할 때까지 반복해서 울리기 (30초 간격 · 최대 10회)
+사장님이 실제 테스트에서 "소리가 한 번만 난다 — 못 들으면 놓친다"를 짚어 주셔서 만든 것.
+
+구조 — sw.js 가 이미 `tag:'massa-booking'` + `renotify:true` 라서
+같은 알림을 다시 보내면 **쌓이지 않고 덮어쓰면서 소리를 다시 낸다.** 서버가 반복만 하면 된다.
+- `notifications` 에 `push_tries`, `next_push_at` 추가.
+- `claim_unpushed_notifications()` 가 (a) 미발송 + (b) 반복 차례가 된 booking_new 를 함께 집는다.
+- 멈춤: is_read=true / 예약이 requested 를 벗어남 / 10회 / 생성 후 10분. booking_new 만 반복한다.
+- 크론 최소 주기가 1분이라 massa_push.sh 가 `call; sleep 30; call` 로 30초 간격을 만든다.
+검증 — tries 1→4 증가 확인, 읽음 처리 후 멈춤 확인. 둘 다 눈으로 봤다.
+
+### ★ 오늘 같은 뿌리로 세 번 깨졌다 — PowerShell 로 셸 명령을 보내지 말 것
+1. heredoc 으로 보냈더니 `$(...)`·`$S` 가 **로컬에서 전개**돼 스크립트가 깨지고
+   NOTIFY_SECRET 이 파일에 박히고 작업 화면에 노출됐다 → 시크릿 회전함.
+2. `tr -d "\r"` 로 CR 을 지우려 했는데 PowerShell 이 `\r` 을 **`r`** 로 넘겨
+   알파벳 r 이 전부 지워졌다 (grep→gep, curl→cul, /root→/oot, /var→/va).
+   크론은 돌지만 스크립트가 종료코드 1 로 죽어 푸시가 멈췄다.
+3. 그 검증으로 `grep -c NOTIFY_SECRET` 과 `sleep 30` 을 썼는데 **둘 다 r 이 없어서** 통과해 버렸다.
+   → 검증 문자열은 깨질 수 있는 문자를 포함해야 한다. scp 로 보내고 파일로 검증한다.
+
+### 시크릿 회전에서 또 하나
+`docker compose restart` 로는 .env 가 다시 읽히지 않는다. `up -d --force-recreate` 여야 한다.
+그리고 "틀린 시크릿으로 401" 은 검증이 아니다 — 옛 값이든 새 값이든 틀리면 401 이라 구분이 안 된다.
+**올바른 검증은 '.env 의 현재 값으로 호출했을 때 200'** 이다.
+
+### PostgREST 스키마 캐시
+테이블에 컬럼을 추가하면 rest 컨테이너가 모른다. `scripts/vps-reload-schema.sh` 를 돌려야
+RPC 가 새 컬럼을 포함해 동작한다. 함수는 psql 로는 되는데 API 로는 안 되면 이걸 의심한다.
