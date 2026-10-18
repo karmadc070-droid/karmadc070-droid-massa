@@ -42,13 +42,18 @@ async function getApnsJwt(): Promise<string | null> {
 const APNS_HOSTS = ["https://api.push.apple.com", "https://api.sandbox.push.apple.com"];
 
 // kind·booking_id 는 알림 data 로 앱에 전달된다 → 누르면 index.html 이 해당 화면을 연다.
+// ★ apns-collapse-id 는 반드시 넣는다. 수락할 때까지 30초마다 다시 보내는데(2026-10-18),
+//   이게 없으면 아이폰에 알림이 10개 쌓인다. 안드로이드 웹푸시의 tag 와 같은 역할 —
+//   같은 값으로 보내면 쌓이지 않고 그 자리에서 덮어쓰며 다시 알린다.
+//   예약은 건별로 묶고(booking_id), 그 외는 종류별로 묶는다. 최대 64바이트.
 async function sendApns(jwt: string, token: string, title: string, body: string, kind: string, bookingId: string | null) {
   const payload = JSON.stringify({ aps: { alert: { title, body }, sound: "default" }, kind, booking_id: bookingId });
+  const collapseId = (bookingId ? `b-${bookingId}` : `k-${kind}`).slice(0, 64);
   let lastError = "";
   for (const host of APNS_HOSTS) {
     const res = await fetch(`${host}/3/device/${token}`, {
       method: "POST",
-      headers: { authorization: `bearer ${jwt}`, "apns-topic": TOPIC, "apns-push-type": "alert", "apns-priority": "10", "content-type": "application/json" },
+      headers: { authorization: `bearer ${jwt}`, "apns-topic": TOPIC, "apns-push-type": "alert", "apns-priority": "10", "apns-collapse-id": collapseId, "content-type": "application/json" },
       body: payload,
     });
     if (res.ok) return { ok: true, gone: false, error: "" };
@@ -190,6 +195,9 @@ async function sendFcm(deviceToken: string, title: string, body: string, kind: s
             channel_id: "massa_booking",
             default_sound: true,
             notification_priority: "PRIORITY_MAX",
+            // ★ tag 가 없으면 30초마다 반복할 때 알림이 10개 쌓인다 (2026-10-18).
+            //   같은 tag 면 덮어쓰면서 다시 알린다. iOS 의 apns-collapse-id 와 같은 역할.
+            tag: (bookingId ? `b-${bookingId}` : `k-${kind}`),
           },
         },
       },
