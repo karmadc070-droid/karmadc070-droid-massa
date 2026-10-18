@@ -214,6 +214,10 @@ workflows:
       - name: 안드로이드 네이티브 프로젝트 생성 + 자산 동기화
         script: |
           npx cap add android
+          # ★ 이 단계를 빼면 Play 앱 아이콘이 Capacitor 기본 마크로 바뀐다 (1.1.101 에서 실제로 그랬다).
+          #   iOS 워크플로에는 있었는데 안드로이드에만 없었다. assets/icon.png 가 massa 마크다.
+          npx @capacitor/assets generate --android --iconBackgroundColor '#1F4E5F' --splashBackgroundColor '#1F4E5F'
+          test -f android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png || { echo "★ 아이콘 생성 실패 - 중단"; exit 1; }
           npx cap sync android
       - name: Firebase 설정 넣기
         script: |
