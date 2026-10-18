@@ -1712,7 +1712,9 @@ async function initMyPos() {
   } catch (e) {}
 }
 function avatarFor(p) { if (p.photo_url) return p.photo_url; if (p.photo_urls && p.photo_urls.length) return p.photo_urls[0]; let hh = 0; const s = String(p.id || p.display_name || ''); for (let i = 0; i < s.length; i++) hh = (hh * 31 + s.charCodeAt(i)) >>> 0; return AVATARS[hh % AVATARS.length]; }
-function providerCard(p, idx) {
+// viewOnly = 내 지역 밖이라 예약은 못 하지만 "어디에 누가 있는지" 는 보여주는 카드.
+// 예약 버튼 자리에 활동 지역을 적는다. 사진·이름을 누르면 프로필은 그대로 열린다.
+function providerCard(p, idx, viewOnly) {
   const photo = avatarFor(p);
   // '위생 인증'·'품질' 태그를 뺐다. 위생 교육을 확인하는 절차가 우리에게 없고,
   // '품질' 은 후기 150건 기준인데 실제 후기는 0건이라 영영 뜨지 않거나 가짜 수치로만 뜬다.
@@ -1726,7 +1728,9 @@ function providerCard(p, idx) {
     <div class="trow1"><span class="tname" data-prof="${p.id}" style="cursor:pointer">${p.display_name}${p.is_verified ? '<span class="badge">✓</span>' : ''}${p.credential_verified ? '<span class="badge" style="background:#2E8B8B">★</span>' : ''}</span><span class="tstart">예약 가능</span></div>
     <div class="tstars">${Number(p.review_count) > 0 ? `★ ${Number(p.rating).toFixed(1)} <span>(${p.review_count} <span>리뷰</span>)</span>` : '<span>아직 후기 없음</span>'}</div>
     <div class="tdesc">${spec}${langs}${p.base_district ? ' · <span>' + p.base_district + '</span> <span>권역</span>' : ''}</div>
-    <div class="trow2"><span class="tdist" data-pid="${p.id}">${distText(p)}</span><button class="bookbtn" data-pid="${p.id}">예약</button></div>
+    <div class="trow2"><span class="tdist" data-pid="${p.id}">${distText(p)}</span>${viewOnly
+      ? `<span style="font-size:12.5px;color:var(--muted)">${rEsc(regName(p.city_code) || p.base_district || T('지역 미정'))}</span>`
+      : `<button class="bookbtn" data-pid="${p.id}">예약</button>`}</div>
   </div></div>`;
 }
 
@@ -1772,6 +1776,15 @@ function fillList(screenId, providers) {
       '<div class="notice">' + rEsc(hiddenFar
         ? T('{km}km 안에 지금 가능한 마사지사가 없습니다.').replace('{km}', String(FAR_BLOCK_KM))
         : T('이 지역에는 아직 마사지사가 없습니다. 다른 지역을 골라 보세요.')) + '</div>');
+    // 보여줄 사람이 하나도 없으면 화면이 텅 빈다. 예약은 못 해도
+    // 어느 지역에 누가 있는지는 보여 준다 (예약 버튼 자리에 지역명).
+    const others = providers.filter(p => shown.indexOf(p) < 0);
+    if (others.length) {
+      notice.insertAdjacentHTML('beforebegin',
+        '<div class="hint" style="margin:14px 2px 6px"><span>'
+        + rEsc(T('다른 지역의 마사지사')) + '</span></div>');
+      others.forEach((p, i) => notice.insertAdjacentHTML('beforebegin', providerCard(p, i, true)));
+    }
   } else if (hiddenFar) {
     notice.insertAdjacentHTML('beforebegin',
       '<div class="hint" style="margin:6px 2px">' + rEsc(T('{km}km 밖은 방문이 어려워 {n}명을 숨겼습니다.')
@@ -4021,6 +4034,8 @@ const DICT = {
   '지금 이 지역에 더 보낼 만한 테라피스트가 없습니다.': ['Hiện khu vực này không còn chuyên viên nào để gửi thêm.', 'There are no other therapists to send to in this area right now.', '目前该地区没有其他可发送的理疗师。', '現在この地域に送れるセラピストがいません。'],
   '요청': ['Gửi', 'Send', '发送', '送る'],
   '요청을 보내지 못했습니다: ': ['Không gửi được yêu cầu: ', 'Could not send the request: ', '无法发送请求：', 'リクエストを送れませんでした: '],
+  '다른 지역의 마사지사': ['Kỹ thuật viên ở khu vực khác', 'Therapists in other areas', '其他地区的理疗师', '他の地域のセラピスト'],
+  '지역 미정': ['Chưa chọn khu vực', 'Area not set', '地区未定', '地域未設定'],
   '{km}km 안에 지금 가능한 마사지사가 없습니다.': ['Không có kỹ thuật viên nào trong bán kính {km}km.', 'No therapists available within {km}km.', '{km}公里内暂无可预约的理疗师。', '{km}km 以内に対応できるセラピストがいません。'],
   '{km}km 밖은 방문이 어려워 {n}명을 숨겼습니다.': ['Đã ẩn {n} người ở ngoài {km}km vì khó tới nơi.', 'Hid {n} therapists beyond {km}km — they cannot travel that far.', '已隐藏 {km}公里外的 {n} 位理疗师，无法上门。', '{km}km より遠い{n}名は訪問が難しいため非表示にしました。'],
   '지도에서 숙소·건물을 골라 주세요. 위치를 알아야 테라피스트가 찾아갑니다.': ['Vui lòng chọn nơi ở trên bản đồ. Có vị trí thì chuyên viên mới tới đúng chỗ.', 'Please pick your place on the map so your therapist can find you.', '请在地图上选择住处，理疗师才能找到您。', '地図から滞在先を選んでください。場所がわかればセラピストが伺えます。'],
