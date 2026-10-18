@@ -2166,7 +2166,11 @@ function setupPush() {
   if (PUSH_TOKEN) return savePushToken();
   if (PUSH_ASKED) return;
   PUSH_ASKED = true;
-  N.registerPush((t) => { PUSH_TOKEN = t; savePushToken(); }, onPushEvent).catch((e) => console.warn('푸시 등록 실패', e));
+  // 네이티브는 OS 권한 창이 한 번만 뜬다. 거절했으면 앱 안에서 되돌릴 수 없으므로
+  // 마사지사에게는 설정으로 가라는 안내 화면을 띄운다(웹과 같은 화면의 denied 모드).
+  N.registerPush((t) => { PUSH_TOKEN = t; savePushToken(); }, onPushEvent)
+    .then(async (ok) => { if (!ok && await isApprovedProvider()) showPushGate(true); })
+    .catch((e) => console.warn('푸시 등록 실패', e));
 }
 
 // ── 웹푸시 (안드로이드 TWA·브라우저) ────────────────────────────
@@ -2185,7 +2189,50 @@ function urlB64ToU8(s) {
 async function setupWebPush() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
   if (Notification.permission === 'granted') return subscribeWebPush();
+  // 마사지사에게 알림은 생업이다. 손님처럼 띠 하나로 두면 지나친다 — 실제로 12명 중 0명이 켰다.
+  if (await isApprovedProvider()) return showPushGate();
   showPushBanner();
+}
+// 승인된 마사지사인가. 신청자 본인(profile_id)과 업체 소유자(owner_id) 둘 다 본다 — 목록 화면과 같은 조건.
+let _isProv = null;
+async function isApprovedProvider() {
+  if (_isProv !== null) return _isProv;
+  if (!SESSION) return false;
+  try {
+    const uid = SESSION.user.id;
+    const { data } = await sb.from('providers').select('id')
+      .or('profile_id.eq.' + uid + ',owner_id.eq.' + uid)
+      .eq('application_status', 'approved').limit(1);
+    _isProv = !!(data && data.length);
+  } catch (e) { _isProv = false; }
+  return _isProv;
+}
+// 마사지사 전용 전체 화면. 'default' 면 닫을 수 없다(허용해야 지나간다).
+// 'denied' 면 앱 안에서 되돌릴 방법이 없으므로 안내만 하고 닫게 해 준다 — 안 그러면 앱을 못 쓴다.
+function showPushGate(forceDenied) {
+  if (document.getElementById('pushGate')) return;
+  const denied = forceDenied === true || Notification.permission === 'denied';
+  const d = document.createElement('div');
+  d.id = 'pushGate';
+  d.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#1F4E5F;color:#fff;'
+    + 'display:flex;flex-direction:column;align-items:center;justify-content:center;'
+    + 'gap:18px;padding:28px;text-align:center;font-size:15px;line-height:1.6';
+  d.innerHTML = '<div style="font-size:46px">🔔</div>'
+    + '<div style="font-size:21px;font-weight:800">알림을 켜 주세요</div>'
+    + '<div style="max-width:420px;opacity:.92">알림이 꺼져 있으면 손님이 신청해도 알 수 없습니다. 신청은 다른 마사지사에게 넘어갑니다.</div>'
+    + (denied
+        ? '<div style="max-width:420px;opacity:.92">휴대폰 설정에서 알림이 차단돼 있습니다. 설정 → 애플리케이션 → massa → 알림 → 허용으로 바꿔 주세요.</div>'
+          + '<button id="gateClose" style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5);'
+          + 'border-radius:10px;padding:12px 22px;font-size:15px">닫기</button>'
+        : '<button id="gateOn" style="background:#fff;color:#1F4E5F;border:0;border-radius:12px;'
+          + 'padding:15px 30px;font-weight:800;font-size:17px">알림 켜기</button>');
+  document.body.appendChild(d);
+  const close = d.querySelector('#gateClose'); if (close) close.onclick = () => d.remove();
+  const on = d.querySelector('#gateOn');
+  if (on) on.onclick = async () => {
+    if (await Notification.requestPermission() !== 'granted') { d.remove(); showPushGate(); return; }
+    if (await subscribeWebPush()) d.remove();
+  };
 }
 async function subscribeWebPush() {
   try {
@@ -3743,6 +3790,41 @@ const TITLE_I18N = {
   '채팅': ['Trò chuyện', 'Chat', '聊天', 'チャット'],
 };
 const DICT = {
+  // ── 알림 켜기 (2026-10-18 추가) ────────────────────────────
+  // 이 문구들이 사전에 없어서 베트남 마사지사에게 한국어로 떴다.
+  // 승인된 마사지사 12명 중 알림을 켠 사람이 0명이었던 직접 원인이다.
+  '알림을 켜야 새 신청을 받을 수 있습니다.': [
+    'Bạn cần bật thông báo thì mới nhận được đơn mới.',
+    'Turn on notifications to receive new requests.',
+    '必须开启通知才能接到新订单。',
+    '通知をオンにしないと新しい依頼を受け取れません。'],
+  '알림 켜기': [
+    'Bật thông báo',
+    'Turn on notifications',
+    '开启通知',
+    '通知をオンにする'],
+  '알림을 켜 주세요': [
+    'Hãy bật thông báo',
+    'Please turn on notifications',
+    '请开启通知',
+    '通知をオンにしてください'],
+  '알림이 꺼져 있으면 손님이 신청해도 알 수 없습니다. 신청은 다른 마사지사에게 넘어갑니다.': [
+    'Nếu tắt thông báo, bạn sẽ không biết khi khách đặt lịch. Đơn sẽ chuyển cho kỹ thuật viên khác.',
+    'With notifications off you will not know when a customer books. The request goes to another therapist.',
+    '关闭通知后，客人下单您将无法得知，订单会转给其他理疗师。',
+    '通知がオフだとお客様の予約に気づけません。依頼は他のセラピストに回ります。'],
+  '휴대폰 설정에서 알림이 차단돼 있습니다. 설정 → 애플리케이션 → massa → 알림 → 허용으로 바꿔 주세요.': [
+    'Thông báo đang bị chặn trong cài đặt điện thoại. Vào Cài đặt → Ứng dụng → massa → Thông báo → Bật.',
+    'Notifications are blocked in your phone settings. Go to Settings → Apps → massa → Notifications → Allow.',
+    '手机设置中已屏蔽通知。请前往 设置 → 应用 → massa → 通知 → 允许。',
+    '端末の設定で通知がブロックされています。設定 → アプリ → massa → 通知 → 許可 に変更してください。'],
+  '브라우저에서 알림이 차단돼 있습니다. 주소창 왼쪽 자물쇠 → 알림 → 허용으로 바꿔 주세요.': [
+    'Thông báo đang bị chặn trong trình duyệt. Bấm biểu tượng ổ khóa bên trái thanh địa chỉ → Thông báo → Cho phép.',
+    'Notifications are blocked in your browser. Click the lock icon left of the address bar → Notifications → Allow.',
+    '浏览器已屏蔽通知。点击地址栏左侧的锁形图标 → 通知 → 允许。',
+    'ブラウザで通知がブロックされています。アドレスバー左の鍵アイコン → 通知 → 許可 に変更してください。'],
+  '닫기': ['Đóng', 'Close', '关闭', '閉じる'],
+
   // 베트남어를 앞세우고 25개 화면을 전부 훑었더니 여기 세 군데만 한국어로 남아 있었다.
   // 하필 예약의 마지막 화면과 마사지사 모집 화면이었다.
   '{name} 테라피스트가 {time}에 출발합니다.': [
