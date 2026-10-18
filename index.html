@@ -2176,22 +2176,48 @@ function urlB64ToU8(s) {
   const raw = atob((s + pad).replace(/-/g, '+').replace(/_/g, '/'));
   return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
 }
+// ★ 화면이 뜨는 중에 권한을 물으면 크롬이 막는다(사용자 조작이 없어서).
+//   실제로 그래서 권한 창이 안 떴고 토큰이 0건이었다. 그래서 두 갈래로 나눈다.
+//   · 이미 허용돼 있으면 → 조용히 구독만 갱신한다
+//   · 아직이면 → 묻지 않고 배너만 띄운다. 버튼을 누를 때(사용자 조작) 묻는다
 async function setupWebPush() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
-  if (PUSH_ASKED) return;
-  PUSH_ASKED = true;
+  if (Notification.permission === 'granted') return subscribeWebPush();
+  showPushBanner();
+}
+async function subscribeWebPush() {
   try {
-    // 권한은 로그인한 뒤에만 묻는다. 처음 열자마자 물으면 대부분 거절한다.
-    if (Notification.permission === 'denied') return;
-    if (Notification.permission !== 'granted' && await Notification.requestPermission() !== 'granted') return;
     const reg = await navigator.serviceWorker.ready;
     const sub = await reg.pushManager.getSubscription()
       || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64ToU8(VAPID_PUBLIC) });
     PUSH_TOKEN = JSON.stringify(sub);
     PUSH_PLATFORM = 'web';
     savePushToken();
-  } catch (e) { console.warn('웹푸시 등록 실패', e); }
+    hidePushBanner();
+    return true;
+  } catch (e) { console.warn('웹푸시 등록 실패', e); return false; }
 }
+// 알림을 켜야 주문을 받을 수 있다. 서버도 같은 규칙으로 막는다(guard_provider_push).
+function showPushBanner() {
+  if (document.getElementById('pushBanner')) return;
+  const d = document.createElement('div');
+  d.id = 'pushBanner';
+  d.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:9999;background:#1F4E5F;'
+    + 'color:#fff;padding:12px 14px;display:flex;align-items:center;gap:10px;font-size:13px;line-height:1.4';
+  d.innerHTML = '<span style="flex:1">알림을 켜야 새 신청을 받을 수 있습니다.</span>'
+    + '<button id="pushOn" style="background:#fff;color:#1F4E5F;border:0;border-radius:8px;'
+    + 'padding:8px 14px;font-weight:700;white-space:nowrap">알림 켜기</button>';
+  document.body.appendChild(d);
+  d.querySelector('#pushOn').onclick = async () => {
+    if (Notification.permission === 'denied') {
+      alert('브라우저에서 알림이 차단돼 있습니다. 주소창 왼쪽 자물쇠 → 알림 → 허용으로 바꿔 주세요.');
+      return;
+    }
+    if (await Notification.requestPermission() !== 'granted') return;
+    await subscribeWebPush();
+  };
+}
+function hidePushBanner() { const d = document.getElementById('pushBanner'); if (d) d.remove(); }
 // 로그아웃 전에 부른다 — 나간 계정의 알림이 이 기기로 오지 않게. 지우려면 아직 로그인 상태여야 한다.
 async function removePushToken() {
   if (!SESSION || !PUSH_TOKEN) return;
