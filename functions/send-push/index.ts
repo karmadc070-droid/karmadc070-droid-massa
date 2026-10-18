@@ -130,6 +130,80 @@ async function sendWebPush(subJson: string) {
   return { ok: false, gone: false, error: `${res.status} ${txt.slice(0, 200)}` };
 }
 
+// ── 안드로이드 네이티브 (FCM HTTP v1) ────────────────────────
+// 웹푸시로는 소리·헤드업 배너를 못 낸다. 네이티브 앱은 '알림 채널'을 직접 만들 수 있고
+// (native.js 에서 massa_booking, importance 5), 서버가 channel_id 를 실어 보내야 그 채널이 쓰인다.
+//
+// FCM HTTP v1 은 서비스 계정으로 OAuth2 토큰을 받아야 한다. 레거시 서버키는 폐지됐다.
+const FCM_SA = Deno.env.get("FCM_SERVICE_ACCOUNT") ?? "";   // 서비스 계정 JSON 통째로
+
+let fcmTok: { token: string; at: number } | null = null;
+async function getFcmAccessToken(): Promise<{ token: string; projectId: string } | null> {
+  if (!FCM_SA) return null;
+  let sa: { client_email: string; private_key: string; project_id: string };
+  try { sa = JSON.parse(FCM_SA); } catch { return null; }
+  // 액세스 토큰은 1시간짜리다. 50분 캐시한다.
+  if (!fcmTok || Date.now() - fcmTok.at > 50 * 60 * 1000) {
+    const now = Math.floor(Date.now() / 1000);
+    const header = b64url(new TextEncoder().encode(JSON.stringify({ alg: "RS256", typ: "JWT" })));
+    const claim = b64url(new TextEncoder().encode(JSON.stringify({
+      iss: sa.client_email,
+      scope: "https://www.googleapis.com/auth/firebase.messaging",
+      aud: "https://oauth2.googleapis.com/token",
+      iat: now, exp: now + 3600,
+    })));
+    const input = `${header}.${claim}`;
+    const key = await crypto.subtle.importKey(
+      "pkcs8", pemToDer(sa.private_key),
+      { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["sign"],
+    );
+    const sig = await crypto.subtle.sign("RSASSA-PKCS1-v1_5", key, new TextEncoder().encode(input));
+    const assertion = `${input}.${b64url(new Uint8Array(sig))}`;
+    const res = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer", assertion,
+      }),
+    });
+    if (!res.ok) { console.error("FCM 토큰 발급 실패", await res.text()); return null; }
+    fcmTok = { token: (await res.json()).access_token, at: Date.now() };
+  }
+  return { token: fcmTok.token, projectId: sa.project_id };
+}
+
+async function sendFcm(deviceToken: string, title: string, body: string, kind: string, bookingId: string | null) {
+  const auth = await getFcmAccessToken();
+  if (!auth) return { ok: false, gone: false, error: "FCM_SERVICE_ACCOUNT 가 없습니다" };
+  const res = await fetch(`https://fcm.googleapis.com/v1/projects/${auth.projectId}/messages:send`, {
+    method: "POST",
+    headers: { authorization: `Bearer ${auth.token}`, "content-type": "application/json" },
+    body: JSON.stringify({
+      message: {
+        token: deviceToken,
+        notification: { title, body },
+        data: { kind, booking_id: bookingId ?? "" },
+        android: {
+          priority: "HIGH",
+          notification: {
+            // ★ 이 채널이 소리·헤드업 배너를 정한다. 앱이 같은 id 로 채널을 만들어 두어야 한다.
+            channel_id: "massa_booking",
+            default_sound: true,
+            notification_priority: "PRIORITY_MAX",
+          },
+        },
+      },
+    }),
+  });
+  if (res.ok) return { ok: true, gone: false, error: "" };
+  const txt = await res.text();
+  // 앱을 지웠거나 토큰이 죽은 경우 — 지운다
+  if (res.status === 404 || txt.includes("UNREGISTERED") || txt.includes("INVALID_ARGUMENT")) {
+    return { ok: false, gone: true, error: `${res.status} ${txt.slice(0, 200)}` };
+  }
+  return { ok: false, gone: false, error: `${res.status} ${txt.slice(0, 200)}` };
+}
+
 // 예약 알림 제목은 기기 언어로 쓴다. 중국어·일본어 화면은 영어로 보낸다. 공지는 관리자가 쓴 문장 그대로.
 const TITLE: Record<string, Record<string, string>> = {
   booking_new: { vi: "Có lịch đặt mới", ko: "새 예약이 들어왔습니다", en: "New booking received" },
@@ -147,8 +221,8 @@ Deno.serve(async (req) => {
   if (!NOTIFY_SECRET || req.headers.get("x-notify-secret") !== NOTIFY_SECRET) return json({ error: "unauthorized" }, 401);
   // 보낼 수단이 하나도 없으면 claim 하기 전에 멈춘다(알림이 조용히 사라지지 않게).
   const jwt = await getApnsJwt();          // 없으면 아이폰만 못 보낸다 — 웹푸시는 계속 간다
-  if (!jwt && !VAPID_PRIVATE) {
-    return json({ error: "APNs 키도 VAPID 키도 없습니다 — 보낼 수단이 없습니다" }, 500);
+  if (!jwt && !VAPID_PRIVATE && !FCM_SA) {
+    return json({ error: "APNs·VAPID·FCM 키가 모두 없습니다 — 보낼 수단이 없습니다" }, 500);
   }
 
   const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -178,6 +252,8 @@ Deno.serve(async (req) => {
       const title = TITLE[n.kind]?.[lang] ?? n.title ?? "massa";
       const r = t.platform === "web"
         ? await sendWebPush(t.token)
+        : t.platform === "android"
+        ? await sendFcm(t.token, title, n.body ?? "", n.kind, n.booking_id)
         : jwt
         ? await sendApns(jwt, t.token, title, n.body ?? "", n.kind, n.booking_id)
         : { ok: false, gone: false, error: "APNs 키 없음" };

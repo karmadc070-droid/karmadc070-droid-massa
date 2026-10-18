@@ -1199,3 +1199,38 @@ Firebase 콘솔도 프로젝트도 필요 없다. 키 한 쌍만 만들면 된�
   실제로 그래서 권한 창이 안 떴고 토큰이 0건이었다.
   이제 · 이미 허용 → 조용히 구독 갱신 · 아직이면 → 하단 배너, 버튼 누를 때 요청.
   거부 상태면 자물쇠 아이콘으로 바꾸라고 안내한다.
+
+## 2026-10-18 — 안드로이드 네이티브 전환 (N10) 작업분
+
+TWA → Capacitor 네이티브. **이유는 하나뿐이다** — 웹푸시는 소리·헤드업 배너를 못 낸다.
+안드로이드는 알림 채널이 그걸 정하는데 웹페이지가 채널 중요도를 건드릴 수 없다.
+
+### 한 것
+- `capacitor/package.json` 에 `@capacitor/android` 추가
+- `native.js registerPush()` 에 **채널 생성** 추가 — id `massa_booking`, importance 5(긴급),
+  visibility 1, vibration. 안드로이드일 때만 만든다.
+  ★ 채널은 한 번 만들어지면 설정이 고정된다. 바꾸려면 id 를 올려야 한다 (massa_booking_v2 …).
+- `index.html setupPush()` — 네이티브면 platform(ios/android)을 그대로 쓰고, 아니면 웹푸시.
+- `push_tokens` 제약에 'android' 추가 (ios·web·android).
+- `send-push` 에 **FCM HTTP v1** 발송 추가. 레거시 서버키는 폐지돼서 **서비스 계정으로
+  OAuth2 토큰**을 받아야 한다 (RS256 JWT → oauth2.googleapis.com/token, 50분 캐시).
+  메시지에 `android.notification.channel_id = massa_booking` 을 실어야 그 채널이 쓰인다.
+- `codemagic.yaml` 에 `android-play` 워크플로 추가. versionCode 는 100+빌드번호
+  (기존 TWA 가 3이라 충돌 없음).
+
+### 함정 (또 걸린다)
+★ codemagic.yaml 안에 파이썬을 인라인으로 넣지 말 것. 여러 줄 문자열의 들여쓰기가
+  YAML 블록 스칼라를 끊어서 파일 전체가 깨진다. → `scripts/android-gradle-patch.py` 로 뺐다.
+
+### 남은 것 (사장님 입력 필요)
+1. **FCM 서비스 계정 키** — Firebase 콘솔 → 프로젝트 설정 → 서비스 계정 →
+   '새 비공개 키 생성' → JSON. 이걸 VPS `.env` 의 `FCM_SERVICE_ACCOUNT` 에 한 줄로 넣어야
+   안드로이드로 푸시가 나간다. (docker-compose·함수는 이미 준비됨)
+2. **Codemagic 환경변수 그룹 `android_signing`** — KEYSTORE_PASSWORD · KEY_ALIAS · KEY_PASSWORD
+   (값은 android-package/signing-key-info.txt 에 있다)
+
+### 메모 정정
+서명키가 공개 저장소에 올라가 있다고 경고했는데 **틀렸다**. `.gitignore` 에 이미
+`android-package/` · `*.keystore` · `signing-key-info.txt` 가 있고 git 추적 대상이 아니다.
+로컬 폴더에 파일이 보인다고 저장소에 있다고 단정했다. `git ls-files` 로 먼저 확인할 것.
+Play 앱 서명은 켜져 있다(진짜 키는 구글 보관, 로컬은 업로드 키).
