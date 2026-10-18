@@ -36,7 +36,11 @@ self.addEventListener('push', e => {
     badge: './icon-192.png',
     tag: 'massa-booking',     // 여러 건이 와도 알림이 쌓이지 않게 한 줄로 덮어쓴다
     renotify: true,
-    requireInteraction: true  // 손으로 지울 때까지 남는다. 주문을 놓치면 안 된다
+    requireInteraction: true, // 손으로 지울 때까지 남는다. 주문을 놓치면 안 된다
+    // ★ 소리와 헤드업 배너는 여기서 못 켠다. 안드로이드는 '알림 채널'이 정하고
+    //   크롬은 사이트마다 채널을 하나 만드는데 웹페이지가 그 중요도를 바꿀 수 없다.
+    //   웹에서 할 수 있는 건 진동뿐이다. 소리까지 내려면 네이티브 앱이어야 한다.
+    vibrate: [300, 150, 300, 150, 300]
   }));
 });
 
