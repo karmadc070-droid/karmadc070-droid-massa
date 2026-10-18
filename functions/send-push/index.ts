@@ -67,6 +67,69 @@ async function sendApns(jwt: string, token: string, title: string, body: string,
   return { ok: false, gone: true, error: lastError };
 }
 
+// ── 웹푸시 (안드로이드 TWA·브라우저) ──────────────────────────
+// 안드로이드는 TWA 라 APNs 도 네이티브 FCM 도 못 쓴다. 표준 Web Push + VAPID 로 보낸다.
+// Firebase 프로젝트는 필요 없다. 브라우저가 준 endpoint 로 그냥 POST 한다.
+//
+// ★ 본문을 싣지 않는다(payload 없음). 본문을 실으려면 aes128gcm 암호화가 필요한데,
+//   서비스워커가 고정 문구로 알림을 띄우는 것으로 충분하다. 내용은 앱을 열면 보인다.
+const VAPID_PRIVATE = Deno.env.get("VAPID_PRIVATE_KEY") ?? "";
+const VAPID_PUBLIC = Deno.env.get("VAPID_PUBLIC_KEY") ?? "";
+const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") ?? "mailto:support@massaviet.com";
+
+// VAPID JWT 는 수신 서버(origin)마다 다르고 최대 24시간이다. origin 별로 12시간 캐시한다.
+const vapidJwts = new Map<string, { token: string; at: number }>();
+async function getVapidJwt(origin: string): Promise<string | null> {
+  if (!VAPID_PRIVATE) return null;
+  const hit = vapidJwts.get(origin);
+  if (hit && Date.now() - hit.at < 12 * 60 * 60 * 1000) return hit.token;
+  const header = b64url(new TextEncoder().encode(JSON.stringify({ typ: "JWT", alg: "ES256" })));
+  const payload = b64url(new TextEncoder().encode(JSON.stringify({
+    aud: origin, exp: Math.floor(Date.now() / 1000) + 23 * 60 * 60, sub: VAPID_SUBJECT,
+  })));
+  const input = `${header}.${payload}`;
+  // VAPID 개인키는 raw d 값(base64url 32바이트)이라 JWK 로 넣는다.
+  const key = await crypto.subtle.importKey(
+    "jwk",
+    { kty: "EC", crv: "P-256", d: VAPID_PRIVATE, x: b64url(b64urlToBytes(VAPID_PUBLIC).slice(1, 33)), y: b64url(b64urlToBytes(VAPID_PUBLIC).slice(33, 65)), ext: true },
+    { name: "ECDSA", namedCurve: "P-256" }, false, ["sign"],
+  );
+  const sig = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, key, new TextEncoder().encode(input));
+  const token = `${input}.${b64url(new Uint8Array(sig))}`;
+  vapidJwts.set(origin, { token, at: Date.now() });
+  return token;
+}
+function b64urlToBytes(s: string): Uint8Array {
+  const pad = "=".repeat((4 - (s.length % 4)) % 4);
+  const bin = atob((s + pad).replace(/-/g, "+").replace(/_/g, "/"));
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+async function sendWebPush(subJson: string) {
+  let endpoint = "";
+  try { endpoint = JSON.parse(subJson).endpoint ?? ""; } catch { /* 깨진 구독 */ }
+  if (!endpoint) return { ok: false, gone: true, error: "구독 정보를 읽을 수 없습니다" };
+  const origin = new URL(endpoint).origin;
+  const jwt = await getVapidJwt(origin);
+  if (!jwt) return { ok: false, gone: false, error: "VAPID_PRIVATE_KEY 가 없습니다" };
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      authorization: `vapid t=${jwt}, k=${VAPID_PUBLIC}`,
+      ttl: "3600",
+      urgency: "high",
+      "content-length": "0",
+    },
+  });
+  if (res.ok) return { ok: true, gone: false, error: "" };
+  const txt = await res.text();
+  // 404·410 은 구독이 사라진 것 — 토큰을 지운다.
+  if (res.status === 404 || res.status === 410) return { ok: false, gone: true, error: `${res.status} ${txt}` };
+  return { ok: false, gone: false, error: `${res.status} ${txt.slice(0, 200)}` };
+}
+
 // 예약 알림 제목은 기기 언어로 쓴다. 중국어·일본어 화면은 영어로 보낸다. 공지는 관리자가 쓴 문장 그대로.
 const TITLE: Record<string, Record<string, string>> = {
   booking_new: { vi: "Có lịch đặt mới", ko: "새 예약이 들어왔습니다", en: "New booking received" },
@@ -78,13 +141,15 @@ const TITLE: Record<string, Record<string, string>> = {
 };
 
 type Noti = { id: string; user_id: string; title: string | null; body: string | null; kind: string; booking_id: string | null };
-type Tok = { token: string; user_id: string; lang: string };
+type Tok = { token: string; user_id: string; lang: string; platform: string | null };
 
 Deno.serve(async (req) => {
   if (!NOTIFY_SECRET || req.headers.get("x-notify-secret") !== NOTIFY_SECRET) return json({ error: "unauthorized" }, 401);
-  // 키가 없으면 알림을 "보냄"으로 표시하기 전에 멈춘다(알림이 사라지지 않게).
-  const jwt = await getApnsJwt();
-  if (!jwt) return json({ error: "APNs 키(APPLE_TEAM_ID·APNS_KEY_ID·APNS_PRIVATE_KEY)가 없습니다" }, 500);
+  // 보낼 수단이 하나도 없으면 claim 하기 전에 멈춘다(알림이 조용히 사라지지 않게).
+  const jwt = await getApnsJwt();          // 없으면 아이폰만 못 보낸다 — 웹푸시는 계속 간다
+  if (!jwt && !VAPID_PRIVATE) {
+    return json({ error: "APNs 키도 VAPID 키도 없습니다 — 보낼 수단이 없습니다" }, 500);
+  }
 
   const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const { data: notis, error } = await db.rpc("claim_unpushed_notifications").returns<Noti[]>();
@@ -92,20 +157,37 @@ Deno.serve(async (req) => {
   if (!notis.length) return json({ ok: true, claimed: 0 });
 
   const users = [...new Set(notis.map((n) => n.user_id))];
-  const { data: toks, error: e2 } = await db.from("push_tokens").select("token, user_id, lang").in("user_id", users).returns<Tok[]>();
+  const { data: toks, error: e2 } = await db.from("push_tokens").select("token, user_id, lang, platform").in("user_id", users).returns<Tok[]>();
   if (e2) return json({ error: e2.message }, 500);
 
-  let sent = 0, removed = 0;
+  let sent = 0, removed = 0, noDevice = 0;
   const errors: string[] = [];
   for (const n of notis) {
-    for (const t of toks.filter((x) => x.user_id === n.user_id)) {
+    const mine = toks.filter((x) => x.user_id === n.user_id);
+    // ★ 받을 기기가 없으면 '보냄'으로 두지 않는다. 예전에는 그대로 두어서
+    //   아무에게도 안 갔는데 전부 발송된 것처럼 보였다 (2026-10-18 수정).
+    if (!mine.length) {
+      noDevice++;
+      await db.from("notifications").update({ push_result: "no_device" }).eq("id", n.id);
+      continue;
+    }
+    let okAny = false;
+    const errs: string[] = [];
+    for (const t of mine) {
       const lang = ["vi", "ko"].includes(t.lang) ? t.lang : "en";
       const title = TITLE[n.kind]?.[lang] ?? n.title ?? "massa";
-      const r = await sendApns(jwt, t.token, title, n.body ?? "", n.kind, n.booking_id);
-      if (r.ok) sent++;
+      const r = t.platform === "web"
+        ? await sendWebPush(t.token)
+        : jwt
+        ? await sendApns(jwt, t.token, title, n.body ?? "", n.kind, n.booking_id)
+        : { ok: false, gone: false, error: "APNs 키 없음" };
+      if (r.ok) { sent++; okAny = true; }
       else if (r.gone) { removed++; await db.from("push_tokens").delete().eq("token", t.token); }
-      if (r.error) errors.push(r.error.slice(0, 300));
+      if (r.error) { errs.push(r.error.slice(0, 300)); errors.push(r.error.slice(0, 300)); }
     }
+    await db.from("notifications")
+      .update({ push_result: okAny ? "sent" : `failed: ${errs.join(" | ").slice(0, 300)}` })
+      .eq("id", n.id);
   }
-  return json({ ok: true, claimed: notis.length, sent, removed, errors: errors.slice(0, 3) });
+  return json({ ok: true, claimed: notis.length, sent, removed, noDevice, errors: errors.slice(0, 3) });
 });

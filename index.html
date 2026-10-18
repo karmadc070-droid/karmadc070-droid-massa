@@ -2150,18 +2150,47 @@ window.refreshNotiDot = refreshNotiDot;
 // 로그인하면 이 기기 토큰을 지금 계정·화면 언어로 등록한다(서버가 그 언어로 제목을 쓴다).
 // registerPush 는 리스너를 붙이므로 앱 실행당 한 번만 부르고, 계정이 바뀌면 받아 둔 토큰으로 다시 등록한다.
 let PUSH_TOKEN = null, PUSH_ASKED = false, PUSH_TAP = null, BOOTED = false;
+let PUSH_PLATFORM = 'ios';   // 웹푸시로 등록했으면 'web'. 언어를 바꿔 다시 등록할 때 섞이면 안 된다
 function savePushToken() {
   if (!SESSION || !PUSH_TOKEN) return;
-  Promise.resolve(sb.rpc('register_push_token', { p_token: PUSH_TOKEN, p_platform: 'ios', p_lang: LANG }))
+  Promise.resolve(sb.rpc('register_push_token', { p_token: PUSH_TOKEN, p_platform: PUSH_PLATFORM, p_lang: LANG }))
     .then(function () {}, function () {});
 }
 function setupPush() {
   const N = window.MassaNative;
-  if (!SESSION || !N || N.platform !== 'ios') return;
+  if (!SESSION) return;
+  // 아이폰 앱은 APNs. 그 외(안드로이드 TWA·웹)는 웹푸시로 간다.
+  if (!N || N.platform !== 'ios') return setupWebPush();
   if (PUSH_TOKEN) return savePushToken();
   if (PUSH_ASKED) return;
   PUSH_ASKED = true;
   N.registerPush((t) => { PUSH_TOKEN = t; savePushToken(); }, onPushEvent).catch((e) => console.warn('푸시 등록 실패', e));
+}
+
+// ── 웹푸시 (안드로이드 TWA·브라우저) ────────────────────────────
+// 베트남 법인이 없어 문자·음성은 못 쓴다. 푸시는 사업자 등록이 필요 없다.
+// 구독 정보(endpoint+키)를 통째로 JSON 으로 push_tokens.token 에 넣는다 — 서버가 그대로 쓴다.
+const VAPID_PUBLIC = 'BDy_oW0HWuT9UdfyuTzb1-F-eFiaA6jhF-T86nh550Jpz1c9sMityl-rCHfPOfFwYloAwTG4nOZww5PBOJfLwAk';
+function urlB64ToU8(s) {
+  const pad = '='.repeat((4 - s.length % 4) % 4);
+  const raw = atob((s + pad).replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
+async function setupWebPush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  if (PUSH_ASKED) return;
+  PUSH_ASKED = true;
+  try {
+    // 권한은 로그인한 뒤에만 묻는다. 처음 열자마자 물으면 대부분 거절한다.
+    if (Notification.permission === 'denied') return;
+    if (Notification.permission !== 'granted' && await Notification.requestPermission() !== 'granted') return;
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription()
+      || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64ToU8(VAPID_PUBLIC) });
+    PUSH_TOKEN = JSON.stringify(sub);
+    PUSH_PLATFORM = 'web';
+    savePushToken();
+  } catch (e) { console.warn('웹푸시 등록 실패', e); }
 }
 // 로그아웃 전에 부른다 — 나간 계정의 알림이 이 기기로 오지 않게. 지우려면 아직 로그인 상태여야 한다.
 async function removePushToken() {
