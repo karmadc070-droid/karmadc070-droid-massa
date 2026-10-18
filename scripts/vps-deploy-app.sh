@@ -9,14 +9,17 @@
 set -e
 
 DIR=/srv/massa-app
-REPO=karmadc070-droid/massa
+# 저장소 이름이 massa -> karmadc070-droid-massa 로 바뀌었다 (2026-10-18).
+# 압축 안의 폴더 이름도 따라 바뀌므로 이름을 박아 두지 않고 풀린 폴더를 찾아 쓴다.
+REPO=karmadc070-droid/karmadc070-droid-massa
 
 echo '=== 1. 최신 소스 내려받기 ==='
 TMP=$(mktemp -d)
 curl -s --location "codeload.github.com/$REPO/tar.gz/refs/heads/main" -o "$TMP/m.tgz"
 tar -xzf "$TMP/m.tgz" -C "$TMP"
-SRC="$TMP/massa-main"
-[ -f "$SRC/index.html" ] || { echo '★ index.html 이 없다 — 중단'; rm -rf "$TMP"; exit 1; }
+SRC=$(find "$TMP" -maxdepth 1 -mindepth 1 -type d | head -1)
+[ -n "$SRC" ] && [ -f "$SRC/index.html" ] || { echo '★ index.html 이 없다 — 중단'; ls -la "$TMP"; rm -rf "$TMP"; exit 1; }
+echo "  소스: $SRC"
 
 echo '=== 2. 웹앱이 아닌 것 걷어내기 ==='
 # 소개 사이트 · 빌드 재료 · 문서 · 열쇠는 웹으로 나가면 안 된다.
