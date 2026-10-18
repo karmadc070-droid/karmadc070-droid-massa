@@ -207,7 +207,10 @@ workflows:
         script: |
           npm run build:native
           test -s www/capacitor-native.js || { echo "번들 생성 실패"; exit 1; }
-          grep -q capacitor-native.js www/index.html || sed -i 's#</head>#<script src="capacitor-native.js"></script></head>#' www/index.html
+          # sed -i 는 쓰지 않는다. macOS(BSD) sed 는 -i 뒤에 백업 확장자를 요구해서
+          # 치환식이 확장자로 먹히고 파일명이 스크립트로 해석된다 (실제로 'sed: ww/index.html' 로 깨졌다).
+          grep -q capacitor-native.js www/index.html || perl -pi -e 's#</head>#<script src="capacitor-native.js"></script></head>#' www/index.html
+          grep -c capacitor-native.js www/index.html
       - name: 안드로이드 네이티브 프로젝트 생성 + 자산 동기화
         script: |
           npx cap add android
@@ -228,8 +231,8 @@ workflows:
       - name: 버전 코드 설정
         script: |
           VC=$(( 100 + ${CM_BUILD_NUMBER:-1} ))
-          sed -i "s/versionCode .*/versionCode $VC/" android/app/build.gradle
-          sed -i "s/versionName .*/versionName \"1.1.$VC\"/" android/app/build.gradle
+          perl -pi -e "s/versionCode .*/versionCode $VC/" android/app/build.gradle
+          perl -pi -e "s/versionName .*/versionName \"1.1.$VC\"/" android/app/build.gradle
           grep -n "versionCode\|versionName" android/app/build.gradle
       - name: AAB 빌드
         script: cd android && ./gradlew bundleRelease
