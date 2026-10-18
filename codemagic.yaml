@@ -182,8 +182,11 @@ workflows:
     max_build_duration: 60
     working_directory: capacitor
     environment:
-      groups:
-        - android_signing          # KEYSTORE_PASSWORD · KEY_ALIAS · KEY_PASSWORD
+      # 키스토어는 저장소에 없다 (android-package/ 는 .gitignore 에 걸려 있다).
+      # Codemagic 의 Code signing identities 에 올려 두고 참조 이름으로 받아 쓴다.
+      # 받으면 CM_KEYSTORE_PATH · CM_KEYSTORE_PASSWORD · CM_KEY_ALIAS · CM_KEY_PASSWORD 가 생긴다.
+      android_signing:
+        - massa_upload_key
       vars:
         PACKAGE_NAME: "app.massa.hanoi"
       node: 22
@@ -214,10 +217,11 @@ workflows:
           grep -q 'app.massa.hanoi' android/app/google-services.json || { echo "★ 패키지 이름 불일치 - 중단"; exit 1; }
       - name: 서명 설정
         script: |
-          printf 'MASSA_STORE_FILE=%s\n' "$CM_BUILD_DIR/android-package/signing.keystore" >> android/gradle.properties
-          printf 'MASSA_STORE_PASSWORD=%s\n' "$KEYSTORE_PASSWORD" >> android/gradle.properties
-          printf 'MASSA_KEY_ALIAS=%s\n' "$KEY_ALIAS" >> android/gradle.properties
-          printf 'MASSA_KEY_PASSWORD=%s\n' "$KEY_PASSWORD" >> android/gradle.properties
+          test -f "$CM_KEYSTORE_PATH" || { echo "★ 키스토어가 없다 - Codemagic 의 Code signing identities 에 massa_upload_key 로 올렸는지 확인"; exit 1; }
+          printf 'MASSA_STORE_FILE=%s\n' "$CM_KEYSTORE_PATH" >> android/gradle.properties
+          printf 'MASSA_STORE_PASSWORD=%s\n' "$CM_KEYSTORE_PASSWORD" >> android/gradle.properties
+          printf 'MASSA_KEY_ALIAS=%s\n' "$CM_KEY_ALIAS" >> android/gradle.properties
+          printf 'MASSA_KEY_PASSWORD=%s\n' "$CM_KEY_PASSWORD" >> android/gradle.properties
           python3 ../scripts/android-gradle-patch.py
       - name: 버전 코드 설정
         script: |

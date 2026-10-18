@@ -1246,3 +1246,22 @@ Play 앱 서명은 켜져 있다(진짜 키는 구글 보관, 로컬은 업로�
   **인증·권한·프로젝트 연결 정상.** 진짜 기기 토큰만 있으면 바로 간다.
 - 참고: `push_tokens.token` 에 형식 검사(check)가 있어서 아무 문자열이나 못 넣는다.
   가짜 토큰으로 end-to-end 시험이 안 되니, FCM 경로는 위처럼 직접 호출로 확인할 것.
+
+## 2026-10-18 안드로이드 서명 — 저장소에 없는 키스토어를 가리키고 있었다
+- `codemagic.yaml` 의 android-play 가 `$CM_BUILD_DIR/android-package/signing.keystore` 를 참조했는데
+  `android-package/` 는 `.gitignore:9` 로 통째로 제외돼 있다. CI 체크아웃에는 그 파일이 없다.
+  빌드를 돌렸으면 gradle 서명 단계에서 죽었을 것이다. 돌리기 전에 발견했다.
+- 고친 방법 — Codemagic 의 Code signing identities(Android keystores)에 키스토어를 올리고
+  `environment.android_signing: [massa_upload_key]` 로 참조한다.
+  Codemagic 이 CM_KEYSTORE_PATH · CM_KEYSTORE_PASSWORD · CM_KEY_ALIAS · CM_KEY_PASSWORD 를 넣어 준다.
+  환경변수 그룹 `android_signing` 은 필요 없어졌다 (만들지 말 것).
+- 교훈 — 빌드 스크립트가 참조하는 경로는 `git ls-files` / `git check-ignore` 로 실재를 확인한다.
+  로컬에 파일이 있다는 것은 CI 에 있다는 뜻이 아니다. (저장소 공개/비공개 오판과 같은 뿌리의 실수다.)
+
+## 2026-10-18 저장소 비공개 전환 → Codemagic 접근 끊김 → 공개로 복귀
+- 비공개로 바꾼 순간 `git ls-remote` 가 "Invalid username or token" 으로 실패했다.
+  연결 방식이 GitHub 연동이 아니라 **Other**(인증 없는 공개 URL)였기 때문이다.
+- Codemagic 에 연결된 GitHub 계정은 parkdongchun-77, 저장소 주인은 karmadc070-droid 로 서로 달라
+  저장소 목록이 비어 있었다. GitHub 연동으로 갈아타려면 계정 정리가 필요하다.
+- 애초에 비공개로 바꾼 이유(내가 "서명 키가 공개 저장소에 있다"고 한 것)는 오판이었다.
+  keystore · FCM 키 · .env 모두 추적된 적 없다. 사용자 판단으로 공개로 되돌렸다.
