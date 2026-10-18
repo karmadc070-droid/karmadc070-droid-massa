@@ -1422,3 +1422,14 @@ ABTEST-BOOKING 을 안 지워서 크론이 매분 반복 발송하고 있었다(
 그래서 build.py 는 이제 인터넷(api.massaviet.com)이 되는 곳에서 돌려야 하고, 못 읽으면 일부러 멈춘다(종류 페이지 없이 배포되는 것을 막으려고). 가격은 테라피스트마다 달라 페이지에 넣지 않았다 — 금액이 바뀌어도 페이지가 틀려지지 않는다.
 VIBI·KBizV 처럼 VPS cron 으로 돌리지 않은 이유: 이 사이트는 GitHub → vps-deploy-massaviet.sh 가 docroot 를 통째로 갈아 끼우는 구조라, VPS 에서 따로 쓰는 파일은 다음 배포 때 지워진다. 종류·시간은 거의 안 바뀌므로 바뀌면 build.py 를 다시 돌리고 배포한다.
 테라피스트 개인 페이지와 지역 페이지는 만들지 않았다(checklist 참고).
+
+## 2026-10-19 — 정산 요약 크론의 평문 시크릿 제거
+
+- `/root/massa_digest.sh` 에 notify 시크릿이 평문으로 박혀 있었다. 그런데 그 값은 10/18 교체 전의 **옛 값**이라
+  **10/19 00:00 다이제스트가 `{"error":"unauthorized"}` 로 실패했다**(/var/log/massa_digest.log). 교체 스크립트가 크론 파일을 다시 만들지 못한 탓.
+- 이제 스크립트는 실행할 때 `/root/massa/.env`(600) 의 `NOTIFY_SECRET` 을 읽는다. 저장소 `scripts/massa_digest.sh` 가 원본이다.
+  `vps-notify-cron.sh` 는 같은 내용을 따옴표 heredoc 으로 만들고, `vps-rotate-notify-secret.sh` 는 더 이상 크론 파일을 고치지 않고 확인만 한다.
+  교체 스크립트 5단계의 옛 값 하드코딩도 실행 시 .env 에서 읽은 OLD 로 바꿨다(저장소 이력에는 옛 값이 남아 있으나 이미 무효).
+- 서버 백업: `/root/backup-digest-20261019080311/` (700, 안의 파일 600. 옛 값이 들어 있다).
+- 검증: action 만 `__auth_check` 로 바꾼 임시 복사본 → `알 수 없는 action`(인증 통과, 메일 없음), 틀린 시크릿 → 401. crontab `0 0 * * * /root/massa_digest.sh` 그대로.
+- 참고: 서버 시계가 KST 라 이 크론은 00:00 KST 에 돈다(스크립트 주석의 "09:00 KST" 와 다름). 동작은 그대로 뒀다.
