@@ -1,5 +1,5 @@
 // 앱 셸과 정적 이미지를 캐시해 오프라인·재방문 속도를 높이는 서비스 워커
-const CACHE = 'massa-v2';   // 웹푸시 추가 (2026-10-18) — 이름을 바꿔야 옛 캐시가 정리된다
+const CACHE = 'massa-v3';   // v3: 푸시 문구를 종류 중립으로 (2026-10-18). 이름을 바꿔야 새 워커가 적용된다
 const SHELL = [
   './',
   './manifest.webmanifest',
@@ -29,9 +29,13 @@ self.addEventListener('activate', e => {
 //
 // ★ 본문(payload)은 비워서 보낸다. 본문을 실으려면 aes128gcm 암호화를 서버에 구현해야 하는데,
 //   마사지사에게 필요한 건 '뭔가 왔다'는 사실이지 본문이 아니다. 열면 앱에서 바로 보인다.
+// ★ 본문이 없으니 알림 종류도 알 수 없다. 그래서 문구는 '어떤 종류든 사실인 말'이어야 한다.
+//   예전 문구는 '새 신청이 들어왔습니다' 였는데, 환영 공지를 보내도 그렇게 떠서
+//   마사지사가 앱을 열면 예약이 없는 상황이 된다 — 거짓말이 된다 (2026-10-18 수정).
+//   정확한 문구는 네이티브(FCM·APNs)에서 나온다. 거기서는 본문이 실려 온다.
 self.addEventListener('push', e => {
   e.waitUntil(self.registration.showNotification('massa', {
-    body: 'Có yêu cầu mới — hãy mở ứng dụng để xem.',   // 새 신청이 들어왔습니다
+    body: 'Bạn có thông báo mới — hãy mở ứng dụng để xem.',   // 새 알림이 있습니다 — 앱에서 확인하세요
     icon: './icon-192.png',
     badge: './icon-192.png',
     tag: 'massa-booking',     // 여러 건이 와도 알림이 쌓이지 않게 한 줄로 덮어쓴다
