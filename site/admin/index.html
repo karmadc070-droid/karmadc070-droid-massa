@@ -639,8 +639,11 @@ function render(d) {
   $('kpi').innerHTML = [
     { lab:'유입', val:num(s.visits), now:s.visits, prev:p.visits, spark:col('visits'), c:C.amber,
       // 로그인 전에 연 사람은 손님인지 마사지사인지 알 길이 없다. 셋째 칸으로 따로 센다.
-      foot:`손님 ${num(s.v_cust)} · 마사지사 ${num(s.v_prov)} · 로그인 전 ${num(s.v_anon)}`
-         + ` · 신규 기기 ${num(s.newbies)}` },
+      // ★ 이 숫자는 전부 '방문 횟수' 다. 사람 수가 아니다 (2026-10-20).
+      //   '마사지사 22' 를 마사지사 22명으로 읽어서 명단의 15명과 안 맞는다는 신고가 있었다.
+      //   한 사람이 여러 번 들어오면 늘어난다. 단위를 붙여 사람 수와 구분한다.
+      foot:`방문 — 손님 ${num(s.v_cust)}회 · 마사지사 ${num(s.v_prov)}회 · 로그인 전 ${num(s.v_anon)}회`
+         + ` · 신규 기기 ${num(s.newbies)}대` },
     { lab:'예약', val:num(s.bookings), now:s.bookings, prev:p.bookings, spark:col('bookings'), c:C.cool,
       foot:`성사 ${num(s.matched)} · 완료 ${num(s.done)}` },
     { lab:'매칭율', val:rate(s.matched, s.bookings), point:true,
@@ -679,9 +682,9 @@ function render(d) {
 
   // 유입 — 그래프는 손님·마사지사·로그인 전으로 쌓는다. 셋을 더하면 전체 방문이다.
   $('c-traffic').innerHTML = bars(S,
-    [{ key:'v_cust', name:'손님', color:C.cool },
-     { key:'v_prov', name:'마사지사', color:C.amber },
-     { key:'v_anon', name:'로그인 전', color:C.sand },
+    [{ key:'v_cust', name:'손님 방문', color:C.cool },
+     { key:'v_prov', name:'마사지사 방문', color:C.amber },
+     { key:'v_anon', name:'로그인 전 방문', color:C.sand },
      { key:'signups', name:'가입', color:C.clay }], num);
   drawTraffic();
 
@@ -1498,10 +1501,10 @@ const TCOLS = [
   { k: 'k',        h: '날짜',      l: 1 },
   { k: 'total',    h: '전체',      t: 'n',
     v: (r) => Number(r.v_cust || 0) + Number(r.v_prov || 0) + Number(r.v_anon || 0) },
-  { k: 'v_cust',   h: '손님',      t: 'n' },
-  { k: 'v_prov',   h: '마사지사',  t: 'n' },
-  { k: 'v_anon',   h: '로그인 전', t: 'n' },
-  { k: 'newbies',  h: '신규 기기', t: 'n' },
+  { k: 'v_cust',   h: '손님 방문',      t: 'n' },
+  { k: 'v_prov',   h: '마사지사 방문',  t: 'n' },
+  { k: 'v_anon',   h: '로그인 전 방문', t: 'n' },
+  { k: 'newbies',  h: '신규 기기',      t: 'n' },
   { k: 'signups',  h: '가입',      t: 'n' },
 ];
 
