@@ -2370,12 +2370,19 @@ function openPushTap() {
 let SOCIAL_ON = null;
 async function loadSocialProviders() {
   if (SOCIAL_ON) return SOCIAL_ON;
+  // ★ 실패를 캐시하지 않는다 (2026-10-19). 전에는 catch 에서 {} 를 넣었는데 {} 는 참이라
+  //   한 번만 실패하면 그 세션 내내 소셜 버튼이 아무 설명 없이 사라졌다. 느린 모바일에서 흔하다.
+  //   10초 안에 답이 없으면 포기하되, 다음에 다시 물어본다.
   try {
-    const r = await fetch(SUPABASE_URL + '/auth/v1/settings', { headers: { apikey: SUPABASE_KEY } });
+    const ac = new AbortController();
+    const t = setTimeout(() => ac.abort(), 10000);
+    const r = await fetch(SUPABASE_URL + '/auth/v1/settings',
+      { headers: { apikey: SUPABASE_KEY }, signal: ac.signal });
+    clearTimeout(t);
     const j = await r.json();
-    SOCIAL_ON = j.external || {};
-  } catch (e) { SOCIAL_ON = {}; }
-  return SOCIAL_ON;
+    if (j && j.external) SOCIAL_ON = j.external;
+    return SOCIAL_ON || {};
+  } catch (e) { console.warn('소셜 제공자 목록을 못 받았다', e); return {}; }
 }
 
 const SOCIAL_META = {
@@ -2412,6 +2419,10 @@ async function renderSocialButtons() {
 window.onNativeAuthReturn = async (fragment) => {
   try {
     const p = new URLSearchParams(String(fragment).replace(/^[#?]/, ''));
+    // ★ 제공자가 거절·오류를 돌려줄 때 이유가 여기 들어 있다 (2026-10-19).
+    //   전에는 읽지 않고 "정보를 받지 못했습니다" 만 띄워서, 카카오·애플이 왜 막혔는지 알 길이 없었다.
+    const err = p.get('error_description') || p.get('error');
+    if (err) { alert(T('로그인에 실패했습니다: ') + decodeURIComponent(err.replace(/\+/g, ' '))); return; }
     const access_token = p.get('access_token'), refresh_token = p.get('refresh_token');
     if (access_token && refresh_token) {
       const { error } = await sb.auth.setSession({ access_token, refresh_token });
@@ -5486,8 +5497,12 @@ function trackVisit() {
       localStorage.setItem('massa_did', id);
     }
   } catch (e) { return; }  // 저장을 못 하면 매번 새 기기로 잡혀 숫자만 부풀린다. 아예 세지 않는다
-  const plat = window.IS_NATIVE_APP ? 'ios'
-    : (matchMedia('(display-mode: standalone)').matches ? 'android' : 'web');
+  // ★ 전에는 IS_NATIVE_APP 이면 무조건 'ios' 였다 (2026-10-19 수정).
+  //   IS_NATIVE_APP 은 PWA·TWA·안드로이드 네이티브에서도 참이라 두 번째 가지는 닿지도 않았고,
+  //   안드로이드 앱 사용자가 전부 ios 로 집계됐다. 네이티브가 알려주는 값을 그대로 쓴다.
+  const nativePlat = window.MassaNative && window.MassaNative.platform;
+  const plat = (nativePlat === 'ios' || nativePlat === 'android') ? nativePlat
+    : (matchMedia('(display-mode: standalone)').matches ? 'pwa' : 'web');
   Promise.resolve(sb.rpc('track_visit', {
     p_device: id, p_platform: plat, p_lang: (navigator.language || '').slice(0, 5)
   })).then(function () {}, function () {});

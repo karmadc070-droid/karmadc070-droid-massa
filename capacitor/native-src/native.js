@@ -74,17 +74,38 @@ async function openExternal(url) {
 // massa:// 로 되돌아왔을 때를 처리한다.
 // 로그인은 massa://auth, 결제는 massa://pay 로 온다.
 // 둘 다 실패 시 code= 를 달고 오므로 파라미터가 아니라 호스트로 갈라야 한다.
+// ★ 손잡이가 아직 없으면 버리지 말고 쌓아 둔다 (2026-10-19).
+//   onNativeAuthReturn 은 index.html 의 module 스크립트 안에서 만들어지는데, 그 스크립트는
+//   CDN 에서 supabase-js 를 받아온 뒤에야 끝난다. 앱이 완전히 꺼진 상태에서 massa:// 로 깨어나면
+//   그 전에 appUrlOpen 이 먼저 올 수 있다. 전에는 그냥 버려서, 로그인은 성공했는데
+//   앱은 로그아웃인 채로 떴다. 결제 복귀도 같은 구멍이었다.
+const pending = [];
+function deliver(name, arg) {
+  const fn = window[name];
+  if (typeof fn === "function") { fn(arg); return true; }
+  pending.push([name, arg]);
+  return false;
+}
+// 손잡이가 생겼는지 잠깐 지켜본다. 20초면 CDN 이 아무리 느려도 충분하다.
+let waits = 0;
+const timer = setInterval(() => {
+  for (let i = pending.length - 1; i >= 0; i--) {
+    const fn = window[pending[i][0]];
+    if (typeof fn === "function") { fn(pending[i][1]); pending.splice(i, 1); }
+  }
+  if (!pending.length || ++waits > 80) clearInterval(timer);
+}, 250);
+
 function handleAppUrl(url) {
   try {
     Browser.close().catch(() => {});
     const u = new URL(url);
     const target = u.host || u.pathname.replace(/^\/+/, "");
-    if (target === "pay") {
-      if (window.onNativePayReturn) window.onNativePayReturn(u.search);
-      return;
-    }
-    // 로그인 — 토큰은 # 뒤에, PKCE 코드는 ? 뒤에 붙는다. 그대로 넘기면 supabase-js 가 세션을 세운다
-    if (window.onNativeAuthReturn) window.onNativeAuthReturn(u.hash && u.hash.includes("access_token") ? u.hash : u.search);
+    if (target === "pay") { deliver("onNativePayReturn", u.search); return; }
+    // 로그인 — 토큰은 # 뒤에, PKCE 코드는 ? 뒤에 붙는다. 그대로 넘기면 supabase-js 가 세션을 세운다.
+    // ★ 거절·오류도 # 뒤에 error= 로 온다. access_token 만 보면 그 이유를 통째로 버리게 된다.
+    const useHash = !!u.hash && /access_token=|error=/.test(u.hash);
+    deliver("onNativeAuthReturn", useHash ? u.hash : u.search);
   } catch (e) { console.error("appUrlOpen 처리 실패", e); }
 }
 

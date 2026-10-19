@@ -1522,3 +1522,36 @@ scripts/vps-patch-ios-sound.sh 를 만들어 두고 1.0.18 이 올라간 뒤에 
 교훈 — 오늘 내가 두 번 넘겨짚었다. 토큰 수가 9→12 로 는 것을 보고 "폰이 demo 로
 로그인했구나" 했는데 updated_at 을 보니 설치 전 시각이었다. FCM 의 "sent" 도
 '기기에 떴다'가 아니라 'FCM 이 받아들였다'일 뿐이다. 확인할 수 있는 값이 있으면 먼저 본다.
+
+## 2026-10-19 밤 — 로그인 경로 전수 점검
+
+서버에서 확인한 사실
+  활성 제공자: google · kakao · apple · email · phone (전부 켜져 있다)
+  가입자: google 35 · apple 25 · email 25 · kakao 0  (카카오는 한 번도 성공한 적 없다)
+  mailer_autoconfirm = true  → 이메일 확인 절차가 없다. 가입 즉시 확인 처리된다.
+  ADDITIONAL_REDIRECT_URLS 에 massa://**, massa://auth 들어감 (오늘 추가)
+
+이메일·비밀번호 로그인은 리디렉션을 쓰지 않는다 — 앱에서도 웹에서도 동일하게 동작한다.
+Jin 이 android 토큰을 가진 이유가 이것으로 설명된다.
+
+iOS 는 massa:// 스킴이 원래 등록돼 있었다. 빠진 건 서버 허용 목록뿐이었으므로,
+이미 배포된 1.0.15 로도 구글·애플 로그인이 앱으로 돌아올 가능성이 크다. 새 빌드 없이 시험 가능.
+
+카카오는 코드상 구글과 완전히 같은 경로다. 다만 저장소 밖 확인이 필요하다 —
+카카오 개발자 콘솔의 Redirect URI 에 https://api.massaviet.com/auth/v1/callback 이 있어야 하고,
+account_email 동의 항목이 켜져 있어야 한다 (꺼져 있으면 이메일을 못 받아 계정 생성이 실패한다).
+
+고친 것 네 가지
+  1) native.js — 딥링크를 버리지 않고 대기열에 쌓는다. onNativeAuthReturn 은 CDN 에서
+     supabase-js 를 받은 뒤에야 생기는데, 앱이 꺼진 상태에서 massa:// 로 깨어나면
+     그 전에 appUrlOpen 이 올 수 있었다. 로그인도 결제도 같은 구멍이었다. 20초까지 기다린다.
+  2) 소셜 제공자 목록 — 실패를 캐시하지 않는다. 전에는 catch 에서 {} 를 넣었는데 {} 가 참이라
+     한 번 실패하면 세션 내내 버튼이 사라졌다. 10초 타임아웃을 두고 다음에 다시 묻는다.
+  3) OAuth 오류 — error / error_description 을 읽어 사용자에게 보여 준다. 전에는 버렸다.
+     카카오를 처음 시험할 때 이게 없으면 원인을 못 찾는다.
+  4) trackVisit — MassaNative.platform 을 쓴다. 전에는 IS_NATIVE_APP 이면 무조건 'ios' 라
+     안드로이드 앱이 전부 ios 로 집계됐다. app_visit.platform 은 제약 없는 text 라 'pwa' 추가 안전.
+
+남겨 둔 것
+  reset.html 이 아직 api.moahagwon.com 을 본다 (지금은 살아 있다 — 401 응답 확인).
+  계정 삭제 시 push_tokens 행이 남는다.

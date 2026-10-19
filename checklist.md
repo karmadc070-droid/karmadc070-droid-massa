@@ -4650,3 +4650,10 @@ iOS 를 지금 따로 올리지 않고, 안드로이드 1.1.101 심사 결과를
       → verify: push_tokens 에 karmadc070 앞으로 android 토큰이 생기는지
 - [ ] 그 상태에서 알림 발송 → "마싸" 소리가 나는지
 - [ ] iOS 도 같은 확인 (서버는 이미 고쳤으니 스킴은 원래 있었다)
+
+## 2026-10-19 밤 — 로그인 경로 네 가지 수정
+- [x] 딥링크 대기열 (native.js)       → verify: ESM 문법 통과, deliver 정의 1 / 사용 3
+- [x] 소셜 목록 실패 캐시 제거         → verify: 문법 통과
+- [x] OAuth 오류 메시지 표시           → verify: 문법 통과
+- [x] trackVisit 플랫폼 실제값         → verify: app_visit.platform 은 제약 없는 text 확인
+- [ ] 1.1.105 빌드에 포함해 실제 확인
