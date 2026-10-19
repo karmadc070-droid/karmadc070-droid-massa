@@ -1,57 +1,41 @@
 #!/bin/sh
-# '다음에 뭘 해야 하나' 를 기억이 아니라 현재 데이터로 답하기 위한 조회. 읽기만 한다.
-# PowerShell 이 한글을 깨뜨리므로 SQL 안에는 ASCII 만 쓴다.
-SQL() { docker exec -i massa-db psql -U postgres -d postgres "$@" < /dev/null; }
+# 지금 상태 한눈에 (2026-10-19)
+PSQL="docker exec -i massa-db psql -U postgres -d postgres"
 
-echo '=== 1. business reality ==='
-SQL -c "
-select (select count(*) from providers where is_active and application_status='approved') as shown_providers,
-       (select count(*) from providers where application_status='pending') as pending_apps,
-       (select count(*) from bookings) as bookings_total,
-       (select count(*) from bookings where status='completed') as bookings_done,
-       (select count(*) from reviews) as reviews_total,
-       (select count(distinct device_id) from app_visit) as devices;"
-
-echo ''
-echo '=== 2. bookings by status ==='
-SQL -c "select status::text, count(*) from bookings group by 1 order by 2 desc;"
-
-echo ''
-echo '=== 3. reviews still on screen (these are the seeded ones) ==='
-SQL -c "
-select p.display_name, count(*) as reviews, round(avg(r.rating),1) as avg
-from reviews r join providers p on p.id=r.provider_id
-group by 1 order by 2 desc;"
-
-echo ''
-echo '=== 4. providers missing documents but shown to customers ==='
-SQL -c "
-select count(*) filter (where k.provider_id is null) as no_kyc_row,
-       count(*) filter (where k.provider_id is not null
-                          and coalesce(k.id_front_url,'')=''
-                          and coalesce(k.cert_url,'')=''
-                          and coalesce(k.business_license_url,'')='') as kyc_row_but_empty,
-       count(*) filter (where p.is_verified) as verified_mark_on
+echo '=== 1. 알림 기기 보유 현황 ==='
+$PSQL -c "
+select p.display_name as 마사지사,
+       (select count(*) from push_tokens t
+         where t.user_id = coalesce(p.profile_id, p.owner_id)) as 기기수,
+       coalesce(n.sent_count,0) as 재촉메일,
+       coalesce(to_char(u.last_sign_in_at at time zone 'Asia/Ho_Chi_Minh','MM-DD HH24:MI'),'없음') as 마지막로그인
 from providers p
-left join provider_kyc k on k.provider_id=p.id
-where p.is_active and p.application_status='approved';"
+left join auth.users u on u.id = coalesce(p.profile_id, p.owner_id)
+left join push_nudges n on n.user_id = u.id
+where p.application_status='approved'
+order by 기기수 desc, p.display_name;"
 
-echo ''
-echo '=== 5. profile gallery photos still full size ==='
-SQL -c "
-select count(*) as providers_with_gallery,
-       sum(coalesce(array_length(photo_urls,1),0)) as gallery_photos
-from providers where is_active and application_status='approved';"
+echo '=== 2. 예약 ==='
+$PSQL -c "
+select to_char(b.created_at at time zone 'Asia/Ho_Chi_Minh','MM-DD HH24:MI') as 신청,
+       b.booking_no, b.status as 상태,
+       coalesce(p.display_name,'-') as 마사지사,
+       coalesce(to_char(b.accepted_at at time zone 'Asia/Ho_Chi_Minh','HH24:MI'),'-') as 수락
+from bookings b left join providers p on p.id=b.provider_id
+order by b.created_at desc limit 5;"
 
-echo ''
-echo '=== 6. app static cache headers (none = refetched every visit) ==='
-for p in "" sw.js icon-192.png; do
-  printf '  %-34s %s\n' "/$p" \
-    "$(curl -s -o /dev/null -D- --max-time 15 "https://app.massaviet.com/$p" | grep -i '^cache-control' | tr -d '\r' || echo '(none)')"
-done
+echo '=== 3. 오늘 알림이 어떻게 처리됐나 ==='
+$PSQL -c "
+select n.kind as 종류, coalesce(n.push_result,'(대기)') as 결과, count(*) as 건수
+from notifications n
+where n.created_at > now() - interval '1 day'
+group by 1,2 order by 3 desc;"
 
-echo ''
-echo '=== 7. old hosts still serving (Vercel exit) ==='
-for u in https://massa-seven.vercel.app/ https://massa.moahagwon.com/ https://api.moahagwon.com/auth/v1/health; do
-  printf '  %-46s %s\n' "$u" "$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$u")"
-done
+echo '=== 4. 재촉 메일 로그 ==='
+tail -6 /var/log/massa_nudge.log 2>/dev/null || echo '  (아직 없음 — 첫 발송은 한국시간 17시)'
+
+echo '=== 5. 푸시 발송기 ==='
+tail -2 /var/log/massa_push.log 2>/dev/null
+echo '=== 6. 크론 ==='
+crontab -l | grep -E 'massa_push|massa_nudge'
+echo '=== DONE ==='
