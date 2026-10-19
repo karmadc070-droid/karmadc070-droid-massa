@@ -4657,3 +4657,31 @@ iOS 를 지금 따로 올리지 않고, 안드로이드 1.1.101 심사 결과를
 - [x] OAuth 오류 메시지 표시           → verify: 문법 통과
 - [x] trackVisit 플랫폼 실제값         → verify: app_visit.platform 은 제약 없는 text 확인
 - [ ] 1.1.105 빌드에 포함해 실제 확인
+
+## 2026-10-20 새벽 — 되돌린 것 두 가지 (1.1.105 출시 후 되살릴 것)
+
+- [x] 푸시 채널을 massa_booking_v2 → massa_booking 으로 되돌림
+      → 이유: 서버는 20:59 에 v2 로 바꿨는데 v2 채널은 1.1.105 에만 있다.
+        안드로이드는 없는 채널로 온 푸시를 조용히 버린다. 1.1.103 쓰는 마사지사
+        전원이 3시간 동안 알림을 못 받았다.
+      → verify: 컨테이너 재시작 후 grep 으로 massa_booking 확인
+- [x] GoTrue 허용 목록에서 massa:// 두 줄 제거
+      → 이유: massa:// 가 허용되면 구글 로그인이 massa://auth 로 되돌아오는데
+        1.1.103 에는 그 스킴을 받을 인텐트 필터가 없다. 크롬이 302 본문만 띄워
+        "Found" 만 보이고 로그인이 막힌다. 빼면 SITE_URL 로 떨어져 웹에서라도 끝난다.
+      → verify: 컨테이너의 GOTRUE_URI_ALLOW_LIST 에서 사라진 것 확인
+- [ ] **1.1.105 가 Play 에 풀리면 둘 다 되살린다.**
+      scripts/vps-allow-app-scheme2.sh  (massa:// 다시 허용)
+      scripts/vps-patch-push-sound.sh   (채널 v2 로 다시)
+      → verify: 안드로이드 앱에서 구글 로그인이 앱 안에서 끝나고,
+        push_tokens 에 android 토큰이 새로 생기고, 알림에서 "마싸" 소리가 날 것
+
+## 2026-10-20 새벽 — 아직 못 푼 것
+
+- [ ] 안드로이드 알림이 왜 안 뜨는지 (FCM 은 16대 전부 200 OK, 화면엔 아무것도)
+      → 다음에 확인할 것 1: 폰 설정 → 앱 → massa → 알림 이 켜져 있는가
+      → 다음에 확인할 것 2: 앱에서 이메일+비밀번호로 로그인하면 토큰이 새로 생기는가
+        (구글 가입 11명은 토큰 0개, 이메일 가입한 Jin 만 토큰 보유 — 우연이 아니다)
+- [ ] API_EXTERNAL_URL 이 api.moahagwon.com 이다. massa 의 소셜 로그인 전부가
+      모아학원 도메인을 거친다. 옮기려면 구글 콘솔에 api.massaviet.com/auth/v1/callback
+      을 먼저 등록해야 한다 (확인함 — 지금은 redirect_uri_mismatch).
