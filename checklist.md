@@ -4629,3 +4629,13 @@ iOS 를 지금 따로 올리지 않고, 안드로이드 1.1.101 심사 결과를
 - [ ] 9. 알림 목록의 가짜 데모 3줄 제거
       → verify: 화면에 실제 알림만 남는다
 - [ ] 10. 배포 후 실제 1회 왕복 테스트 (예약 → 수락 → 채팅)
+
+## 2026-10-19 저녁 — iOS 1.0.18 (1.0.17 은 심사에서 내림)
+
+- [x] codemagic ios-appstore 에 '알림음 넣기 (번들 리소스 등록)' 추가
+      → verify: xcodeproj 로 등록 후 resources_build_phase 에 있는지 확인, 없으면 중단
+- [ ] App Store Connect 에서 1.0.17 심사 철회
+- [ ] 1.0.18 빌드 (오늘 작업 10가지 + 알림음 전부 포함)
+- [ ] TestFlight 에서 소리 확인
+- [ ] 소리 확인된 뒤에만 vps-patch-ios-sound.sh 실행 (aps.sound → massa.caf)
+- [ ] 1.0.18 심사 제출
