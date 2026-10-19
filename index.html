@@ -625,6 +625,7 @@
       <div class="fchip sel" onclick="pick(this)">내 근처</div>
       <div class="fchip" onclick="pick(this)">주문 많은 순</div>
       <div class="fchip" id="svcChip_thList" onclick="openServiceTypeSheet('thList')">서비스 유형 ▾</div>
+      <div class="fchip" id="locChip_thList" onclick="openLocations('thList')">📍 <span class="locname">전체 지역</span></div>
     </div>
     <div class="tcard">
       <div class="tphoto"><img src="11.jpg" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:12px"><span class="tag new">신규 도착</span></div>
@@ -675,6 +676,7 @@
       <div class="fchip" data-svc="wax" onclick="filterBeauty(this)">왁싱</div>
       <div class="fchip" data-svc="exfoliation" onclick="filterBeauty(this)">각질 제거</div>
       <div class="fchip" id="svcChip_therapy" onclick="openServiceTypeSheet('therapy')">서비스 유형 ▾</div>
+      <div class="fchip" id="locChip_therapy" onclick="openLocations('therapy')">📍 <span class="locname">전체 지역</span></div>
     </div>
     <div class="tcard">
       <div class="tphoto"><img src="44.jpg" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:12px"><span class="tag q">품질</span></div>
@@ -1789,13 +1791,19 @@ function fillList(screenId, providers) {
         : T('이 지역에는 아직 마사지사가 없습니다. 다른 지역을 골라 보세요.')) + '</div>');
     // 보여줄 사람이 하나도 없으면 화면이 텅 빈다. 예약은 못 해도
     // 어느 지역에 누가 있는지는 보여 준다 (예약 버튼 자리에 지역명).
-    const others = providers.filter(p => shown.indexOf(p) < 0);
-    if (others.length) {
+    // ★ 지역을 골랐으면 그 지역 사람부터 보여 준다. 전에는 고른 지역과 상관없이
+    //    전원을 '다른 지역' 으로 묶어 버려서, 하노이를 골라도 호치민을 골라도
+    //    같은 목록이 나왔다 — 지역 선택이 아무 일도 안 하는 것처럼 보였다.
+    const inCity = MYCITY ? providers.filter(p => p.city_code === MYCITY) : [];
+    const rest = providers.filter(p => shown.indexOf(p) < 0 && inCity.indexOf(p) < 0);
+    const block = (title, arr) => {
+      if (!arr.length) return;
       notice.insertAdjacentHTML('beforebegin',
-        '<div class="hint" style="margin:14px 2px 6px"><span>'
-        + rEsc(T('다른 지역의 마사지사')) + '</span></div>');
-      others.forEach((p, i) => notice.insertAdjacentHTML('beforebegin', providerCard(p, i, true)));
-    }
+        '<div class="hint" style="margin:14px 2px 6px"><span>' + rEsc(title) + '</span></div>');
+      arr.forEach((p, i) => notice.insertAdjacentHTML('beforebegin', providerCard(p, i, true)));
+    };
+    block(regName(MYCITY) + ' · ' + T('지금은 예약할 수 없습니다'), inCity);
+    block(T('다른 지역의 마사지사'), rest);
   } else if (hiddenFar) {
     notice.insertAdjacentHTML('beforebegin',
       '<div class="hint" style="margin:6px 2px">' + rEsc(T('{km}km 밖은 방문이 어려워 {n}명을 숨겼습니다.')
@@ -3137,7 +3145,18 @@ window.openReview = (bookingId, providerId) => {
 let MYCITY = null;                      // 고른 성 코드. null 이면 전체
 try { MYCITY = localStorage.getItem('massa.city') || null; } catch (e) {}
 
-window.openLocations = function () { window.go('location'); renderLocList(); };
+// 지역을 어느 화면에서 열었는지 기억한다. 고른 뒤 그 화면으로 돌아가야
+// 목록을 보다 지역만 바꾸고 다시 목록을 볼 수 있다 (홈으로 튕기면 처음부터 다시다).
+let LOC_FROM = 'home';
+window.openLocations = function (from) { LOC_FROM = from || 'home'; window.go('location'); renderLocList(); };
+
+// 목록 화면 맨 윗줄의 지역 칩에 지금 고른 지역을 찍는다.
+window.paintLocChips = function () {
+  const label = MYCITY ? regName(MYCITY) : T('전체 지역');
+  document.querySelectorAll('.fchip .locname').forEach(n => { n.textContent = label; });
+  document.querySelectorAll('#locChip_thList, #locChip_therapy')
+    .forEach(n => n.classList.toggle('sel', !!MYCITY));
+};
 
 window.renderLocList = function () {
   const q = (document.getElementById('locSearch').value || '').trim().toLowerCase();
@@ -3158,7 +3177,7 @@ window.pickLocation = function (code) {
   try { code ? localStorage.setItem('massa.city', code) : localStorage.removeItem('massa.city'); } catch (e) {}
   const el = document.getElementById('homeLoc');
   if (el) el.textContent = code ? regName(code) : T('전체 지역');
-  window.go('home');
+  window.go(LOC_FROM || 'home');
   if (window.repaintLists) repaintLists();
 };
 
@@ -4076,6 +4095,7 @@ const DICT = {
     '通过审核后，请在应用中开启通知。开启后每次有预约手机都会响铃；不开启则只有打开应用才会知道。',
     '承認後はアプリで通知を許可してください。オンにすると予約のたびに端末が鳴ります。オフだとアプリを開くまで気づけません。'],
   '다른 지역의 마사지사': ['Kỹ thuật viên ở khu vực khác', 'Therapists in other areas', '其他地区的理疗师', '他の地域のセラピスト'],
+  '지금은 예약할 수 없습니다': ['Hiện chưa thể đặt lịch', 'Not bookable right now', '目前无法预约', '今は予約できません'],
   '지역 미정': ['Chưa chọn khu vực', 'Area not set', '地区未定', '地域未設定'],
   '{km}km 안에 지금 가능한 마사지사가 없습니다.': ['Không có kỹ thuật viên nào trong bán kính {km}km.', 'No therapists available within {km}km.', '{km}公里内暂无可预约的理疗师。', '{km}km 以内に対応できるセラピストがいません。'],
   '{km}km 밖은 방문이 어려워 {n}명을 숨겼습니다.': ['Đã ẩn {n} người ở ngoài {km}km vì khó tới nơi.', 'Hid {n} therapists beyond {km}km — they cannot travel that far.', '已隐藏 {km}公里外的 {n} 位理疗师，无法上门。', '{km}km より遠い{n}名は訪問が難しいため非表示にしました。'],
@@ -4579,7 +4599,10 @@ function computeProviders(screenId) {
   });
   return list;
 }
-function refreshList(screenId) { fillList(screenId, computeProviders(screenId)); }
+function refreshList(screenId) {
+  fillList(screenId, computeProviders(screenId));
+  if (window.paintLocChips) paintLocChips();
+}
 window.refreshList = refreshList;
 
 // ── 숙소 검색 (구글 지도) ────────────────────────────────────
@@ -5001,6 +5024,7 @@ async function load() {
   // 저장된 지역을 홈에 찍는다. 이름은 regions 에서 오므로 여기서 해야 한다.
   const _hl = document.getElementById('homeLoc');
   if (_hl) _hl.textContent = MYCITY ? regName(MYCITY) : T('전체 지역');
+  if (window.paintLocChips) paintLocChips();
   try {
     const { data: providers, error } = await sb.from('providers')
       // sort_priority 로 먼저 줄을 세운다. 전에는 rating 순이었는데 후기가 0건이라
