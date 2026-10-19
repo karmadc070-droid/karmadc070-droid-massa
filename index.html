@@ -3296,7 +3296,15 @@ window.loadAccount = loadAccount;
 // 켜 줘야 예약 알림이 오는데, 그걸 모르고 지내던 마사지사가 12명 중 11명이었다.
 async function permStates() {
   let noti = 'unsupported';
-  try { if ('Notification' in window) noti = Notification.permission; } catch (e) {}
+  // ★ 네이티브 앱이 먼저다 (2026-10-19). iOS WebView 에는 웹 Notification API 가 없어서
+  //   그걸로 판단하면 알림이 멀쩡한 기기에 "쓸 수 없습니다" 라고 말하게 된다. 실제로 그랬다.
+  const N = window.MassaNative;
+  if (N && N.checkPush && (N.platform === 'ios' || N.platform === 'android')) {
+    const r = await N.checkPush();
+    noti = (r === 'prompt-with-rationale') ? 'prompt' : r;   // granted | denied | prompt | unknown
+  } else {
+    try { if ('Notification' in window) noti = Notification.permission; } catch (e) {}
+  }
   let geo = MYPOS ? 'granted' : 'prompt';
   try {
     if (navigator.permissions && navigator.permissions.query) {
@@ -3324,6 +3332,19 @@ window.paintPermRows = paintPermRows;
 
 window.tapNotiRow = async function () {
   const s = await permStates();
+  // ★ 네이티브는 OS 권한창을 띄워야 한다. 웹용 안내 화면을 띄워 봐야 아무 일도 안 일어난다.
+  const N = window.MassaNative;
+  if (N && N.registerPush && (N.platform === 'ios' || N.platform === 'android')) {
+    if (s.noti === 'denied') {
+      alert(T('휴대폰 설정에서 알림이 꺼져 있습니다. 설정 → massa → 알림에서 켜 주세요.'));
+      return;
+    }
+    if (s.noti === 'granted') { alert(T('알림이 켜져 있습니다.')); paintPermRows(); return; }
+    PUSH_ASKED = false;          // 다시 물어볼 수 있게 푼다
+    setupPush();                 // OS 권한창 → 허용하면 토큰이 등록된다
+    setTimeout(paintPermRows, 2500);
+    return;
+  }
   if (s.noti === 'unsupported') { alert(T('이 기기에서는 알림을 쓸 수 없습니다.')); return; }
   if (s.noti === 'granted') {
     // 이미 허용돼 있어도 구독이 끊겨 있을 수 있다 (앱 재설치·브라우저 정리).
@@ -4407,6 +4428,11 @@ const DICT = {
   '꺼짐': ['Đang tắt', 'Off', '已关闭', 'オフ'],
   '차단됨': ['Bị chặn', 'Blocked', '已封锁', 'ブロック中'],
   '알림이 켜져 있습니다.': ['Thông báo đang bật.', 'Notifications are on.', '通知已开启。', '通知はオンです。'],
+  '휴대폰 설정에서 알림이 꺼져 있습니다. 설정 → massa → 알림에서 켜 주세요.':
+    ['Thông báo đang tắt trong cài đặt máy. Vào Cài đặt → massa → Thông báo để bật.',
+     'Notifications are off in your phone settings. Go to Settings → massa → Notifications to turn them on.',
+     '手机设置中已关闭通知。请前往 设置 → massa → 通知 开启。',
+     '端末の設定で通知がオフです。設定 → massa → 通知 からオンにしてください。'],
   '이 기기에서는 알림을 쓸 수 없습니다.':
     ['Thiết bị này không hỗ trợ thông báo.', 'This device does not support notifications.',
      '此设备不支持通知。', 'この端末では通知を使えません。'],

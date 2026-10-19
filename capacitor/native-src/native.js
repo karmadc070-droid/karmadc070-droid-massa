@@ -116,6 +116,15 @@ if (Capacitor.isNativePlatform()) {
   App.addListener("appUrlOpen", (e) => handleAppUrl(e.url));
 }
 
+// 네이티브 앱의 알림 권한을 묻는다. 웹의 Notification API 는 iOS WebView 에 아예 없어서,
+// 그걸로 판단하면 "이 기기에서는 알림을 쓸 수 없습니다" 라는 거짓말을 하게 된다 (2026-10-19).
+async function checkPush() {
+  try {
+    const p = await PushNotifications.checkPermissions();
+    return p.receive;          // 'granted' | 'denied' | 'prompt' | 'prompt-with-rationale'
+  } catch (e) { return 'unknown'; }
+}
+
 window.IS_NATIVE_APP = Capacitor.isNativePlatform();
 window.openExternal = openExternal;
 window.MassaNative = {
@@ -123,5 +132,6 @@ window.MassaNative = {
   isNative: Capacitor.isNativePlatform(),
   geoShimmed,
   registerPush,
+  checkPush,
   openExternal,
 };
