@@ -1406,7 +1406,7 @@ function drawApps() {
       <h4>${esc(p.display_name || '(이름 없음)')}
         <span class="tag">${r.shop ? '마사지샵' : '프리랜서'}</span>
         <span class="tag">${esc(p.kind === 'therapist' ? '홈뷰티' : '마사지')}</span></h4>
-      <div class="meta">신청 ${esc(d(p.created_at))} · ${esc(p.service_area || '지역 미입력')}</div>
+      <div class="meta">신청 ${esc(d(p.created_at))} · ${esc(p.service_area || p.city_code || '지역 미입력')}</div>
       <div class="svc">${(p.specialties || []).length
         ? (p.specialties || []).map(v => `<span>${esc(SVC_KO[v] || v)}</span>`).join('')
         : '<span style="color:var(--bad)">선택한 시술 없음</span>'}</div>
@@ -1435,8 +1435,12 @@ const REJECT_WHY = ['신분증 사진이 흐리거나 식별이 어렵습니다'
 async function reviewApp(id, status, reason) {
   // 승인과 인증은 다른 것이다. 승인은 '목록에 노출한다', 인증(✓)은 '신분증을 확인했다' 는 뜻이다.
   // 예전에 승인하면 is_verified 가 같이 켜져서 서류 없는 사람에게 ✓ 가 붙은 적이 있다. 섞지 않는다.
-  const patch = { application_status: status, is_active: status === 'approved',
+  // 승인은 '명단에 올린다' 까지만 한다. 손님 목록 노출은 본인이 앱에서 알림을 켜고 영업을 시작해야 한다.
+  // 예전에는 여기서 is_active 를 같이 켰는데, 알림을 등록하지 않은 사람은 서버 트리거
+  // (guard_provider_push) 가 막아서 '알림을 켜야 영업을 시작할 수 있습니다' 로 승인 자체가 실패했다.
+  const patch = { application_status: status,
     reviewed_at: new Date().toISOString(), reject_reason: status === 'rejected' ? (reason || null) : null };
+  if (status !== 'approved') patch.is_active = false;   // 반려·보류는 즉시 내린다
   const { data: me } = await sb.auth.getUser();
   if (me && me.user) patch.reviewed_by = me.user.id;
 
@@ -1452,7 +1456,7 @@ async function reviewApp(id, status, reason) {
       user_id: uid,
       title: status === 'approved' ? '등록 승인 안내' : '등록 반려 안내',
       body: status === 'approved'
-        ? '등록 신청이 승인되었습니다. 이제 고객 목록에 보이고 예약을 받을 수 있습니다.'
+        ? '등록 신청이 승인되었습니다. 앱에서 알림을 켜고 「영업 시작」을 누르면 고객 목록에 보입니다.'
         : '등록 신청이 반려되었습니다.\n사유: ' + (reason || '-')
           + '\n계정 → 제공자 등록 신청에서 고쳐서 다시 보내실 수 있습니다.',
       kind: status === 'approved' ? 'approved' : 'rejected' });
