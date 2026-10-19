@@ -1436,3 +1436,25 @@ VIBI·KBizV 처럼 VPS cron 으로 돌리지 않은 이유: 이 사이트는 Git
 
 ### IndexNow (2026-10-19)
 키 파일은 공개 값이다(검색엔진이 https://massaviet.com/<키>.txt 로 확인). site-src/indexnow-key.txt 를 지우거나 바꾸면 build.py 가 멈추거나 키가 바뀐다 — 바꾸지 말 것. 알림은 배포 때만 간다: 옛 sitemap 과 비교해 바뀐 주소만 보내므로 문구만 고친 페이지는 massage_content.UPDATED 처럼 lastmod 를 올려야 알림이 간다. 전부 다시 보내려면 VPS 에서 `python3 indexnow.py /없는경로 /srv/massaviet-web --all`.
+
+## 2026-10-19 — 마사지사 수락 경로 (A안)
+
+왜: 실제 예약 1건(MS-261019-3906)이 아무도 수락하지 않아 죽었다. 원인을 마사지사의
+무관심으로 봤는데, 실제로는 **수락할 방법이 없었다.** 테스트로 확인한 경로는 이렇다.
+푸시 도착 ✅ → 배너 클릭 → 알림 목록(클릭 동작 없음) → 끝. 예약 내역은 customer_id 로만
+조회해서 마사지사로 받은 건은 구조상 안 보인다. 수락 버튼은 admin.html 에만 있고
+massaviet.com/admin/* 는 oauth2-proxy 가 막는다 (302 → /oauth2/sign_in).
+
+범위 결정 (A안): 파트너 화면 일습을 옮기지 않는다. 막혀 있는 것은 '수락할 수 없다' 하나다.
+받은 신청 목록 + 수락/거절 + 채팅만 앱에 넣는다. 출퇴근·정산·일정은 콘솔에 그대로 둔다.
+수락이 실제로 도는 걸 본 뒤에 나머지를 정한다.
+
+왜 accept_booking() RPC 를 쓰는가: 같은 요청이 여러 마사지사에게 가 있을 수 있다.
+update 로 하면 둘이 동시에 누를 때 둘 다 확정된다. RPC 가 묶음을 잠그고 한 명만 통과시킨다.
+콘솔도 같은 함수를 쓴다 — 두 경로가 갈라지면 안 된다.
+
+채팅: messages 테이블은 처음부터 양방향이다 (sender_role customer|provider).
+화면만 손님 쪽으로 고정돼 있었다. 새 테이블·새 구독이 필요 없고 UI 만 더하면 된다.
+
+테스트 계정: providers 47482472-7f32-4d7e-af2b-e97bd5dd83f5 '[TEST] massa owner'
+(profile_id = 사장님). 인증 마크는 끄고 sort_priority -99. 끝나면 지운다.

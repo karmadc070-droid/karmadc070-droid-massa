@@ -861,6 +861,11 @@
     <div class="notice" id="myBookingsEmpty" style="display:none">아직 예약이 없습니다. 홈에서 서비스를 예약해 보세요.</div>
   </div>
 
+  <!-- 마사지사가 받은 신청. 이게 없어서 푸시를 받고도 수락할 데가 없었다 (2026-10-19) -->
+  <div class="screen" id="incoming" data-title="받은 신청">
+    <div id="incomingList"><div class="hint">불러오는 중…</div></div>
+  </div>
+
   <!-- 홈뷰티 등록 신청 -->
   <div class="screen" id="applyForm" data-title="제공자 등록 신청">
     <div id="apStatusBox"></div>
@@ -961,6 +966,7 @@
       <div class="mp-row" onclick="window.go('favorites');renderFavorites()"><span class="mp-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#E5484D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.6-9.5-9C1 9 2.5 5.5 6 5.5c2 0 3.2 1.2 4 2.3.8-1.1 2-2.3 4-2.3 3.5 0 5 3.5 3.5 6.5C19 16.4 12 21 12 21z"/></svg></span><span class="mp-name">즐겨찾기</span><span class="mp-chev">›</span></div>
       <div class="mp-row" onclick="window.go('coupons');renderCoupons()"><span class="mp-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#4A5A61" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16v3a2 2 0 000 4v3H4v-3a2 2 0 000-4V7z"/><path d="M14 7v10" stroke-dasharray="2 2"/></svg></span><span class="mp-name">쿠폰함</span><span class="mp-chev">›</span></div>
       <div class="mp-row" onclick="window.go('profileInfo')"><span class="mp-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#4A5A61" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"/></svg></span><span class="mp-name">개인 정보</span><span class="mp-chev">›</span></div>
+      <div class="mp-row" id="mpIncoming" style="display:none" onclick="openIncoming()"><span class="mp-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#2E8B8B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20v-1a4 4 0 014-4h1"/><circle cx="8.5" cy="8" r="3"/><path d="M14 13l2 2 4-4"/></svg></span><span class="mp-name">받은 신청</span><span class="mp-val" id="mpIncomingVal"></span><span class="mp-chev">›</span></div>
       <div class="mp-row" onclick="tapNotiRow()"><span class="mp-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#4A5A61" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15V10a6 6 0 10-12 0v5l-1.5 2.5h15L18 15z"/><path d="M10 20h4"/></svg></span><span class="mp-name">알림</span><span class="mp-val" id="mpNotiVal">—</span><span class="mp-chev">›</span></div>
       <div class="mp-row" onclick="tapGeoRow()"><span class="mp-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#4A5A61" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.3 7-11a7 7 0 10-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span><span class="mp-name">위치</span><span class="mp-val" id="mpGeoVal">—</span><span class="mp-chev">›</span></div>
       <div class="mp-row" id="mpLang"><span class="mp-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#4A5A61" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h9"/><path d="M8.5 5c0 5-2 8-5.5 9"/><path d="M5.5 10c1.6 2.6 4.2 4.2 6.5 4.7"/><path d="M13 20l4-9 4 9M14.4 17h5.2"/></svg></span><span class="mp-name">언어</span><span class="mp-val" id="mpLangVal">한국인</span><span class="mp-chev">›</span></div>
@@ -2141,6 +2147,7 @@ async function refreshSession() {
     const { data: prof } = await sb.from('profiles').select('*').eq('id', SESSION.user.id).single();
     CUR_PROFILE = prof || {};
   } else CUR_PROFILE = null;
+  MY_PROV = null; _isProv = null;   // 계정이 바뀌면 다시 읽는다
   refreshNotiDot();
   subscribeNotifications();
   loadBlocks();
@@ -2348,7 +2355,10 @@ function onPushEvent(e) {
 function openPushTap() {
   const d = PUSH_TAP; PUSH_TAP = null;
   if (!d) return;
-  if (SESSION && /^booking_(confirmed|on_the_way|completed|cancelled)$/.test(d.kind)) { window.go('myBookings'); loadMyBookings(); }
+  // ★ booking_new 가 빠져 있었다 (2026-10-19). 마사지사가 알림을 눌러도
+  //    알림 목록까지만 가고 거기서 끝났다. 수락할 화면으로 보낸다.
+  if (SESSION && d.kind === 'booking_new') { openIncoming(); }
+  else if (SESSION && /^booking_(confirmed|on_the_way|completed|cancelled)$/.test(d.kind)) { window.go('myBookings'); loadMyBookings(); }
   else openNotifications();
 }
 
@@ -3260,6 +3270,7 @@ async function loadAccount() {
   const msg = document.getElementById('acMsg');
   if (msg) msg.textContent = SESSION.user.email + (window.__BUILD__ ? ' · build ' + window.__BUILD__ : '');
   paintPermRows();
+  paintIncomingRow();
 }
 window.loadAccount = loadAccount;
 
@@ -4432,6 +4443,31 @@ const DICT = {
   '이용 정보': ['Thông tin dịch vụ', 'Service info', '使用信息', 'ご利用案内'],
   '🕒 영업시간': ['🕒 Giờ làm việc', '🕒 Hours', '🕒 营业时间', '🕒 営業時間'],
   '언제든 가능': ['Bất kỳ lúc nào', 'Anytime', '随时可预约', 'いつでも可能'],
+  '받은 신청': ['Yêu cầu nhận được', 'Incoming requests', '收到的申请', '受けた申込'],
+  '수락': ['Nhận', 'Accept', '接受', '受ける'],
+  '거절': ['Từ chối', 'Decline', '拒绝', '断る'],
+  '채팅': ['Nhắn tin', 'Chat', '聊天', 'チャット'],
+  '손님': ['Khách', 'Customer', '客人', 'お客様'],
+  '수락 대기': ['Chờ nhận', 'Awaiting you', '等待接受', '受け待ち'],
+  '수락함': ['Đã nhận', 'Accepted', '已接受', '受付済み'],
+  '이동 중': ['Đang di chuyển', 'On the way', '前往中', '移動中'],
+  '진행 중': ['Đang thực hiện', 'In progress', '进行中', '進行中'],
+  '아직 받은 신청이 없습니다.': ['Chưa có yêu cầu nào.', 'No requests yet.', '还没有申请。', 'まだ申込はありません。'],
+  '아직 알림이 없습니다.': ['Chưa có thông báo.', 'No notifications yet.', '还没有通知。', 'まだお知らせはありません。'],
+  '마사지사로 승인된 계정이 아닙니다.': ['Tài khoản chưa được duyệt làm kỹ thuật viên.',
+    'This account is not an approved therapist.', '此账号未获批准为理疗师。', '承認されたセラピストのアカウントではありません。'],
+  '수락했습니다. 손님에게 알림이 갔습니다.': ['Đã nhận. Khách đã được thông báo.',
+    'Accepted. The customer has been notified.', '已接受。已通知客人。', '受けました。お客様に通知しました。'],
+  '다른 마사지사가 먼저 수락했습니다.': ['Kỹ thuật viên khác đã nhận trước.',
+    'Another therapist accepted first.', '其他理疗师先接受了。', '他のセラピストが先に受けました。'],
+  '수락하지 못했습니다.': ['Không nhận được.', 'Could not accept.', '无法接受。', '受けられませんでした。'],
+  '거절하지 못했습니다.': ['Không từ chối được.', 'Could not decline.', '无法拒绝。', '断れませんでした。'],
+  '거절 사유를 적어 주세요. 손님에게는 보이지 않습니다.':
+    ['Vui lòng ghi lý do từ chối. Khách sẽ không nhìn thấy.',
+     'Please give a reason. The customer will not see it.',
+     '请填写拒绝理由。客人看不到。', '断る理由を書いてください。お客様には見えません。'],
+  '사유를 적어 주세요.': ['Vui lòng ghi lý do.', 'Please give a reason.', '请填写理由。', '理由を書いてください。'],
+  '보내지 못했습니다.': ['Không gửi được.', 'Could not send.', '发送失败。', '送れませんでした。'],
   '📍 주소': ['📍 Địa chỉ', '📍 Address', '📍 地址', '📍 住所'],
   '📞 전화': ['📞 Điện thoại', '📞 Phone', '📞 电话', '📞 電話'],
   '🗨️ 카카오톡': ['🗨️ KakaoTalk', '🗨️ KakaoTalk', '🗨️ KakaoTalk', '🗨️ カカオトーク'],
@@ -4469,10 +4505,7 @@ const DICT = {
   '분 전': ['phút trước', 'min ago', '分钟前', '分前'],
   '시간 전': ['giờ trước', 'hours ago', '小时前', '時間前'],
   '일 전': ['ngày trước', 'days ago', '天前', '日前'],
-  '테라피스트 Linh N.는 서비스 예약을 간절히 기다리고 있습니다.': ['Chuyên viên Linh N. đang mong chờ lịch đặt của bạn.', 'Therapist Linh N. is looking forward to your booking.', '理疗师 Linh N. 正期待您的预约。', 'セラピストのLinh N.があなたのご予約をお待ちしています。'],
-  '서비스가 완료되었습니다. 평가를 남겨주세요': ['Dịch vụ đã hoàn tất. Hãy để lại đánh giá nhé.', 'Your service is complete. Please leave a review.', '服务已完成，请留下评价。', 'サービスが完了しました。レビューをお願いします。'],
   '연결됨': ['Đã kết nối', 'Connected', '已连接', '接続済み'],
-  '테라피스트와 연결되었습니다': ['Đã kết nối với chuyên viên', 'You are connected with a therapist', '已与理疗师建立联系', 'セラピストとつながりました'],
   'AI 자연어 검색 · 보통 몇 초 내 응답': ['Tìm kiếm bằng ngôn ngữ tự nhiên · thường trả lời trong vài giây', 'Natural-language search · usually replies in seconds', '自然语言搜索 · 通常几秒内回复', '自然言語検索 · 通常数秒で返信'],
   '예: 커플 마사지 10만원 이하': ['VD: massage cặp đôi dưới 2 triệu ₫', 'e.g. couple massage under 2,000,000₫', '例：情侣按摩 200万₫以下', '例：カップルマッサージ 200万₫以下'],
   '예약 방법': ['Cách đặt lịch', 'How to book', '如何预约', '予約方法'],
@@ -4959,10 +4992,12 @@ function providerMatches(p, f) {
 function isSearch(text) { return parseSearch(text).conds.length > 0; }
 
 let CHAT_PID = null, chatChannel = null;
+// 같은 화면을 손님도 마사지사도 쓴다. 누가 보고 있는지에 따라 '내 말' 쪽이 뒤집힌다.
+let CHAT_AS = 'customer', CHAT_CID = null;
 function appendChat(m) {
   const wrap = document.getElementById('chatMsgs'); if (!wrap) return;
   if (wrap.querySelector('[data-mid="' + m.id + '"]')) return;
-  const d = document.createElement('div'); d.className = 'bmsg ' + (m.sender_role === 'customer' ? 'me' : 'bot'); d.dataset.mid = m.id; d.textContent = m.body;
+  const d = document.createElement('div'); d.className = 'bmsg ' + (m.sender_role === CHAT_AS ? 'me' : 'bot'); d.dataset.mid = m.id; d.textContent = m.body;
   wrap.appendChild(d); wrap.scrollTop = wrap.scrollHeight;
 }
 // ★ 여기 있던 chatAutoReply 를 지웠다 (2026-10-14).
@@ -4979,6 +5014,7 @@ window.openChat = async function (pid, name) {
     alert('예약을 완료하시면 담당 테라피스트와 채팅할 수 있습니다.\n서비스·시간·장소를 선택해 예약을 먼저 진행해 주세요.');
     return;
   }
+  CHAT_AS = 'customer'; CHAT_CID = SESSION.user.id;
   CHAT_PID = pid;
   document.getElementById('chat').dataset.title = name;
   window.go('chat');
@@ -5001,9 +5037,139 @@ window.openChat = async function (pid, name) {
 };
 window.sendChat = async function () {
   const inp = document.getElementById('chatInput'); const v = inp.value.trim(); if (!v || !CHAT_PID) return; inp.value = '';
-  const { data } = await sb.from('messages').insert({ customer_id: SESSION.user.id, provider_id: CHAT_PID, sender_role: 'customer', body: v }).select().single();
+  // customer_id 는 늘 '손님 쪽' 이다. 마사지사가 보낼 때도 상대 손님의 id 를 넣어야
+  // 같은 대화에 붙는다 — 여기에 본인 id 를 넣으면 혼잣말 방이 하나 더 생긴다.
+  const { data, error } = await sb.from('messages')
+    .insert({ customer_id: CHAT_CID || SESSION.user.id, provider_id: CHAT_PID, sender_role: CHAT_AS, body: v })
+    .select().single();
+  if (error) { alert(T('보내지 못했습니다.') + ' ' + error.message); return; }
   if (data) appendChat(data);
   // 답장은 마사지사가 파트너 채팅에서 직접 보낸다. 실시간 구독(chatChannel)이 받아 띄운다.
+};
+
+// ── 마사지사가 받은 신청 (2026-10-19) ──────────────────────
+// 전에는 이 화면이 없어서, 푸시를 받은 마사지사가 앱에서 할 수 있는 일이 하나도 없었다.
+// 수락 버튼은 운영 콘솔에만 있었고 콘솔은 oauth2-proxy 뒤라 마사지사는 못 들어간다.
+// 실제 예약 1건이 그래서 죽었다. 여기 있는 것은 수락·거절·채팅 셋뿐이다 —
+// 출퇴근·정산·일정은 콘솔에 그대로 둔다.
+let MY_PROV = null;
+async function myProviderIds() {
+  if (MY_PROV) return MY_PROV;
+  if (!SESSION) return [];
+  const uid = SESSION.user.id;
+  const { data } = await sb.from('providers').select('id, display_name')
+    .or('profile_id.eq.' + uid + ',owner_id.eq.' + uid)
+    .eq('application_status', 'approved');
+  MY_PROV = data || [];
+  return MY_PROV;
+}
+
+// 계정 화면에 '받은 신청' 줄을 보일지 정한다. 대기 중 건수도 함께 찍는다.
+async function paintIncomingRow() {
+  const row = document.getElementById('mpIncoming');
+  if (!row) return;
+  const mine = await myProviderIds();
+  if (!mine.length) { row.style.display = 'none'; return; }
+  row.style.display = '';
+  const { count } = await sb.from('bookings').select('id', { count: 'exact', head: true })
+    .in('provider_id', mine.map(p => p.id)).eq('status', 'requested');
+  const v = document.getElementById('mpIncomingVal');
+  if (v) {
+    v.textContent = count ? String(count) : '';
+    v.style.cssText = count ? 'background:#E5484D;color:#fff;border-radius:10px;padding:1px 8px;font-weight:700' : '';
+  }
+}
+window.paintIncomingRow = paintIncomingRow;
+
+window.openIncoming = function () { window.go('incoming'); loadIncoming(); };
+
+async function loadIncoming() {
+  const wrap = document.getElementById('incomingList');
+  if (!wrap) return;
+  const mine = await myProviderIds();
+  if (!mine.length) { wrap.innerHTML = '<div class="notice">' + rEsc(T('마사지사로 승인된 계정이 아닙니다.')) + '</div>'; return; }
+  const { data, error } = await sb.from('bookings')
+    .select('*, services(name, duration_min)')
+    .in('provider_id', mine.map(p => p.id))
+    .in('status', ['requested', 'confirmed', 'on_the_way', 'in_progress'])
+    .order('created_at', { ascending: false }).limit(30);
+  if (error) { wrap.innerHTML = '<div class="notice">' + rEsc(error.message) + '</div>'; return; }
+  const list = data || [];
+  if (!list.length) { wrap.innerHTML = '<div class="notice">' + rEsc(T('아직 받은 신청이 없습니다.')) + '</div>'; return; }
+  const when = iso => { const d = new Date(iso); const p2 = n => String(n).padStart(2, '0');
+    return p2(d.getMonth() + 1) + '/' + p2(d.getDate()) + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes()); };
+  const STAT = { requested: '수락 대기', confirmed: '수락함', on_the_way: '이동 중', in_progress: '진행 중' };
+  wrap.innerHTML = list.map(b => {
+    const place = [b.hotel_name, b.room_number].filter(Boolean).join(' ') || b.address || '-';
+    const acts = b.status === 'requested'
+      ? '<button class="chip sel" onclick="acceptIncoming(\'' + b.id + '\')">' + rEsc(T('수락')) + '</button>'
+        + '<button class="chip" onclick="rejectIncoming(\'' + b.id + '\')">' + rEsc(T('거절')) + '</button>'
+      : '';
+    return '<div class="tcard" style="display:block;padding:14px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center">'
+      + '<b>' + rEsc(b.booking_no || '') + '</b>'
+      + '<span style="font-size:12.5px;color:' + (b.status === 'requested' ? '#E5484D' : '#2E8B8B') + ';font-weight:700">'
+      + rEsc(T(STAT[b.status] || b.status)) + '</span></div>'
+      + '<div style="color:var(--muted);font-size:13px;margin-top:6px;line-height:1.7">'
+      + '🕒 ' + when(b.scheduled_at) + '<br>'
+      + '📍 ' + rEsc(place) + '<br>'
+      + '💆 ' + rEsc((b.services && b.services.name) || '-') + '<br>'
+      + '💰 ' + Number(b.amount_vnd || 0).toLocaleString() + '₫</div>'
+      + '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">' + acts
+      + '<button class="chip" onclick="openChatAsProvider(\'' + b.id + '\',\'' + b.customer_id + '\',\'' + b.provider_id + '\')">💬 '
+      + rEsc(T('채팅')) + '</button></div></div>';
+  }).join('');
+}
+window.loadIncoming = loadIncoming;
+
+// 수락은 update 가 아니라 서버 함수로 한다. 같은 요청이 여러 사람에게 가 있을 수 있어서,
+// 둘이 같은 순간에 누르면 update 로는 둘 다 확정된다. 운영 콘솔도 같은 함수를 쓴다.
+window.acceptIncoming = async function (id) {
+  const { error } = await sb.rpc('accept_booking', { p_id: id });
+  if (error) {
+    alert(/already_taken|먼저 수락/.test(error.message || '')
+      ? T('다른 마사지사가 먼저 수락했습니다.')
+      : T('수락하지 못했습니다.') + ' ' + error.message);
+  } else {
+    alert(T('수락했습니다. 손님에게 알림이 갔습니다.'));
+  }
+  loadIncoming(); paintIncomingRow();
+};
+
+window.rejectIncoming = async function (id) {
+  const reason = prompt(T('거절 사유를 적어 주세요. 손님에게는 보이지 않습니다.'));
+  if (reason === null) return;
+  if (!reason.trim()) { alert(T('사유를 적어 주세요.')); return; }
+  const { error } = await sb.from('bookings')
+    .update({ status: 'cancelled', rejected_at: new Date().toISOString(), reject_reason: reason.trim() })
+    .eq('id', id);
+  if (error) { alert(T('거절하지 못했습니다.') + ' ' + error.message); return; }
+  loadIncoming(); paintIncomingRow();
+};
+
+// 마사지사 쪽에서 여는 채팅. messages 테이블은 처음부터 양방향이라(sender_role)
+// 테이블도 구독도 그대로 쓰고, 보내는 쪽 표시만 'provider' 로 바꾼다.
+window.openChatAsProvider = async function (bookingId, customerId, providerId) {
+  CHAT_AS = 'provider';
+  CHAT_PID = providerId;
+  CHAT_CID = customerId;
+  document.getElementById('chat').dataset.title = T('손님');
+  window.go('chat');
+  const wrap = document.getElementById('chatMsgs'); wrap.innerHTML = '';
+  const { data } = await sb.from('messages').select('*')
+    .eq('customer_id', customerId).eq('provider_id', providerId).order('created_at');
+  if (!data || !data.length) {
+    const h = document.createElement('div');
+    h.style.cssText = 'text-align:center;color:#8A9AA2;font-size:12.5px;padding:18px 10px;line-height:1.6';
+    h.textContent = T('아직 주고받은 메시지가 없습니다. 먼저 말을 걸어보세요.');
+    wrap.appendChild(h);
+  }
+  (data || []).forEach(appendChat);
+  if (chatChannel) { sb.removeChannel(chatChannel); chatChannel = null; }
+  chatChannel = sb.channel('chat-p-' + providerId)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: 'provider_id=eq.' + providerId }, (payload) => {
+      const m = payload.new; if (m.customer_id === customerId) appendChat(m);
+    }).subscribe();
 };
 
 window.openBot = function () {
@@ -5083,17 +5249,21 @@ async function renderNotifications() {
   if (!wrap) return;
   let real = [];
   if (SESSION) { try { const { data } = await sb.from('notifications').select('*').eq('user_id', SESSION.user.id).order('created_at', { ascending: false }).limit(30); real = data || []; } catch (e) {} }
-  const realHtml = real.map(n => '<div class="noti-row"><div class="noti-ico">' + (n.kind === 'warning' ? '⚠️' : '📢') + '</div><div class="noti-body"><div class="noti-title">' + (n.title || '알림') + '</div><div class="noti-desc">' + (n.body || '') + '</div><div class="noti-time">' + notiAgo(n.created_at) + '</div></div></div>').join('');
-  const items = [
-    ['알림', '테라피스트 Linh N.는 서비스 예약을 간절히 기다리고 있습니다.', '15 <span>시간 전</span>'],
-    ['완료', '서비스가 완료되었습니다. 평가를 남겨주세요', '3 <span>일 전</span>'],
-    ['연결됨', '테라피스트와 연결되었습니다', '3 <span>일 전</span>']
-  ];
-  const demoHtml = items.map(n => '<div class="noti-row"><div class="noti-ico">📢</div><div class="noti-body"><div class="noti-title">' + n[0] + '</div><div class="noti-desc">' + n[1] + '</div><div class="noti-time">' + n[2] + '</div></div></div>').join('');
-  wrap.innerHTML = realHtml + demoHtml;
+  // ★ 항목을 누르면 해당 화면으로 간다 (2026-10-19). 전에는 클릭 동작이 아예 없어서
+  //    푸시를 눌러 들어온 마사지사가 여기서 막혔다.
+  const realHtml = real.map(n => '<div class="noti-row" style="cursor:pointer" onclick="tapNoti(\'' + n.kind + '\')"><div class="noti-ico">' + (n.kind === 'warning' ? '⚠️' : '📢') + '</div><div class="noti-body"><div class="noti-title">' + (n.title || '알림') + '</div><div class="noti-desc">' + (n.body || '') + '</div><div class="noti-time">' + notiAgo(n.created_at) + '</div></div></div>').join('');
+  // ★ 여기 있던 데모 3줄을 지웠다 (2026-10-19) — 'Linh N.는 기다리고 있습니다',
+  //   '서비스가 완료되었습니다', '테라피스트와 연결되었습니다'. 코드에 박힌 가짜였고
+  //   실제 사용자에게 자기 일인 것처럼 보이고 있었다. 다시 넣지 말 것.
+  wrap.innerHTML = realHtml || '<div class="notice">' + rEsc(T('아직 알림이 없습니다.')) + '</div>';
   if (SESSION && real.length) { try { await sb.from('notifications').update({ is_read: true }).eq('user_id', SESSION.user.id).eq('is_read', false); refreshNotiDot(); } catch (e) {} }
 }
 window.renderNotifications = renderNotifications;
+// 알림 종류에 따라 갈 곳이 다르다. 마사지사용(booking_new)은 '받은 신청' 으로.
+window.tapNoti = function (kind) {
+  if (kind === 'booking_new') { openIncoming(); return; }
+  if (/^booking_/.test(kind)) { window.go('myBookings'); loadMyBookings(); }
+};
 window.openNotifications = function () {
   const dot = document.querySelector('.hdot'); if (dot) dot.style.display = 'none';
   window.go('notifications'); renderNotifications();

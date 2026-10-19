@@ -4604,3 +4604,28 @@ iOS 를 지금 따로 올리지 않고, 안드로이드 1.1.101 심사 결과를
 - [ ] 지역 페이지는 보류 — 승인 테라피스트가 도시당 1~5명이라 내용이 거의 같은 얇은 페이지가 된다. 도시별 인원이 늘면 다시 검토
 - [ ] (사용자) Search Console·Bing·네이버에서 https://massaviet.com/sitemap.xml 다시 제출(IndexNow 키 없음)
 - [x] (10/19) IndexNow: 키는 site-src/indexnow-key.txt, build.py 가 site/<키>.txt 로 넣는다(배포가 docroot 를 갈아 끼워도 남게). vps-deploy-massaviet.sh 가 비우기 전 옛 sitemap 을 남겨 두고, 복사 뒤 site-src/indexnow.py 로 새 주소·lastmod 변경분만 api.indexnow.org 에 보낸다. 첫 전체 제출(--all) 결과는 context-notes 참고
+
+## 2026-10-19 — 마사지사가 앱에서 신청을 수락할 수 있게 (A안)
+
+발견: 마사지사는 푸시를 받아도 앱에서 할 수 있는 일이 없었다.
+수락 버튼은 운영 콘솔에만 있고, 콘솔은 oauth2-proxy 뒤라 베트남 마사지사는 로그인 자체가 안 된다.
+
+- [ ] 1. myProviderIds() — 내가 가진 승인된 provider id (profile_id · owner_id 둘 다)
+      → verify: 사장님 계정에서 1건 반환
+- [ ] 2. '받은 신청' 화면 + 계정 탭 줄 (승인된 마사지사에게만 보임)
+      → verify: 사장님 계정에 보이고, demo 손님 계정에는 안 보임
+- [ ] 3. 목록 — 내 provider 앞으로 온 예약, 최신순
+      → verify: MS-261019-6714 가 보인다
+- [ ] 4. 수락 = accept_booking() RPC
+      → verify: status requested → confirmed, 손님에게 알림 생성
+- [ ] 5. 거절 = status cancelled + reject_reason (콘솔과 같은 모양)
+      → verify: 사유 없이 못 누른다
+- [ ] 6. 마사지사 쪽 채팅 (sender_role='provider')
+      → verify: 양쪽에서 보낸 글이 서로 보인다
+- [ ] 7. 푸시 탭 분기에 booking_new 추가 → '받은 신청' 으로
+      → verify: 알림 눌러서 바로 그 화면
+- [ ] 8. 알림 목록 항목 클릭 동작 추가
+      → verify: 누르면 해당 화면으로 간다
+- [ ] 9. 알림 목록의 가짜 데모 3줄 제거
+      → verify: 화면에 실제 알림만 남는다
+- [ ] 10. 배포 후 실제 1회 왕복 테스트 (예약 → 수락 → 채팅)
