@@ -4125,6 +4125,14 @@ async function loadAdminProviders() {
   if (kw) q = q.ilike('display_name', '%' + kw + '%');
   const { data, error } = await q;
   if (error) { wrap.innerHTML = '<div class="notice">불러오기 실패: ' + error.message + '</div>'; return; }
+  // 알림 기기 보유 현황. 기기가 0개면 예약이 들어와도 본인은 모른다 (10/19 실제로 손님을 놓쳤다).
+  // push_tokens 는 본인만 읽을 수 있어서 관리자용 함수로 개수만 받아온다.
+  const DEV = {};
+  try {
+    const { data: ps } = await sb.rpc('admin_push_status');
+    (ps || []).forEach(r => { DEV[r.provider_id] = r.device_count; });
+  } catch (e) { console.warn('알림 현황 조회 실패', e); }
+  const noDev = (p) => DEV[p.id] === 0;
   const kindKo = { masseur: '마사지사', therapist: '홈 뷰티' };
   if (!data || !data.length) { wrap.innerHTML = '<div class="notice">검색 결과가 없습니다.</div>'; return; }
   const susp = (p) => p.suspended_until && new Date(p.suspended_until) > new Date();
@@ -4138,11 +4146,13 @@ async function loadAdminProviders() {
             { k:'off',  h:'내려감',    f: (p) => !p.is_active },
             { k:'wait', h:'심사 대기', f: (p) => p.application_status === 'pending' },
             { k:'ver',  h:'인증 있음', f: (p) => p.is_verified || p.credential_verified },
-            { k:'pen',  h:'제재 있음', f: (p) => (p.penalty_level || 0) > 0 || susp(p) }],
+            { k:'pen',  h:'제재 있음', f: (p) => (p.penalty_level || 0) > 0 || susp(p) },
+            { k:'nodev',h:'🔕 알림 꺼짐', f: noDev }],
     search: (p) => [p.display_name, p.base_district, tel(p), p.deposit_code],
   }, (p) => '<div class="card" style="cursor:default"><div class="trow1"><span class="t">' + p.display_name + ' <span style="font-size:11px;color:var(--muted)">' + (kindKo[p.kind] || p.kind) + '</span></span><label class="sw"><input type="checkbox" ' + (p.is_active ? 'checked' : '') + ' onchange="toggleActive(\'' + p.id + '\',this.checked)"><span class="sw-track"></span></label></div>'
     + '<div class="d">★ ' + Number(p.rating).toFixed(1) + ' · 리뷰 ' + p.review_count + ' · ' + (p.base_district || '-') + ' · ' + (p.application_status === 'approved' ? '승인' : p.application_status) + '</div>'
     + (function () { const lv = p.penalty_level || 0; const sus = p.suspended_until && new Date(p.suspended_until) > new Date(); if (!lv && !sus) return ''; const t = sus ? '🚫 예약 정지 (~' + new Date(p.suspended_until).toLocaleDateString() + ')' : lv >= 2 ? '⚠ 노출 저하' : '⚠ 경고'; return '<div class="d" style="color:#E5484D;font-weight:bold">' + t + ' · 최근 거절 ' + (p.reject_count || 0) + '회</div>'; })()
+    + (noDev(p) ? '<div class="d" style="color:#E5484D;font-weight:bold">🔕 알림 꺼짐 — 예약이 와도 본인은 모릅니다 (메일로만 전달)</div>' : '')
     + '<div class="d">' + (p.specialties || []).map(s => TYPE_KO[s] || s).join('·') + ' · ' + (tel(p) || '연락처 없음') + '</div>'
     + '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="chip" onclick="openProfile(\'' + p.id + '\')">프로필</button>'
     + (p.is_verified ? '<span class="chip sel">✓ 신원 확인됨</span>' : '<button class="chip" onclick="adminVerify(\'' + p.id + '\')">신원 확인 주기</button>')
