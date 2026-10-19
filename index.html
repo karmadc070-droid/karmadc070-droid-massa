@@ -857,13 +857,14 @@
   </div>
 
   <div class="screen" id="myBookings" data-title="내 신청·예약">
+    <!-- 마사지사에게만 두 칸이 보인다. 계정 탭 깊숙이 숨겨 두면 또 놓친다 (2026-10-19) -->
+    <div class="filters" id="bkTabs" style="display:none">
+      <div class="fchip sel" id="bkTabIn" onclick="switchBkTab('in')">받은 신청 <span id="bkTabInN"></span></div>
+      <div class="fchip" id="bkTabMine" onclick="switchBkTab('mine')">내 예약</div>
+    </div>
+    <div id="incomingList" style="display:none"></div>
     <div id="myBookingsList"></div>
     <div class="notice" id="myBookingsEmpty" style="display:none">아직 예약이 없습니다. 홈에서 서비스를 예약해 보세요.</div>
-  </div>
-
-  <!-- 마사지사가 받은 신청. 이게 없어서 푸시를 받고도 수락할 데가 없었다 (2026-10-19) -->
-  <div class="screen" id="incoming" data-title="받은 신청">
-    <div id="incomingList"><div class="hint">불러오는 중…</div></div>
   </div>
 
   <!-- 홈뷰티 등록 신청 -->
@@ -2148,6 +2149,7 @@ async function refreshSession() {
     CUR_PROFILE = prof || {};
   } else CUR_PROFILE = null;
   MY_PROV = null; _isProv = null;   // 계정이 바뀌면 다시 읽는다
+  if (SESSION && window.paintBkTabs) paintBkTabs();   // 아래 탭 빨간 점을 바로 찍는다
   refreshNotiDot();
   subscribeNotifications();
   loadBlocks();
@@ -2764,7 +2766,10 @@ async function loadMyBookings() {
     .select('*, services(name), providers(display_name)')
     .eq('customer_id', SESSION.user.id).order('created_at', { ascending: false });
   if (error) { wrap.innerHTML = `<div class="notice">불러오기 실패: ${error.message}</div>`; return; }
-  empty.style.display = data.length ? 'none' : 'block';
+  // '받은 신청' 칸을 보고 있으면 손님용 빈 안내를 띄우지 않는다 — 둘이 겹쳐 보인다.
+  const onIncoming = document.getElementById('incomingList')
+    && document.getElementById('incomingList').style.display !== 'none';
+  empty.style.display = (data.length || onIncoming) ? 'none' : 'block';
   window.__myBookings = data;
   // 채팅은 테라피스트가 먼저 건다 (2026-10-15 방침). 그 전에는 버튼을 내놓지 않는다.
   // 서버도 막지만(guard_first_message), 눌러도 거절당하는 버튼을 보여 주면 안 된다.
@@ -5081,7 +5086,51 @@ async function paintIncomingRow() {
 }
 window.paintIncomingRow = paintIncomingRow;
 
-window.openIncoming = function () { window.go('incoming'); loadIncoming(); };
+// '받은 신청' 은 예약 내역 탭 안의 첫 칸이다. 알림·푸시에서도 여기로 보낸다.
+window.openIncoming = function () { window.go('myBookings'); switchBkTab('in'); };
+
+window.switchBkTab = function (which) {
+  const inList = document.getElementById('incomingList');
+  const myList = document.getElementById('myBookingsList');
+  const empty = document.getElementById('myBookingsEmpty');
+  const on = which === 'in';
+  document.getElementById('bkTabIn').classList.toggle('sel', on);
+  document.getElementById('bkTabMine').classList.toggle('sel', !on);
+  inList.style.display = on ? '' : 'none';
+  myList.style.display = on ? 'none' : '';
+  if (empty) empty.style.display = 'none';
+  if (on) { inList.innerHTML = '<div class="hint">' + rEsc(T('불러오는 중…')) + '</div>'; loadIncoming(); }
+  else loadMyBookings();
+};
+
+// 마사지사면 두 칸을 꺼내고, 대기 중인 신청 수를 칸과 아래 탭에 찍는다.
+async function paintBkTabs() {
+  const tabs = document.getElementById('bkTabs');
+  if (!tabs) return 0;
+  const mine = await myProviderIds();
+  if (!mine.length) { tabs.style.display = 'none'; return 0; }
+  tabs.style.display = '';
+  const { count } = await sb.from('bookings').select('id', { count: 'exact', head: true })
+    .in('provider_id', mine.map(p => p.id)).eq('status', 'requested');
+  const n = count || 0;
+  const el = document.getElementById('bkTabInN');
+  if (el) {
+    el.textContent = n ? String(n) : '';
+    el.style.cssText = n ? 'background:#E5484D;color:#fff;border-radius:9px;padding:0 6px;margin-left:4px;font-weight:700' : '';
+  }
+  // 아래 탭 '예약 내역' 에 빨간 점. 앱만 열어도 눈에 들어와야 한다.
+  const tab = document.querySelectorAll('.tabbar div')[1];
+  if (tab) {
+    let dot = tab.querySelector('.bkdot');
+    if (n && !dot) {
+      dot = document.createElement('span'); dot.className = 'bkdot';
+      dot.style.cssText = 'position:absolute;top:4px;right:28%;width:8px;height:8px;border-radius:50%;background:#E5484D';
+      tab.style.position = 'relative'; tab.appendChild(dot);
+    } else if (!n && dot) dot.remove();
+  }
+  return n;
+}
+window.paintBkTabs = paintBkTabs;
 
 async function loadIncoming() {
   const wrap = document.getElementById('incomingList');
@@ -5133,7 +5182,7 @@ window.acceptIncoming = async function (id) {
   } else {
     alert(T('수락했습니다. 손님에게 알림이 갔습니다.'));
   }
-  loadIncoming(); paintIncomingRow();
+  loadIncoming(); paintIncomingRow(); paintBkTabs();
 };
 
 window.rejectIncoming = async function (id) {
@@ -5144,7 +5193,7 @@ window.rejectIncoming = async function (id) {
     .update({ status: 'cancelled', rejected_at: new Date().toISOString(), reject_reason: reason.trim() })
     .eq('id', id);
   if (error) { alert(T('거절하지 못했습니다.') + ' ' + error.message); return; }
-  loadIncoming(); paintIncomingRow();
+  loadIncoming(); paintIncomingRow(); paintBkTabs();
 };
 
 // 마사지사 쪽에서 여는 채팅. messages 테이블은 처음부터 양방향이라(sender_role)
@@ -5273,7 +5322,12 @@ async function load() {
   const _tabs = document.querySelectorAll('.tabbar div');
   const _setTab = (i) => _tabs.forEach((t, k) => t.classList.toggle('on', k === i));
   if (_tabs[0]) _tabs[0].onclick = () => { window.go('home'); _setTab(0); };
-  if (_tabs[1]) _tabs[1].onclick = () => { window.go('myBookings'); loadMyBookings(); _setTab(1); };
+  if (_tabs[1]) _tabs[1].onclick = async () => {
+    window.go('myBookings'); _setTab(1);
+    // 대기 중인 신청이 있으면 그 칸을 먼저 연다. 없으면 평소대로 내 예약.
+    const n = await paintBkTabs();
+    switchBkTab(n > 0 ? 'in' : 'mine');
+  };
   if (_tabs[2]) _tabs[2].onclick = () => { openAccount(); _setTab(2); };
   await loadRegions();   // 거리 계산과 지역 표시가 여기에 걸려 있다. 목록보다 먼저 받는다
   // 저장된 지역을 홈에 찍는다. 이름은 regions 에서 오므로 여기서 해야 한다.
