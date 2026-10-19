@@ -961,6 +961,8 @@
       <div class="mp-row" onclick="window.go('favorites');renderFavorites()"><span class="mp-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#E5484D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.6-9.5-9C1 9 2.5 5.5 6 5.5c2 0 3.2 1.2 4 2.3.8-1.1 2-2.3 4-2.3 3.5 0 5 3.5 3.5 6.5C19 16.4 12 21 12 21z"/></svg></span><span class="mp-name">즐겨찾기</span><span class="mp-chev">›</span></div>
       <div class="mp-row" onclick="window.go('coupons');renderCoupons()"><span class="mp-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#4A5A61" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16v3a2 2 0 000 4v3H4v-3a2 2 0 000-4V7z"/><path d="M14 7v10" stroke-dasharray="2 2"/></svg></span><span class="mp-name">쿠폰함</span><span class="mp-chev">›</span></div>
       <div class="mp-row" onclick="window.go('profileInfo')"><span class="mp-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#4A5A61" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"/></svg></span><span class="mp-name">개인 정보</span><span class="mp-chev">›</span></div>
+      <div class="mp-row" onclick="tapNotiRow()"><span class="mp-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#4A5A61" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15V10a6 6 0 10-12 0v5l-1.5 2.5h15L18 15z"/><path d="M10 20h4"/></svg></span><span class="mp-name">알림</span><span class="mp-val" id="mpNotiVal">—</span><span class="mp-chev">›</span></div>
+      <div class="mp-row" onclick="tapGeoRow()"><span class="mp-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#4A5A61" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.3 7-11a7 7 0 10-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span><span class="mp-name">위치</span><span class="mp-val" id="mpGeoVal">—</span><span class="mp-chev">›</span></div>
       <div class="mp-row" id="mpLang"><span class="mp-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#4A5A61" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h9"/><path d="M8.5 5c0 5-2 8-5.5 9"/><path d="M5.5 10c1.6 2.6 4.2 4.2 6.5 4.7"/><path d="M13 20l4-9 4 9M14.4 17h5.2"/></svg></span><span class="mp-name">언어</span><span class="mp-val" id="mpLangVal">한국인</span><span class="mp-chev">›</span></div>
       <div class="mp-row" id="mpCountry"><span class="mp-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#4A5A61" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.6 2.6 14.4 0 17M12 3.5c-2.6 2.6-2.6 14.4 0 17"/></svg></span><span class="mp-name">국가</span><span class="mp-val" id="mpCountryVal">🇻🇳 Vietnam</span><span class="mp-chev">›</span></div>
       <div class="mp-row" onclick="window.go('safety');loadSafety()"><span class="mp-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#E5484D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.4-3 8-7 10-4-2-7-5.6-7-10V6l7-3z"/><path d="M12 9v4M12 16h.01"/></svg></span><span class="mp-name">안전 센터</span><span class="mp-chev">›</span></div>
@@ -2293,6 +2295,7 @@ async function subscribeWebPush() {
     PUSH_PLATFORM = 'web';
     savePushToken();
     hidePushBanner();
+    if (window.paintPermRows) paintPermRows();
     return true;
   } catch (e) { console.warn('웹푸시 등록 실패', e); return false; }
 }
@@ -3243,8 +3246,64 @@ async function loadAccount() {
   // 빌드 번호를 함께 보여 어떤 버전이 설치됐는지 바로 확인할 수 있게 한다
   const msg = document.getElementById('acMsg');
   if (msg) msg.textContent = SESSION.user.email + (window.__BUILD__ ? ' · build ' + window.__BUILD__ : '');
+  paintPermRows();
 }
 window.loadAccount = loadAccount;
+
+// ── 계정 화면의 알림·위치 줄 ──────────────────────────────
+// 브라우저 권한은 한 번 거절하면 앱 안에서 되돌릴 방법이 없다. 그래서 지금 상태를
+// 늘 보여 주고, 눌렀을 때 켜는 길(또는 설정으로 가는 안내)을 연다.
+// 켜 줘야 예약 알림이 오는데, 그걸 모르고 지내던 마사지사가 12명 중 11명이었다.
+async function permStates() {
+  let noti = 'unsupported';
+  try { if ('Notification' in window) noti = Notification.permission; } catch (e) {}
+  let geo = MYPOS ? 'granted' : 'prompt';
+  try {
+    if (navigator.permissions && navigator.permissions.query) {
+      geo = (await navigator.permissions.query({ name: 'geolocation' })).state;
+    }
+  } catch (e) {}
+  return { noti: noti, geo: geo };
+}
+
+async function paintPermRows() {
+  const s = await permStates();
+  const put = (id, on, text) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = text;
+    el.style.color = on ? '#2E8B8B' : '#E5484D';
+    el.style.fontWeight = '700';
+  };
+  put('mpNotiVal', s.noti === 'granted',
+    s.noti === 'granted' ? '🔔 ' + T('켜짐') : s.noti === 'denied' ? '🔕 ' + T('차단됨') : '🔕 ' + T('꺼짐'));
+  put('mpGeoVal', s.geo === 'granted',
+    s.geo === 'granted' ? '📍 ' + T('켜짐') : s.geo === 'denied' ? '📍 ' + T('차단됨') : '📍 ' + T('꺼짐'));
+}
+window.paintPermRows = paintPermRows;
+
+window.tapNotiRow = async function () {
+  const s = await permStates();
+  if (s.noti === 'unsupported') { alert(T('이 기기에서는 알림을 쓸 수 없습니다.')); return; }
+  if (s.noti === 'granted') {
+    // 이미 허용돼 있어도 구독이 끊겨 있을 수 있다 (앱 재설치·브라우저 정리).
+    // 여기서 한 번 더 등록해 둔다 — 눌렀는데 아무 일도 안 일어나면 고장 난 줄 안다.
+    await subscribeWebPush();
+    alert(T('알림이 켜져 있습니다.'));
+    return;
+  }
+  showPushGate(s.noti === 'denied');   // 차단 상태면 설정으로 가는 안내를 띄운다
+};
+
+window.tapGeoRow = async function () {
+  const s = await permStates();
+  if (s.geo === 'denied') {
+    alert(T('브라우저에서 위치가 차단돼 있습니다. 주소창 왼쪽 자물쇠 → 위치 → 허용으로 바꿔 주세요.'));
+    return;
+  }
+  await askMyPos(true);   // 손님이 직접 누른 순간이라 권한창이 뜬다
+  paintPermRows();
+};
 async function editField(field) {
   if (!SESSION) { openAuth(); return; }
   const labels = { full_name: '성명', phone: '전화번호', gender: '성별 (남성/여성/기타)', nationality: '국적' };
@@ -4304,6 +4363,18 @@ const DICT = {
   '다 채우셨습니다. 신청할 수 있습니다.': ['Đã đủ. Bạn có thể gửi đăng ký.', 'All set. You can submit.', '已填完，可以提交申请。', '入力完了。申請できます。'],
   '계정 삭제': ['Xóa tài khoản', 'Delete account', '删除账户', 'アカウント削除'],
   '알림': ['Thông báo', 'Notifications', '通知', 'お知らせ'],
+  '켜짐': ['Đang bật', 'On', '已开启', 'オン'],
+  '꺼짐': ['Đang tắt', 'Off', '已关闭', 'オフ'],
+  '차단됨': ['Bị chặn', 'Blocked', '已封锁', 'ブロック中'],
+  '알림이 켜져 있습니다.': ['Thông báo đang bật.', 'Notifications are on.', '通知已开启。', '通知はオンです。'],
+  '이 기기에서는 알림을 쓸 수 없습니다.':
+    ['Thiết bị này không hỗ trợ thông báo.', 'This device does not support notifications.',
+     '此设备不支持通知。', 'この端末では通知を使えません。'],
+  '브라우저에서 위치가 차단돼 있습니다. 주소창 왼쪽 자물쇠 → 위치 → 허용으로 바꿔 주세요.':
+    ['Trình duyệt đang chặn vị trí. Nhấn ổ khóa bên trái thanh địa chỉ → Vị trí → Cho phép.',
+     'Location is blocked in your browser. Tap the lock icon in the address bar → Location → Allow.',
+     '浏览器已封锁定位。请点击地址栏左侧的锁图标 → 位置 → 允许。',
+     'ブラウザで位置情報がブロックされています。アドレスバー左の鍵アイコン → 位置情報 → 許可に変えてください。'],
   '후불': ['Trả sau', 'Pay later', '后付', '後払い'],
   'QR': ['QR', 'QR', 'QR码', 'QR'],
   '현금': ['Tiền mặt', 'Cash', '现金', '現金'],
