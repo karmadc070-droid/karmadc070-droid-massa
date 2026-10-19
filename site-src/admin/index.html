@@ -731,7 +731,8 @@ async function loadData() {
 
 // 명단은 기간과 무관하다. 한 번 받아 두고 바뀔 때만 다시 받는다.
 let ROSTER = null;
-let KYC = {};   // provider_id → { photo, idF, idB, cert, lic }
+let KYC = {};     // provider_id → { photo, idF, idB, cert, lic }
+let PHOTOS = {};  // provider_id → [사진 주소…]. 명단이 주는 건 대표 1장뿐이라 따로 받는다.
 
 // 서류는 비공개 버킷(kyc-docs)에 있다. 1시간짜리 임시 주소를 만들어야 열린다.
 // 이미 http 로 시작하면 옛 공개 주소라 그대로 쓴다.
@@ -796,6 +797,24 @@ async function loadRoster() {
   ROSTER = data;
   drawRoster();           // 서류를 기다리지 않고 먼저 그린다 — 표가 늦게 뜨면 안 된다
   loadKyc();              // 서류 주소는 받아지는 대로 채운다
+  loadPhotos();           // 사진 여러 장도 마찬가지로 뒤따라 채운다
+}
+
+// 마사지사 사진은 photo_urls 에 여러 장 들어 있다. 명단 함수는 대표 1장만 주므로
+// 여기서 따로 받는다. 함수를 건드리지 않는 쪽이 안전하다 (2026-10-20).
+async function loadPhotos() {
+  const ids = (ROSTER && ROSTER.rows || []).map(r => r.id);
+  if (!ids.length) return;
+  const { data, error } = await sb.from('providers')
+    .select('id, photo_url, photo_urls').in('id', ids);
+  if (error) { console.warn('사진을 불러오지 못했다', error.message); return; }
+  (data || []).forEach(p => {
+    // 대표 사진을 맨 앞에 두고, 갤러리에 같은 주소가 또 있으면 뺀다.
+    const rest = (p.photo_urls || []).filter(u => u && u !== p.photo_url);
+    const all = (p.photo_url ? [p.photo_url] : []).concat(rest);
+    if (all.length) PHOTOS[p.id] = all;
+  });
+  drawRoster();           // 장수를 뱃지로 보여 주려면 다시 그려야 한다
 }
 
 // 신분증·자격증 임시 주소를 한 번에 받아 둔다.
@@ -818,8 +837,49 @@ async function loadKyc() {
 
 // ── 크게 보기 ────────────────────────────────
 // 신분증은 작게 보면 글자가 안 읽힌다. 눌러서 키울 수 있어야 심사가 된다.
-function openImg(url, label) {
-  if (!url) return;
+// ★ 마사지사 사진은 한 사람이 보통 5장이다. 예전에는 첫 장만 열려서
+//   나머지를 볼 길이 없었다 (2026-10-20). 이제 넘겨 볼 수 있다.
+//   신분증처럼 한 장짜리는 그대로 한 장만 뜬다 — 화살표가 나오지 않는다.
+let LB = { urls: [], i: 0, label: '' };
+
+function lbPaint() {
+  const ov = $('lbox');
+  if (!ov) return;
+  const n = LB.urls.length;
+  const url = LB.urls[LB.i] || '';
+  const many = n > 1;
+  const arrow = (dir, ch) => `<button class="mini" data-lbmove="${dir}"
+      style="font-size:18px;line-height:1;padding:10px 14px">${ch}</button>`;
+  ov.innerHTML = `<div style="color:#fff;font-size:14px;font-weight:600">${esc(LB.label || '')}`
+    + (many ? ` <span style="opacity:.7;font-weight:400">${LB.i + 1} / ${n}</span>` : '') + `</div>
+    <div style="display:flex;align-items:center;gap:10px;max-width:96vw">
+      ${many ? arrow(-1, '‹') : ''}
+      <img src="${esc(url)}" alt="" style="max-width:min(88vw,860px);max-height:72vh;border-radius:10px;background:#fff">
+      ${many ? arrow(1, '›') : ''}
+    </div>`
+    + (many ? `<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:90vw">`
+        + LB.urls.map((u, k) => `<img src="${esc(u)}" alt="" data-lbgo="${k}" loading="lazy"
+             style="width:54px;height:40px;object-fit:cover;border-radius:4px;cursor:pointer;
+                    border:2px solid ${k === LB.i ? '#fff' : 'transparent'};opacity:${k === LB.i ? 1 : .55}">`).join('')
+        + `</div>` : '')
+    + `<div style="display:flex;gap:8px">
+      <a class="mini" href="${esc(url)}" target="_blank" rel="noopener"
+         style="text-decoration:none">새 창에서 열기</a>
+      <button class="mini" data-close="1">닫기 (Esc)</button>
+    </div>`;
+}
+
+function lbMove(d) {
+  const n = LB.urls.length;
+  if (n < 2) return;
+  LB.i = (LB.i + d + n) % n;   // 끝에서 다시 처음으로. 막다른 길이 없는 편이 손이 편하다.
+  lbPaint();
+}
+
+function openImg(urls, label, start) {
+  const list = (Array.isArray(urls) ? urls : [urls]).filter(Boolean);
+  if (!list.length) return;
+  LB = { urls: list, i: Math.min(Math.max(start || 0, 0), list.length - 1), label: label || '' };
   let ov = $('lbox');
   if (!ov) {
     ov = document.createElement('div');
@@ -827,21 +887,30 @@ function openImg(url, label) {
     ov.style.cssText = 'position:fixed;inset:0;z-index:400;background:rgba(14,18,20,.88);'
       + 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px';
     document.body.appendChild(ov);
-    ov.addEventListener('click', (e) => { if (e.target === ov || e.target.dataset.close) ov.style.display = 'none'; });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && ov.style.display !== 'none') ov.style.display = 'none'; });
+    ov.addEventListener('click', (e) => {
+      const mv = e.target.closest('[data-lbmove]');
+      if (mv) { lbMove(Number(mv.dataset.lbmove)); return; }
+      const go = e.target.closest('[data-lbgo]');
+      if (go) { LB.i = Number(go.dataset.lbgo); lbPaint(); return; }
+      if (e.target === ov || e.target.dataset.close) ov.style.display = 'none';
+    });
+    document.addEventListener('keydown', (e) => {
+      if (ov.style.display === 'none') return;
+      if (e.key === 'Escape') { ov.style.display = 'none'; return; }
+      if (e.key === 'ArrowLeft') lbMove(-1);
+      if (e.key === 'ArrowRight') lbMove(1);
+    });
   }
-  ov.innerHTML = `<div style="color:#fff;font-size:14px;font-weight:600">${esc(label || '')}</div>
-    <img src="${esc(url)}" alt="" style="max-width:min(94vw,900px);max-height:78vh;border-radius:10px;background:#fff">
-    <div style="display:flex;gap:8px">
-      <a class="mini" href="${esc(url)}" target="_blank" rel="noopener"
-         style="text-decoration:none">새 창에서 열기</a>
-      <button class="mini" data-close="1">닫기 (Esc)</button>
-    </div>`;
+  lbPaint();
   ov.style.display = 'flex';
 }
+
 document.addEventListener('click', (e) => {
+  // 마사지사 사진 — 그 사람 사진 전부를 넘겨 본다.
+  const g = e.target.closest('[data-gal]');
+  if (g) { openImg(PHOTOS[g.dataset.gal] || [], g.dataset.imglabel || '', 0); return; }
   const t = e.target.closest('[data-img]');
-  if (t && t.dataset.img) openImg(t.dataset.img, t.dataset.imglabel || '');
+  if (t && t.dataset.img) openImg(t.dataset.img, t.dataset.imglabel || '', 0);
 });
 
 // ── 표 정렬 (두 명단이 같이 쓴다) ──────────────
@@ -1760,8 +1829,17 @@ function drawRoster() {
       const owe = Number(r.owe || 0), cred = Number(r.credit || 0);
       return `<tr>
         <td class="l"><div class="who">${r.photo_url
-            ? `<img src="${esc(r.photo_url)}" alt="" loading="lazy" style="cursor:zoom-in"
-                 data-img="${esc(r.photo_url)}" data-imglabel="${esc(r.name || '')} 프로필 사진">`
+            ? `<span style="position:relative;display:inline-block">
+                 <img src="${esc(r.photo_url)}" alt="" loading="lazy" style="cursor:zoom-in"
+                   data-gal="${esc(r.id)}" data-imglabel="${esc(r.name || '')} 사진">
+                 ${(PHOTOS[r.id] || []).length > 1
+                   ? `<span data-gal="${esc(r.id)}" data-imglabel="${esc(r.name || '')} 사진"
+                        title="사진 ${(PHOTOS[r.id] || []).length}장 — 눌러서 넘겨 보기"
+                        style="position:absolute;right:-2px;bottom:-2px;background:var(--ink,#1a1a1a);color:#fff;
+                               font-size:10px;line-height:1;padding:2px 4px;border-radius:7px;cursor:zoom-in">
+                        ${(PHOTOS[r.id] || []).length}</span>`
+                   : ''}
+               </span>`
             : '<div class="ph"></div>'}
           <div><div style="font-weight:600">${esc(r.name || '(이름 없음)')}</div>
             <div style="font-size:11px;color:var(--ink-soft)">
