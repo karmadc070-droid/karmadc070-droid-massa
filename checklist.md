@@ -4753,3 +4753,24 @@ api.massaviet.com/auth/v1/callback  -> redirect_uri_mismatch (등록 안 돼 있
         두 번째에 claimed 가 0 인지 확인
 - [ ] 테스트 스크립트는 kind 를 'notice' 로 쓸 것. booking_new 로 쏘면 반복한다.
       (scripts/vps-test-sound.sh, vps-test-sound2.sh 둘 다 booking_new 를 쓴다)
+
+## 2026-10-20 새벽 — 마사지사 활동 패널 (C 완료)
+
+massaviet.com/admin 에 '마사지사 활동' 패널을 넣었다. 왼쪽 차례에서 '마사지사 명단' 바로 위다.
+
+- [x] A. `admin_provider_activity()` 함수 — 받음·수락·수락률·평균 수락 시간·완료·거절·취소
+      → verify: 관리자 JWT 로 15행, 비관리자는 거부. 둘 다 확인함.
+- [x] B. `app_visit.user_id` 추가 + `track_visit` 이 `auth.uid()` 를 같이 기록
+      → verify: 트랜잭션 안에서 track_visit 호출 → user_id 채워짐 확인 후 rollback
+- [x] 패널에 '앱 들어온 날' · '마지막 접속' 열 추가
+      → verify: 배포본에서 rpc 1 / s-activity 2 / loadActivity 2 / visit_days 1
+
+**지금 보이는 값.** 수락·완료 전부 0 이다. 예약 자체가 17건뿐이고 수락된 적이 없다.
+이게 기준선이다. 1.1.105 가 풀린 뒤 이 숫자가 움직이면 오늘 밤 고친 것들이 통한 것이다.
+
+**패널이 바로 알려준 것.** 승인된 15명 중 **기기가 0 대인 사람이 13명**이다.
+Thanh hà 만 17대, Jin 과 Thảo 가 1대씩. 나머지는 알림이 닿을 곳이 아예 없다.
+그래서 '기기' 열을 수락률 왼쪽에 뒀다. 기기 0 인 사람의 수락률 0 은 성실도가 아니다.
+
+- [ ] Thanh hà 의 기기 17대가 demo@massa.app 토큰과 같은 수다. 계정이 섞여 있는지 확인할 것.
+- [ ] '앱 들어온 날' 은 오늘부터 쌓인다. 과거는 없다. 며칠 지나야 의미가 생긴다.
