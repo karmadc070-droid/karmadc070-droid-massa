@@ -1,23 +1,21 @@
 #!/bin/sh
-# 크론이 massa_push.sh 를 실제로 돌리고 있는지 확인한다
-echo '=== 1. cron 데몬 ==='
-(systemctl is-active cron 2>/dev/null || systemctl is-active crond 2>/dev/null || echo '확인불가') | sed 's/^/  /'
+# ASCII only. The sender stopped logging at 01:23. Why? (2026-10-20 05:32)
+echo '=== cron entries ==='
+crontab -l 2>&1 | grep -i 'massa\|push' || echo "  (no matching crontab line)"
 
-echo '=== 2. 등록된 항목 ==='
-crontab -l | grep -n massa_push | sed 's/^/  /'
+echo '=== is cron even running? ==='
+service cron status 2>&1 | head -3 || systemctl is-active cron 2>&1
 
-echo '=== 3. 파일 상태 ==='
-ls -l /root/massa_push.sh | sed 's/^/  /'
-head -1 /root/massa_push.sh | cat -A | sed 's/^/  shebang: /'
+echo '=== cron log for massa_push ==='
+grep -i 'massa_push' /var/log/syslog 2>/dev/null | tail -5 || echo "  (no syslog entries)"
 
-echo '=== 4. 최근 cron 실행 기록 (massa_push) ==='
-grep -h massa_push /var/log/syslog /var/log/cron /var/log/cron.log 2>/dev/null | tail -5 | sed 's/^/  /' || echo '  로그 없음'
+echo '=== log file state ==='
+ls -l /var/log/massa_push.log
+echo '--- last 3 lines ---'
+tail -3 /var/log/massa_push.log
 
-echo '=== 5. 로그 파일 쓰기 권한 ==='
-ls -l /var/log/massa_push.log 2>/dev/null | sed 's/^/  /' || echo '  로그 파일 없음'
-
-echo '=== 6. 크론과 같은 방식으로 직접 실행 ==='
-/bin/bash /root/massa_push.sh
-echo '  실행 완료 (종료코드 '$?')'
-tail -2 /var/log/massa_push.log | sed 's/^/  /'
-echo '=== CHECK DONE ==='
+echo '=== run it by hand and see what happens ==='
+bash /root/massa_push.sh 2>&1 | tail -3
+echo '--- log after the manual run ---'
+tail -3 /var/log/massa_push.log
+echo '=== DONE ==='
