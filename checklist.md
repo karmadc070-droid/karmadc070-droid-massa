@@ -4692,3 +4692,51 @@ iOS 를 지금 따로 올리지 않고, 안드로이드 1.1.101 심사 결과를
 - [ ] 1.1.105 출시되면 마사지사 11명에게 베트남어 안내 발송
       (앱 업데이트 후 **이메일+비밀번호로** 다시 로그인해 달라는 내용.
        구글 로그인은 1.1.105 부터 앱 안에서 끝나므로 그 뒤엔 어느 쪽이든 된다)
+
+## 보류 — massa 의 소셜 로그인을 모아학원 도메인에서 떼어내기
+
+**지금 상태.** massa 의 구글·카카오·애플 로그인이 전부 `api.moahagwon.com` 을 거친다.
+`/root/massa/.env` 의 `API_EXTERNAL_URL=https://api.moahagwon.com` 한 줄 때문이고,
+docker-compose 가 그 값으로 세 provider 의 REDIRECT_URI 를 전부 만든다.
+
+```
+GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI: ${API_EXTERNAL_URL}/auth/v1/callback
+GOTRUE_EXTERNAL_KAKAO_REDIRECT_URI:  ${API_EXTERNAL_URL}/auth/v1/callback
+GOTRUE_EXTERNAL_APPLE_REDIRECT_URI:  ${API_EXTERNAL_URL}/auth/v1/callback
+GOTRUE_JWT_ISSUER:                   ${API_EXTERNAL_URL}
+```
+
+**왜 고쳐야 하나.** 지금은 동작한다. 급하지 않다. 다만 massa 의 로그인이 통째로
+남의 서비스 도메인에 매달려 있다. 모아학원 도메인이 만료되거나 DNS 가 바뀌면
+massa 의 소셜 로그인이 그날로 전부 죽는다. 서로 다른 서비스가 한 줄로 묶여 있는 건
+언젠가는 끊어야 한다.
+
+**왜 오늘 못 했나.** 실제로 찔러 봤다.
+
+```
+api.moahagwon.com/auth/v1/callback  -> 구글이 받아 준다 (등록돼 있음)
+api.massaviet.com/auth/v1/callback  -> redirect_uri_mismatch (등록 안 돼 있음)
+```
+
+지금 `.env` 만 바꾸면 **모든 소셜 로그인이 즉시 죽는다.** 콘솔 등록이 먼저다.
+
+**순서 (이 순서를 지킬 것. 콘솔이 먼저, 서버가 나중).**
+
+- [ ] 1. 구글 클라우드 콘솔 → 사용자 인증 정보 → OAuth 클라이언트
+      (client_id `823881120105-lsi766j30jepa3ss5r59bvve5a7pm4nm`)
+      승인된 리디렉션 URI 에 `https://api.massaviet.com/auth/v1/callback` **추가**.
+      기존 moahagwon 주소는 **지우지 말 것** — 둘 다 둔 채로 옮기고, 다 끝난 뒤에 지운다.
+      → verify: scripts/vps-probe-google-uri.sh 를 돌려 두 주소 모두 accepted 인지 확인
+- [ ] 2. 카카오 개발자 콘솔에도 같은 주소 추가 (카카오 가입자는 아직 0명이지만 같이 해 둔다)
+- [ ] 3. 애플 Developer → Service ID 의 Return URLs 에도 추가
+- [ ] 4. `.env` 의 `API_EXTERNAL_URL` 을 `https://api.massaviet.com` 으로 교체 후
+      `docker compose up -d auth`
+      → verify: `curl -s -D - ".../authorize?provider=google&redirect_to=..."` 의
+        location 에서 redirect_uri 가 massaviet 으로 바뀌었는지
+- [ ] 5. 실제 로그인 3종(구글·애플·이메일)을 앱에서 눈으로 확인
+      → verify: auth.users 에 새 로그인이 찍히고, 기존 사용자가 튕기지 않는지
+- [ ] 6. 하루 이상 문제 없으면 콘솔에서 moahagwon 주소 제거
+
+**주의 한 가지.** `GOTRUE_JWT_ISSUER` 도 같은 값을 쓰므로 바꾸면 새로 발급되는 토큰의
+`iss` 가 달라진다. PostgREST 는 기본적으로 서명만 검사하고 `iss` 는 안 보지만,
+4번 직후에 기존 로그인 세션이 유지되는지 반드시 확인할 것.
