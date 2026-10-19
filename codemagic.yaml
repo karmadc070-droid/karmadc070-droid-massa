@@ -254,6 +254,38 @@ workflows:
           cp ../capacitor/assets/sound/massa.wav android/app/src/main/res/raw/massa.wav
           test -f android/app/src/main/res/raw/massa.wav || { echo "★ 알림음 복사 실패 - 중단"; exit 1; }
           echo "  알림음 넣음: $(du -h android/app/src/main/res/raw/massa.wav | cut -f1)"
+      # URL 스킴 (2026-10-19). iOS 에만 있고 안드로이드에 없었다.
+      # 앱은 구글 로그인을 외부 브라우저로 내보내며 redirectTo=massa://auth 로 돌아오라고 한다.
+      # 받을 인텐트 필터가 없으면 브라우저가 웹에 머물고, 로그인이 앱이 아니라 웹에서 끝난다.
+      # 그러면 앱은 세션이 없어 네이티브 푸시 토큰을 영영 등록하지 못한다 — 알림음이 안 난 진짜 원인.
+      - name: URL 스킴 등록 (massa://)
+        script: |
+          MF=android/app/src/main/AndroidManifest.xml
+          test -f "$MF" || { echo "★ AndroidManifest.xml 이 없다 - 중단"; exit 1; }
+          python3 - "$MF" <<'PY'
+          import sys, re
+          p = sys.argv[1]
+          s = open(p, encoding='utf-8').read()
+          if 'android:scheme="massa"' in s:
+              print('  이미 있음'); raise SystemExit
+          block = (
+            '\n            <intent-filter>\n'
+            '                <action android:name="android.intent.action.VIEW" />\n'
+            '                <category android:name="android.intent.category.DEFAULT" />\n'
+            '                <category android:name="android.intent.category.BROWSABLE" />\n'
+            '                <data android:scheme="massa" />\n'
+            '            </intent-filter>\n        ')
+          # 메인 액티비티의 </activity> 바로 앞에 끼운다
+          i = s.find('</activity>')
+          if i < 0:
+              print('★ </activity> 를 못 찾았다'); raise SystemExit(1)
+          s = s[:i] + block + s[i:]
+          open(p, 'w', encoding='utf-8').write(s)
+          print('  massa:// 인텐트 필터 추가')
+          PY
+          grep -q 'android:scheme="massa"' "$MF" || { echo "★ 스킴 등록 실패 - 중단"; exit 1; }
+          echo "----- URL 스킴 확인 -----"
+          grep -A1 -B3 'android:scheme="massa"' "$MF"
       - name: Firebase 설정 넣기
         script: |
           test -f ../google-services.json || { echo "★ google-services.json 이 없다 - 중단"; exit 1; }

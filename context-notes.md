@@ -1495,3 +1495,30 @@ cap add ios 가 매 빌드마다 프로젝트를 새로 만드므로 CI 에서 x
 서버의 aps.sound 는 아직 "default" 다. 번들에 massa.caf 가 든 빌드가 사용자 손에
 가기 전에 바꾸면, 옛 버전 사용자에게 없는 파일을 가리키게 된다.
 scripts/vps-patch-ios-sound.sh 를 만들어 두고 1.0.18 이 올라간 뒤에 돌린다.
+
+## 2026-10-19 밤 — 알림음이 안 난 진짜 원인: 구글 로그인이 앱 밖에서 끝났다
+
+사장님이 짚어 준 단서("앱에서 구글 로그인하면 웹으로 간다")가 열쇠였다. 추적 결과:
+
+  socialLogin() 은 네이티브면 redirectTo = massa://auth 로 보내고 외부 브라우저를 연다.
+  그런데 (1) 안드로이드 빌드에 massa:// 인텐트 필터가 없었고 (iOS 에만 있었다),
+         (2) GoTrue 의 ADDITIONAL_REDIRECT_URLS 에 massa:// 가 하나도 없었다.
+  허용 목록에 없는 주소면 GoTrue 는 SITE_URL(app.massaviet.com) 로 되돌린다.
+  → 로그인이 브라우저에서 끝나고, 앱은 세션을 못 받는다.
+  → 앱이 세션이 없으니 setupPush 가 네이티브 토큰을 등록하지 못한다.
+  → 사장님 계정에는 web 토큰만 쌓였고, 웹푸시는 소리를 못 낸다.
+
+(2) 는 iOS 에도 해당한다. 스킴은 등록돼 있었지만 서버가 그 주소로 안 보내 줬다.
+즉 양쪽 다 구글 로그인은 웹에서 끝나고 있었다. Jin 이 android 토큰을 가진 건
+구글이 아닌 다른 방법으로 로그인했기 때문으로 보인다.
+
+조치
+  서버: ADDITIONAL_REDIRECT_URLS 에 massa://**, massa://auth 추가 후 auth 컨테이너 재생성.
+        컨테이너 안에서 GOTRUE_URI_ALLOW_LIST 에 들어간 것 확인함.
+  빌드: codemagic android-play 에 'URL 스킴 등록 (massa://)' 단계 추가.
+        AndroidManifest 의 </activity> 앞에 인텐트 필터를 끼운다. 두 번 돌려도 안전하고,
+        끝나고 grep 으로 확인해 없으면 빌드를 끊는다. 샘플 매니페스트로 검증함(XML 유효).
+
+교훈 — 오늘 내가 두 번 넘겨짚었다. 토큰 수가 9→12 로 는 것을 보고 "폰이 demo 로
+로그인했구나" 했는데 updated_at 을 보니 설치 전 시각이었다. FCM 의 "sent" 도
+'기기에 떴다'가 아니라 'FCM 이 받아들였다'일 뿐이다. 확인할 수 있는 값이 있으면 먼저 본다.

@@ -4639,3 +4639,14 @@ iOS 를 지금 따로 올리지 않고, 안드로이드 1.1.101 심사 결과를
 - [ ] TestFlight 에서 소리 확인
 - [ ] 소리 확인된 뒤에만 vps-patch-ios-sound.sh 실행 (aps.sound → massa.caf)
 - [ ] 1.0.18 심사 제출
+
+## 2026-10-19 밤 — 구글 로그인이 앱으로 돌아오게
+
+- [x] GoTrue 허용 목록에 massa://** 추가 + auth 컨테이너 재생성
+      → verify: 컨테이너 안 GOTRUE_URI_ALLOW_LIST 에서 확인함
+- [x] codemagic android-play 에 massa:// 인텐트 필터 단계 추가
+      → verify: 샘플 매니페스트로 삽입·중복방지·XML 유효성 확인
+- [ ] 1.1.104 빌드 → 설치 → 구글 로그인이 앱으로 돌아오는지
+      → verify: push_tokens 에 karmadc070 앞으로 android 토큰이 생기는지
+- [ ] 그 상태에서 알림 발송 → "마싸" 소리가 나는지
+- [ ] iOS 도 같은 확인 (서버는 이미 고쳤으니 스킴은 원래 있었다)
