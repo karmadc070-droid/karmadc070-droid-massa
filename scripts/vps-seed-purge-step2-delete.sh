@@ -14,7 +14,7 @@ DUMP() { docker exec -i massa-db psql -U postgres -d postgres -c "\copy ($1) to 
 
 echo "=== 0. 안전장치 — 날짜가 불가능한(시드) 예약만 대상인지 다시 확인 ==="
 SQL -c "select count(*) as total, count(*) filter (where scheduled_at < created_at) as impossible from bookings;"
-BAD=$(docker exec -i massa-db psql -U postgres -d postgres -tAc \
+BAD=$(docker exec massa-db psql -U postgres -d postgres -tAc \
   "select count(*) from bookings where scheduled_at >= created_at;" < /dev/null | tr -d ' ')
 if [ "$BAD" != "0" ]; then
   echo "★ 날짜가 정상인 예약이 $BAD 건 있다 — 진짜 예약일 수 있으므로 중단한다."

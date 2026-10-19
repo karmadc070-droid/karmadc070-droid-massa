@@ -2,7 +2,7 @@
 # owner_id 하나에 살아 있는 마사지사가 8건이다. 이름으로 찾았을 때는 안 보였다.
 # 지우기 전에 '같은 사람이 여러 번 신청한 것' 인지 '매장이 직원 여럿을 올린 것' 인지 봐야 한다.
 # 둘은 완전히 다르다. 후자를 지우면 멀쩡한 등록을 지우는 것이다.
-SQL() { docker exec -i massa-db psql -U postgres -d postgres -c "$1"; }
+SQL() { docker exec massa-db psql -U postgres -d postgres -c "$1"; }
 
 OWNER='adec3c30-746b-47db-bd8d-53ae164a142c'
 

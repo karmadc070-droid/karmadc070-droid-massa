@@ -5,7 +5,7 @@
 # 예약·위치·메모가 전부 비어 있다. 실제 위급 상황이 아니라 기능 점검 흔적이다.
 # ★ 실제 사용자의 sos 는 이렇게 일괄 처리하지 않는다. 반드시 건별로 확인한다.
 set -e
-PSQL="docker exec -i massa-db psql -U postgres -d postgres"
+PSQL="docker exec massa-db psql -U postgres -d postgres"
 
 echo '=== 닫기 전 — 대상 확인 (테스트 계정 것만) ==='
 $PSQL -c "

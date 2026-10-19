@@ -1,6 +1,6 @@
 #!/bin/sh
 # 지금 상태 한눈에 (2026-10-19)
-PSQL="docker exec -i massa-db psql -U postgres -d postgres"
+PSQL="docker exec massa-db psql -U postgres -d postgres"
 
 echo '=== 1. 알림 기기 보유 현황 ==='
 $PSQL -c "

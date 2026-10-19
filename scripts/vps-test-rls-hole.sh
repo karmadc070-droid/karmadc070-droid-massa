@@ -2,7 +2,7 @@
 # 로그인한 테라피스트가 자기 행의 승인·인증을 직접 바꿀 수 있는지 '실제로' 해 본다.
 # 전부 하나의 트랜잭션 안에서 하고 마지막에 ROLLBACK 한다. 데이터는 바뀌지 않는다.
 set -e
-PSQL() { docker exec -i massa-db psql -U postgres -d postgres "$@"; }
+PSQL() { docker exec massa-db psql -U postgres -d postgres "$@"; }
 
 # 대상 한 명을 먼저 뽑아 변수에 담는다 (임시테이블은 role 을 바꾸면 못 읽는다)
 read -r PID PROF NAME <<< "$(PSQL -t -A -F' ' < /dev/null -c \

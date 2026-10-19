@@ -1,7 +1,7 @@
 #!/bin/sh
 # block_duplicate_provider 가 이미 있는데 Thanh hà 는 4건이 들어왔다.
 # 새로 만들기 전에 '왜 안 걸렸는가' 부터 본다. 있는 걸 또 만들면 두 개가 서로 싸운다.
-SQL() { docker exec -i massa-db psql -U postgres -d postgres -c "$1"; }
+SQL() { docker exec massa-db psql -U postgres -d postgres -c "$1"; }
 
 echo '=== 1. 함수 본문 ==='
 SQL "select pg_get_functiondef(p.oid)

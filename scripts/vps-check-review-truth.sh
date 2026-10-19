@@ -1,7 +1,7 @@
 #!/bin/sh
 # 완료된 예약이 0건인데 후기가 9건이다. 앞서 고친 '허위 인증 마크' 와 같은 종류의 문제일 수 있다.
 # 대시보드에 숫자를 올리기 전에 이 9건이 무엇인지부터 확인한다.
-SQL() { docker exec -i massa-db psql -U postgres -d postgres -c "$1"; }
+SQL() { docker exec massa-db psql -U postgres -d postgres -c "$1"; }
 
 echo '=== reviews 컬럼 ==='
 SQL "select column_name, data_type from information_schema.columns

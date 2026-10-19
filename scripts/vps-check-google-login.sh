@@ -3,7 +3,7 @@
 # 가장 중요한 질문 — 구글로 로그인하면 **기존 admin 계정에 붙는가, 새 계정이 생기는가.**
 # 새 계정이 생기면 role 이 없어서 관리자 화면이 하나도 안 보인다. 지금보다 나빠진다.
 set -e
-SQL() { docker exec -i massa-db psql -U postgres -d postgres -c "$1"; }
+SQL() { docker exec massa-db psql -U postgres -d postgres -c "$1"; }
 
 echo '=== 1. 구글 로그인이 서버에 켜져 있나 ==='
 grep -E 'GOOGLE|EXTERNAL' /root/massa/docker-compose.yml | sed 's/\(SECRET[^ ]*\).*/\1=***/' | sed 's/^/  /' || echo '  설정 없음'

@@ -1,6 +1,6 @@
 #!/bin/sh
 # 6단계(기기가 생기면 집히는가) 마무리 + 정리
-PSQL="docker exec -i massa-db psql -U postgres -d postgres"
+PSQL="docker exec massa-db psql -U postgres -d postgres"
 
 echo '=== push_tokens 구조 ==='
 $PSQL -c "select column_name, is_nullable, column_default from information_schema.columns

@@ -5,7 +5,7 @@
 #   임시 계정(karmadc070+pushtest@gmail.com)을 만들어 쓰고, 끝나면 지운다.
 # ★ 시크릿은 서버 안에서만 읽고 화면에 찍지 않는다.
 set -e
-PSQL="docker exec -i massa-db psql -U postgres -d postgres"
+PSQL="docker exec massa-db psql -U postgres -d postgres"
 TESTMAIL='karmadc070+pushtest@gmail.com'
 
 echo '=== 1. 임시 계정 만들기 (기기 0개) ==='

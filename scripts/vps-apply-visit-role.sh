@@ -1,7 +1,7 @@
 #!/bin/bash
 # 유입 역할 구분을 올리고, 실제 호출 경로로 시험한다. 시험은 롤백하는 트랜잭션 안에서 한다.
 set -e
-P() { docker exec -i massa-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 "$@"; }
+P() { docker exec massa-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 "$@"; }
 
 echo '=== 1. 올리기 ==='
 P < /tmp/vr.sql

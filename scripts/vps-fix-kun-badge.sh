@@ -8,7 +8,7 @@
 #
 # 기준을 바꾼다 — 레코드 유무가 아니라 '신분증 파일이 실제로 있는가' 로 본다.
 set -e
-SQL() { docker exec -i massa-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "$1"; }
+SQL() { docker exec massa-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "$1"; }
 
 echo '=== 내리기 전 ==='
 SQL "select display_name, is_verified from providers where is_verified;"

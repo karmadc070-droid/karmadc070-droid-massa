@@ -3,7 +3,7 @@
 # 앞서 'KYC 레코드가 있으면 인증' 으로 처리했는데, 레코드는 있어도 파일이 하나도 없는 경우가 있었다.
 # 서류 = 신분증 앞/뒤 중 하나라도 있는 것으로 본다.
 set -e
-SQL() { docker exec -i massa-db psql -U postgres -d postgres -c "$1"; }
+SQL() { docker exec massa-db psql -U postgres -d postgres -c "$1"; }
 
 echo '=== 인증 마크가 붙은 파트너와 그 근거 ==='
 SQL "

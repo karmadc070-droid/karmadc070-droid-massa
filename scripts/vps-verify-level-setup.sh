@@ -5,7 +5,7 @@
 #
 # is_verified 는 '신원 확인(신분증)' 의미로 그대로 쓴다. 단계 값으로 바꾸면 기존 참조를 전부 고쳐야 한다.
 set -e
-SQL() { docker exec -i massa-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "$1"; }
+SQL() { docker exec massa-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "$1"; }
 
 echo '=== Z-12-1. 중복 KYC 정리 — 먼저 백업 ==='
 SQL "

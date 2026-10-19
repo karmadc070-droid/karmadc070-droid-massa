@@ -2,7 +2,7 @@
 # Thanh hà 중복 4건 중 승인된 1건만 남기고 3건 삭제.
 # 삭제 전에 (1) 백업 (2) 딸린 데이터 확인. 딸린 게 있으면 지우지 않고 멈춘다.
 set -e
-SQL() { docker exec -i massa-db psql -U postgres -d postgres -c "$1"; }
+SQL() { docker exec massa-db psql -U postgres -d postgres -c "$1"; }
 
 KEEP='cf32fcbf-200b-4f8b-a152-8b472a06a7ad'   # approved · is_active
 DEL1='c6ac1c25-8475-4197-8036-b1fb336e8926'

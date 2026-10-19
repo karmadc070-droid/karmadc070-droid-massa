@@ -2,7 +2,7 @@
 # 스파 안내(매장 목록)에 별점·조회수·'위생 인증' 배지가 붙어 있다.
 # 앞서 마사지사 쪽에서 걷어낸 허위 신뢰 신호와 같은 종류인지 확인한다.
 # 코드의 목업은 DB 에 있는 카테고리만 덮어쓴다(Object.assign). 나머지는 가짜가 그대로 남는다.
-SQL() { docker exec -i massa-db psql -U postgres -d postgres -c "$1"; }
+SQL() { docker exec massa-db psql -U postgres -d postgres -c "$1"; }
 
 echo '=== stores 컬럼 ==='
 SQL "select column_name, data_type from information_schema.columns

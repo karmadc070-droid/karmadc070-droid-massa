@@ -1,6 +1,6 @@
 #!/bin/sh
 # safety_alerts 내용을 사람·예약과 함께 본다
-docker exec -i massa-db psql -U postgres -d postgres -c "
+docker exec massa-db psql -U postgres -d postgres -c "
 select s.id,
        s.kind,
        s.status,
@@ -16,7 +16,7 @@ left join providers p on p.profile_id = s.user_id
 order by s.created_at desc;"
 
 echo '=== 이 계정들이 실제 사용자인가 ==='
-docker exec -i massa-db psql -U postgres -d postgres -c "
+docker exec massa-db psql -U postgres -d postgres -c "
 select u.email, u.created_at::date as 가입일,
        (select count(*) from providers p where p.profile_id=u.id) as 마사지사등록,
        (select count(*) from bookings b where b.customer_id=u.id) as 예약수

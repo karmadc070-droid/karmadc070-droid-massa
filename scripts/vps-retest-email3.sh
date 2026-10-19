@@ -2,7 +2,7 @@
 # 메일 대체 재시험 (3판)
 # ★ psql -t -A 로 RETURNING 을 받으면 뒤에 'INSERT 0 1' 명령 태그까지 붙어 나온다.
 #   그대로 uuid 에 넣어 전부 깨졌다. head -1 로 첫 줄만 쓴다.
-PSQL="docker exec -i massa-db psql -U postgres -d postgres"
+PSQL="docker exec massa-db psql -U postgres -d postgres"
 TESTMAIL='karmadc070+pushtest@gmail.com'
 cd /root/massa
 

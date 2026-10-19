@@ -31,7 +31,7 @@ echo '=== 6. 로그 꼬리 ==='
 tail -3 /var/log/massa_push.log | sed 's/^/  /'
 
 echo '=== 7. 테스트 알림 상태 ==='
-docker exec -i massa-db psql -U postgres -d postgres -c \
+docker exec massa-db psql -U postgres -d postgres -c \
  "select push_tries, push_result, pushed_at::time(0) as last, next_push_at::time(0) as next, now()::time(0) as now from notifications where title like 'TEST5%';"
 
 echo '=== VERIFY DONE ==='

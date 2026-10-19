@@ -8,7 +8,7 @@
 # 이게 끝나야 유니크 인덱스를 걸 수 있다. 인덱스가 마지막 방어선이다 —
 # 트리거만으로는 같은 순간에 들어온 두 요청이 둘 다 통과한다.
 set -e
-SQL() { docker exec -i massa-db psql -U postgres -d postgres -c "$1"; }
+SQL() { docker exec massa-db psql -U postgres -d postgres -c "$1"; }
 
 echo '=== 1. 지울 대상 확인 (빈 껍데기가 맞는지 다시 본다) ==='
 docker exec -i massa-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 <<'SQLEOF'

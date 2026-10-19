@@ -8,7 +8,7 @@
 # 원칙 — 숫자를 다른 숫자로 바꾸지 않는다. 근거 없는 표시를 없앨 뿐이다.
 # 되돌릴 수 있도록 바꾸기 전 값을 백업 테이블에 남긴다.
 set -e
-SQL() { docker exec -i massa-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "$1"; }
+SQL() { docker exec massa-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "$1"; }
 
 echo '=== 0. 백업 (providers_trust_backup_20260930) ==='
 SQL "

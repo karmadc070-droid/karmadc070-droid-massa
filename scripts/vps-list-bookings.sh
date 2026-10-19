@@ -1,6 +1,6 @@
 #!/bin/sh
 # 지금까지 들어온 예약을 전부 본다 (삭제 전 확인용, 2026-10-19)
-PSQL="docker exec -i massa-db psql -U postgres -d postgres"
+PSQL="docker exec massa-db psql -U postgres -d postgres"
 
 echo '=== 1. 예약 전체 ==='
 $PSQL -c "

@@ -4,7 +4,7 @@
 OWNER='adec3c30-746b-47db-bd8d-53ae164a142c'   # 이미 살아 있는 신청을 가진 실제 계정
 
 echo '=== 시험 전 ==='
-docker exec -i massa-db psql -U postgres -d postgres -c \
+docker exec massa-db psql -U postgres -d postgres -c \
  "select count(*) as 전체 from providers;"
 
 docker exec -i massa-db psql -U postgres -d postgres <<SQLEOF
@@ -32,7 +32,7 @@ SQLEOF
 
 echo ''
 echo '=== 시험 후 — 숫자가 그대로여야 한다 ==='
-docker exec -i massa-db psql -U postgres -d postgres -c \
+docker exec massa-db psql -U postgres -d postgres -c \
  "select count(*) as 전체 from providers;"
-docker exec -i massa-db psql -U postgres -d postgres -c \
+docker exec massa-db psql -U postgres -d postgres -c \
  "select count(*) as 시험데이터남음 from providers where display_name like '시험-%';"

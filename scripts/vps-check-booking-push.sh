@@ -1,6 +1,6 @@
 #!/bin/sh
 # 최근 예약 요청이 실제로 성사됐는지 + 그에 딸린 푸시가 나갔는지 한 번에 본다
-PSQL="docker exec -i massa-db psql -U postgres -d postgres"
+PSQL="docker exec massa-db psql -U postgres -d postgres"
 
 echo '=== 1. 최근 예약 10건 (무슨 일이 있었나) ==='
 $PSQL -c "

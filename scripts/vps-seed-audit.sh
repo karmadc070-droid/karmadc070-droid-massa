@@ -1,7 +1,7 @@
 #!/bin/sh
 # 시드 정리 범위를 정하기 전에 전체를 센다.
 # 예약·후기가 시드에 붙어 있으면 지우는 순간 그것도 같이 사라진다. 먼저 알아야 한다.
-SQL() { docker exec -i massa-db psql -U postgres -d postgres -c "$1"; }
+SQL() { docker exec massa-db psql -U postgres -d postgres -c "$1"; }
 
 echo '=== 1. 마사지사 25명 전수 ==='
 SQL "

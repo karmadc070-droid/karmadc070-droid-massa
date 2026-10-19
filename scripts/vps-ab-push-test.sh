@@ -1,7 +1,7 @@
 #!/bin/sh
 # notice 와 booking_new 를 연달아 보내 어느 쪽이 폰에 도착하는지 가린다.
 # 앞서 booking_new 는 도착했는데 notice 는 안 왔다고 해서, kind 가 변수인지 확인한다.
-PSQL="docker exec -i massa-db psql -U postgres -d postgres"
+PSQL="docker exec massa-db psql -U postgres -d postgres"
 S=$(grep -E '^NOTIFY_SECRET=' /root/massa/.env | cut -d= -f2-)
 U="karmadc070@gmail.com"
 

@@ -1,7 +1,7 @@
 #!/bin/sh
 # 예약 알림은 30초마다 10번 재시도한다. 그때마다 메일이 가면 한 건에 10통이다.
 # 첫 시도에만 가는지 3분 지켜본다.
-PSQL="docker exec -i massa-db psql -U postgres -d postgres"
+PSQL="docker exec massa-db psql -U postgres -d postgres"
 TESTMAIL='karmadc070+pushonce@gmail.com'
 
 $PSQL -c "delete from notifications where user_id in (select id from auth.users where email='$TESTMAIL');" 2>&1 >/dev/null

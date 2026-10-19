@@ -8,7 +8,7 @@
 #   - 7/12 시드 15명은 이미 owner_id 가 비어 있고 멀쩡히 보인다. 같은 상태로 맞추는 것이다.
 #   - Thanh hà 의 파트너 콘솔에서는 자기 것(Thanh hà 1건)만 남는다.
 set -e
-SQL() { docker exec -i massa-db psql -U postgres -d postgres -c "$1"; }
+SQL() { docker exec massa-db psql -U postgres -d postgres -c "$1"; }
 OWNER='adec3c30-746b-47db-bd8d-53ae164a142c'
 
 echo '=== 1. 떼어낼 대상 ==='

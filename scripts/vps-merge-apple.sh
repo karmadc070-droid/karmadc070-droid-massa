@@ -3,7 +3,7 @@
 set -e
 STAMP=$(date +%Y%m%d_%H%M%S)
 echo "=== auth 백업 (/root/auth_backup_$STAMP.sql) ==="
-docker exec -i massa-db pg_dump -U postgres -d postgres --schema=auth > "/root/auth_backup_$STAMP.sql"
+docker exec massa-db pg_dump -U postgres -d postgres --schema=auth > "/root/auth_backup_$STAMP.sql"
 ls -la "/root/auth_backup_$STAMP.sql"
 
 echo '=== 합치기 ==='

@@ -2,7 +2,7 @@
 # 일괄 승인 함수를 넣고, 심사 대기 마사지사 명단을 뽑는다.
 set -e
 docker exec -i massa-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 < /root/price_bulk_approve.sql
-docker exec -i massa-db psql -U postgres -d postgres -c "notify pgrst, 'reload schema'"
+docker exec massa-db psql -U postgres -d postgres -c "notify pgrst, 'reload schema'"
 
 echo ''
 echo '=== 심사 대기 명단 ==='

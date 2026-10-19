@@ -1,7 +1,7 @@
 #!/bin/sh
 # (c) 분기 — '기기가 생기면 집힌다' 를 기기 있는 계정으로 정확히 검증한다.
 # 앞선 시도는 가짜 토큰이 CHECK 제약에 걸려 검증이 안 됐다.
-PSQL="docker exec -i massa-db psql -U postgres -d postgres"
+PSQL="docker exec massa-db psql -U postgres -d postgres"
 
 echo '=== 참고: 토큰 CHECK 제약 ==='
 $PSQL -t -A -c "select pg_get_constraintdef(oid) from pg_constraint where conname='push_tokens_token_check';" | sed 's/^/  /'

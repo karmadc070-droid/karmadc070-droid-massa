@@ -2,7 +2,7 @@
 # 지금 시스템이 실제로 받을 수 있는 서류가 무엇인지, 그리고 실제로 받은 게 무엇인지 본다.
 # 읽기 전용. 인증 절차를 새로 정하기 전에 '할 수 있는 것' 부터 확인한다.
 set -e
-SQL() { docker exec -i massa-db psql -U postgres -d postgres -c "$1"; }
+SQL() { docker exec massa-db psql -U postgres -d postgres -c "$1"; }
 
 echo '=== 제출된 KYC 레코드 (파일이 실제로 있는지만 본다. 내용은 보지 않는다) ==='
 SQL "

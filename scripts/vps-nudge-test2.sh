@@ -2,7 +2,7 @@
 # 재촉 메일 스크립트 실제 발송 시험 (2판)
 # ★ providers 는 guard_provider_kyc_insert 때문에 pending 으로만 만들 수 있다.
 #   만든 뒤 approved 로 바꾼다 (is_active 는 false 라 푸시 규칙엔 안 걸린다).
-PSQL="docker exec -i massa-db psql -U postgres -d postgres"
+PSQL="docker exec massa-db psql -U postgres -d postgres"
 TESTMAIL='karmadc070+nudge@gmail.com'
 cd /root/massa
 

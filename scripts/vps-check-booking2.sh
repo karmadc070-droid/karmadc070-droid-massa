@@ -2,7 +2,7 @@
 # 최근 예약이 성사됐는지 본다
 # ★ 앞선 스크립트는 services.name_ko 가 없어서 쿼리가 통째로 깨졌고, 섹션이 비어 보였다.
 #   없는 컬럼을 짐작해 쓰지 말고 조인을 줄인다.
-PSQL="docker exec -i massa-db psql -U postgres -d postgres"
+PSQL="docker exec massa-db psql -U postgres -d postgres"
 
 echo '=== 최근 예약 10건 ==='
 $PSQL -c "

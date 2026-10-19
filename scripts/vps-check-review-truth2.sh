@@ -1,6 +1,6 @@
 #!/bin/sh
 # 후기 9건이 어디에 붙어 있고, 앱 화면에 실제로 보이는지 확인한다.
-SQL() { docker exec -i massa-db psql -U postgres -d postgres -c "$1"; }
+SQL() { docker exec massa-db psql -U postgres -d postgres -c "$1"; }
 
 echo '=== providers 컬럼 이름 확인 (name 이 아니었다) ==='
 SQL "select column_name from information_schema.columns

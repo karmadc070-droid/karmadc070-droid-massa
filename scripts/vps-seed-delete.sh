@@ -26,7 +26,7 @@ for q in \
 ; do
   name="${q%%:*}"; sql="${q#*:}"
   # \copy 는 psql 클라이언트 명령이라 docker exec 안에서 경로가 꼬인다. 서버쪽 copy to stdout 을 쓴다.
-  docker exec -i massa-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
+  docker exec massa-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
     -c "copy ($sql) to stdout with csv header" < /dev/null > "$DIR/$name.csv"
   printf '  %-20s %s 줄\n' "$name" "$(($(wc -l < "$DIR/$name.csv") - 1))"
 done

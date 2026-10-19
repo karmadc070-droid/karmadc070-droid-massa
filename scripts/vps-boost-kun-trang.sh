@@ -2,7 +2,7 @@
 # Kun, Trang 두 분을 목록 위로 올린다. 거짓 표시는 쓰지 않고 '노출 순서' 만 바꾼다.
 # sort_priority 를 새로 둔다 — 지금은 rating 순인데 전원 0 이라 사실상 무작위다.
 # PowerShell 이 한글을 깨뜨리므로 SQL 안에는 ASCII 만 쓴다 (기록된 교훈).
-SQL() { docker exec -i massa-db psql -U postgres -d postgres -c "$1"; }
+SQL() { docker exec massa-db psql -U postgres -d postgres -c "$1"; }
 
 echo '=== 0. before: profile fields ==='
 SQL "

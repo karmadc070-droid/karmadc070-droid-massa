@@ -24,7 +24,7 @@ echo '=== moahagwon.com 네임서버 ==='
 
 echo ''
 echo '=== DB 안에 api.moahagwon.com 이 박힌 주소가 몇 건인가 (도메인 이전의 진짜 비용) ==='
-docker exec -i massa-db psql -U postgres -d postgres -c "
+docker exec massa-db psql -U postgres -d postgres -c "
 select 'providers.photo_url' as col, count(*) from providers where photo_url like '%api.moahagwon.com%'
 union all select 'providers.photo_urls', count(*) from providers p, lateral unnest(coalesce(p.photo_urls,'{}')) u(x) where u.x like '%api.moahagwon.com%'
 union all select 'providers.photo_url_orig', count(*) from providers where photo_url_orig like '%api.moahagwon.com%'

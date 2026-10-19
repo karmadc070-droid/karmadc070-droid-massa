@@ -1,7 +1,7 @@
 #!/bin/bash
 # 입금코드 자동 발급을 올리고, 실제 가입 경로로 시험한다. 시험은 롤백하는 트랜잭션 안에서 한다.
 set -e
-P() { docker exec -i massa-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 "$@"; }
+P() { docker exec massa-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 "$@"; }
 
 echo '=== 0. 적용 전 상태 ==='
 P -c "select display_name 이름, coalesce(deposit_code,'(없음)') 코드 from providers order by created_at;" < /dev/null

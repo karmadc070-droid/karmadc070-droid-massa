@@ -1,6 +1,6 @@
 #!/bin/sh
 # 지금 있는 '다른 사람에게 더 보내기' 구조를 확인한다 (2026-10-19)
-PSQL="docker exec -i massa-db psql -U postgres -d postgres"
+PSQL="docker exec massa-db psql -U postgres -d postgres"
 
 echo '=== 1. 어제 그 예약에 group_id 가 있었나 ==='
 $PSQL -c "select booking_no, status, group_id, provider_id from bookings order by created_at desc limit 3;"

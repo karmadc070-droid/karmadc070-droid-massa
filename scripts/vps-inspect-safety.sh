@@ -1,6 +1,6 @@
 #!/bin/sh
 # 미처리 안전 요청 3건이 무엇인지 확인한다. sos 가 섞여 있어 내용을 모르고 처리하면 안 된다.
-PSQL="docker exec -i massa-db psql -U postgres -d postgres"
+PSQL="docker exec massa-db psql -U postgres -d postgres"
 
 echo '=== 관련 테이블 ==='
 $PSQL -c "select table_name from information_schema.tables

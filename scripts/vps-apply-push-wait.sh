@@ -5,13 +5,13 @@
 #   2) 기기가 없는 동안은 다시 집히지 않는가 (헛돌지 않는가)
 #   3) 기기가 생기면 집히는가 (가짜 토큰을 잠깐 넣어 확인하고 지운다)
 set -e
-PSQL="docker exec -i massa-db psql -U postgres -d postgres"
+PSQL="docker exec massa-db psql -U postgres -d postgres"
 
 echo '=== 1. 함수 교체 ==='
 $PSQL -v ON_ERROR_STOP=1 < /tmp/wait.sql
 
 echo '=== 2. 스키마 리로드 ==='
-docker exec -i massa-db psql -U postgres -d postgres -c "notify pgrst, 'reload schema';" >/dev/null
+docker exec massa-db psql -U postgres -d postgres -c "notify pgrst, 'reload schema';" >/dev/null
 sleep 2
 
 echo '=== 3. 기기 0대인 마사지사에게 공지 넣기 ==='

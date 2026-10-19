@@ -18,13 +18,13 @@ done
 
 echo ''
 echo '=== 3. provider photos: how many, how big, cached? ==='
-docker exec -i massa-db psql -U postgres -d postgres -c "
+docker exec massa-db psql -U postgres -d postgres -c "
 select count(*) as providers_shown,
        count(*) filter (where photo_url like '%storage/v1%') as served_from_storage
 from providers where is_active and application_status='approved';"
 
 echo '  -- sample photo: size and headers --'
-U=$(docker exec -i massa-db psql -U postgres -d postgres -tAc "
+U=$(docker exec massa-db psql -U postgres -d postgres -tAc "
   select photo_url from providers
   where is_active and application_status='approved' and photo_url like 'http%'
   limit 1;")
@@ -35,7 +35,7 @@ grep -iE 'content-type|cache-control|content-length' /tmp/ph | tr -d '\r' | sed 
 
 echo ''
 echo '  -- total bytes of all shown provider photos --'
-docker exec -i massa-db psql -U postgres -d postgres -tAc "
+docker exec massa-db psql -U postgres -d postgres -tAc "
   select photo_url from providers
   where is_active and application_status='approved' and photo_url like 'http%';" \
 | while read -r p; do
@@ -49,5 +49,5 @@ docker stats --no-stream --format '{{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}' | hea
 
 echo ''
 echo '=== 5. db: slow? ==='
-docker exec -i massa-db psql -U postgres -d postgres -c "\timing on" -c "
+docker exec massa-db psql -U postgres -d postgres -c "\timing on" -c "
 select count(*) from providers where is_active and application_status='approved';"

@@ -2,7 +2,7 @@
 # Thanh hà 가 4번 나온다. KYC 중복이 아니라 파트너 레코드 자체가 4개였다.
 # 어느 것이 살아 있는 것인지, 무엇이 다른지 본다. 읽기 전용 — 지우지 않는다.
 set -e
-SQL() { docker exec -i massa-db psql -U postgres -d postgres -c "$1"; }
+SQL() { docker exec massa-db psql -U postgres -d postgres -c "$1"; }
 
 echo '=== 같은 이름의 파트너 레코드 ==='
 SQL "

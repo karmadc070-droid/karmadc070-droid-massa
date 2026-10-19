@@ -3,7 +3,7 @@
 # ★ app_settings 의 URL(massa-edge-functions:9000)은 도커 네트워크 안에서만 풀린다.
 #   호스트에서 curl 하면 아무 응답도 없이 끝나서 아무것도 확인되지 않았다.
 #   크론(/root/massa_push.sh)이 매분 도니까 그걸 기다린다.
-PSQL="docker exec -i massa-db psql -U postgres -d postgres"
+PSQL="docker exec massa-db psql -U postgres -d postgres"
 TESTMAIL='karmadc070+pushtest@gmail.com'
 cd /root/massa
 

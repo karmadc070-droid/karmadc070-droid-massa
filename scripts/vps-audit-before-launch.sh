@@ -2,7 +2,7 @@
 # 출시 직전 실태 재확인 — 읽기 전용이다. 아무것도 바꾸지 않는다.
 # 컬럼 이름은 실제 스키마에서 확인한 것이다. providers 의 상태 컬럼은 application_status 다.
 set -e
-SQL() { docker exec -i massa-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "$1"; }
+SQL() { docker exec massa-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "$1"; }
 
 echo '=== 0. application_status 값 분포 ==='
 SQL "select application_status, count(*) from providers group by 1 order by 2 desc;"

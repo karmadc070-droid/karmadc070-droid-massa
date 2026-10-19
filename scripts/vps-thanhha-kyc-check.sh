@@ -1,7 +1,7 @@
 #!/bin/sh
 # 지울 3건에 provider_kyc 가 붙어 있다. 안에 실제 서류가 있는지 본다.
 # 빈 껍데기면 같이 지우고, 서류가 있으면 남길 1건으로 옮겨야 한다. 서류를 버리면 안 된다.
-SQL() { docker exec -i massa-db psql -U postgres -d postgres -c "$1"; }
+SQL() { docker exec massa-db psql -U postgres -d postgres -c "$1"; }
 
 echo '=== provider_kyc 컬럼 ==='
 SQL "select column_name from information_schema.columns

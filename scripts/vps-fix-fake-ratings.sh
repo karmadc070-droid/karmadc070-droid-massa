@@ -7,7 +7,7 @@
 # 원칙 — 숫자를 다른 숫자로 바꾸지 않는다. 근거 없는 표시를 없앨 뿐이다.
 # 예약과 연결된 실제 후기가 없는 파트너는 별점·후기 수를 0 으로 두고, 화면에서는 '후기 없음' 으로 보이게 한다.
 set -e
-SQL() { docker exec -i massa-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "$1"; }
+SQL() { docker exec massa-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "$1"; }
 
 echo '=== 백업 테이블이 살아 있는지 먼저 확인 ==='
 SQL "select count(*) as 백업행수, count(*) filter (where is_verified) as 백업당시_인증마크 from providers_trust_backup_20260930;"

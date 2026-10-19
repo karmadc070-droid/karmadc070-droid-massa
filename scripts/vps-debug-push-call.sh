@@ -12,5 +12,5 @@ curl -s -m 25 -X POST http://localhost:8002/functions/v1/send-push \
   -H 'Content-Type: application/json' -H "x-notify-secret: $S" -d '{}'
 echo ''
 echo "=== DB 상태 ==="
-docker exec -i massa-db psql -U postgres -d postgres -c \
+docker exec massa-db psql -U postgres -d postgres -c \
   "select push_tries, push_result, pushed_at::time(0), next_push_at::time(0), now()::time(0) as now from notifications where title like 'TEST5%';"

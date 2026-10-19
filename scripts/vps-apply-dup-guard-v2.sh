@@ -2,7 +2,7 @@
 # 중복 방지 v2 적용 + 실제로 막히는지 시험한다.
 # 적용됐다는 말만 믿지 않는다 — 넣어 보고 막히는지, 멀쩡한 건 통과하는지 둘 다 본다.
 set -e
-SQL() { docker exec -i massa-db psql -U postgres -d postgres -c "$1"; }
+SQL() { docker exec massa-db psql -U postgres -d postgres -c "$1"; }
 
 echo '=== 1. 적용 ==='
 docker exec -i massa-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 < /root/dup_guard_v2.sql

@@ -2,7 +2,7 @@
 # 메일 대체 재시험 — 모든 출력을 stdout 으로 합친다
 # ★ 앞선 두 판에서 psql 의 stderr 가 ssh 경로에서 사라져, 어느 줄이 깨졌는지 못 봤다.
 #   이번에는 psql 마다 2>&1 을 붙이고 단계마다 결과를 찍는다.
-PSQL="docker exec -i massa-db psql -U postgres -d postgres"
+PSQL="docker exec massa-db psql -U postgres -d postgres"
 TESTMAIL='karmadc070+pushtest@gmail.com'
 cd /root/massa
 

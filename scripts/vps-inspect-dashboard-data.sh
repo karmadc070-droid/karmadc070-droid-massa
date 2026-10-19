@@ -1,7 +1,7 @@
 #!/bin/sh
 # 대시보드 3종을 만들기 전에 '무엇을 보여줄 수 있는가' 를 먼저 본다.
 # 없는 데이터로 화면을 그리면 빈 칸만 나온다. 스키마부터 읽고 설계한다.
-SQL() { docker exec -i massa-db psql -U postgres -d postgres -c "$1"; }
+SQL() { docker exec massa-db psql -U postgres -d postgres -c "$1"; }
 
 echo '=== 1. 테이블 목록과 행 수 ==='
 SQL "

@@ -1,6 +1,6 @@
 #!/bin/sh
 # 로그를 켠 뒤 메일 대체를 다시 시험하고, 실패 이유를 컨테이너 로그에서 읽는다
-PSQL="docker exec -i massa-db psql -U postgres -d postgres"
+PSQL="docker exec massa-db psql -U postgres -d postgres"
 TESTMAIL='karmadc070+pushtest@gmail.com'
 cd /root/massa
 

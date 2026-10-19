@@ -1,7 +1,7 @@
 #!/bin/sh
 # 메일 대체 확인 — 2단계(알림 넣기)까지는 이미 손으로 끝냈다. 호출·확인·치우기만 한다.
 # ★ set -e 를 빼고 오류를 눈에 보이게 둔다 (앞 판에서 stderr 가 삼켜져 뭐가 깨졌는지 못 봤다).
-PSQL="docker exec -i massa-db psql -U postgres -d postgres"
+PSQL="docker exec massa-db psql -U postgres -d postgres"
 U_=9be8f740-9884-4257-ba0b-eece0a73d8d6
 cd /root/massa
 

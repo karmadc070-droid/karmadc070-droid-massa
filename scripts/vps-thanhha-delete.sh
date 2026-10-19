@@ -6,7 +6,7 @@
 # 남길 1건(cf32fcbf)이 같은 파일을 이미 들고 있다. 서류는 하나도 잃지 않는다.
 # 스토리지 파일 자체는 건드리지 않는다.
 set -e
-SQL() { docker exec -i massa-db psql -U postgres -d postgres -c "$1"; }
+SQL() { docker exec massa-db psql -U postgres -d postgres -c "$1"; }
 
 KEEP='cf32fcbf-200b-4f8b-a152-8b472a06a7ad'
 DELS="'c6ac1c25-8475-4197-8036-b1fb336e8926','8c106c4e-5a11-4f34-9de6-323d1a5d9753','c07b0825-ba5e-4552-aaf1-35ef0dd75f6c'"

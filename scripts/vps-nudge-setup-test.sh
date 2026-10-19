@@ -4,7 +4,7 @@
 # ★ 12명은 오늘 이미 같은 내용을 두 번 받았다. 그걸 1회차로 쳐서 기록해 두면
 #   자동 발송은 3시간 뒤부터 시작된다. 그래야 지금 시험한다고 또 날아가지 않는다.
 # ★ 시험은 사장님 받은편지함으로 가는 임시 마사지사 한 명으로만 한다.
-PSQL="docker exec -i massa-db psql -U postgres -d postgres"
+PSQL="docker exec massa-db psql -U postgres -d postgres"
 TESTMAIL='karmadc070+nudge@gmail.com'
 cd /root/massa
 

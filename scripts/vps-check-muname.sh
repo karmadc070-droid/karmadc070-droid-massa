@@ -1,7 +1,7 @@
 #!/bin/sh
 # '무명' 이 Thanh hà 와 같은 profile_id 에 붙어 있다. 같은 사람의 옛 신청인지 본다.
 # 같은 사람이면 '1건만 남기고 삭제' 범위에 들어간다. 아니면 손대지 않는다.
-SQL() { docker exec -i massa-db psql -U postgres -d postgres -c "$1"; }
+SQL() { docker exec massa-db psql -U postgres -d postgres -c "$1"; }
 
 echo '=== 무명 / Thanh hà 비교 ==='
 SQL "

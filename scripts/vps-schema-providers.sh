@@ -3,7 +3,7 @@
 set -e
 for T in providers reviews provider_kyc bookings; do
   echo "=== $T ==="
-  docker exec -i massa-db psql -U postgres -d postgres -Atc \
+  docker exec massa-db psql -U postgres -d postgres -Atc \
     "select column_name||' '||data_type from information_schema.columns where table_name='$T' order by ordinal_position;" \
     | sed 's/^/  /'
   echo ''

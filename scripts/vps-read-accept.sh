@@ -1,6 +1,6 @@
 #!/bin/sh
 # 자동 전환을 만들기 전에, 이미 있는 장치들을 정확히 읽는다
-PSQL="docker exec -i massa-db psql -U postgres -d postgres -t -A"
+PSQL="docker exec massa-db psql -U postgres -d postgres -t -A"
 echo '########## accept_booking ##########'
 $PSQL -c "select pg_get_functiondef(oid) from pg_proc where proname='accept_booking';"
 echo '########## guard_booking_write ##########'

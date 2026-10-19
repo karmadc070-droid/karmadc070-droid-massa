@@ -11,7 +11,7 @@ MAX_SENDS=21    # 한 사람에게 최대 몇 통까지 (하루 3통 × 7일)
 
 LOG=/var/log/massa_nudge.log
 cd /root/massa || exit 1
-PSQL="docker exec -i massa-db psql -U postgres -d postgres -t -A -F|"
+PSQL="docker exec massa-db psql -U postgres -d postgres -t -A -F|"
 RESEND=$(grep -E '^RESEND_KEY=' .env | cut -d= -f2-)
 [ -n "$RESEND" ] || { echo "$(date -Is) RESEND_KEY 없음" >> "$LOG"; exit 1; }
 
@@ -49,7 +49,7 @@ massa"
         '{from:"massa <massa@moahagwon.com>", to:[$to], subject:$s, text:$b, reply_to:"massa@moahagwon.com"}')")
 
   if [ "$RESP" = "200" ]; then
-    docker exec -i massa-db psql -U postgres -d postgres -q -c "select push_nudge_mark('$UID_');" >/dev/null 2>&1
+    docker exec massa-db psql -U postgres -d postgres -q -c "select push_nudge_mark('$UID_');" >/dev/null 2>&1
     echo "$(date -Is) 보냄 $EMAIL (${N}회차)" >> "$LOG"
   else
     echo "$(date -Is) 실패 $EMAIL HTTP=$RESP" >> "$LOG"

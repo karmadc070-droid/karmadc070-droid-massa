@@ -2,7 +2,7 @@
 # Kun, Trang 두 명에게 별점·인증마크를 붙여도 되는지 판단할 근거를 본다.
 # 판단 기준은 두 가지뿐이다 — 서류(kyc)가 실제로 있나, 받은 후기가 실제로 있나.
 # PowerShell 이 한글을 깨뜨리므로 SQL 안에는 ASCII 만 쓴다 (기록된 교훈).
-SQL() { docker exec -i massa-db psql -U postgres -d postgres -c "$1"; }
+SQL() { docker exec massa-db psql -U postgres -d postgres -c "$1"; }
 
 echo '=== 1. providers matching kun / trang ==='
 SQL "

@@ -3,5 +3,5 @@
 set -e
 docker exec -i massa-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 < /root/provider_price.sql
 echo '--- PostgREST 스키마 다시 읽기 ---'
-docker exec -i massa-db psql -U postgres -d postgres -c "notify pgrst, 'reload schema'"
+docker exec massa-db psql -U postgres -d postgres -c "notify pgrst, 'reload schema'"
 echo '완료'

@@ -1,7 +1,7 @@
 #!/bin/sh
 # 1) send-push 파일이 실제로 어디 있는지 찾아 collapse 적용 여부 확인
 # 2) 정리 안 된 A/B 테스트 알림이 계속 반복 발송되고 있다 — 지운다
-PSQL="docker exec -i massa-db psql -U postgres -d postgres"
+PSQL="docker exec massa-db psql -U postgres -d postgres"
 
 echo '=== 1. send-push 실제 경로 ==='
 find /root/massa -name 'index.ts' -path '*send-push*' 2>/dev/null | sed 's/^/  /'
