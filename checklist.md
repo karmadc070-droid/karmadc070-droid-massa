@@ -4740,3 +4740,16 @@ api.massaviet.com/auth/v1/callback  -> redirect_uri_mismatch (등록 안 돼 있
 **주의 한 가지.** `GOTRUE_JWT_ISSUER` 도 같은 값을 쓰므로 바꾸면 새로 발급되는 토큰의
 `iss` 가 달라진다. PostgREST 는 기본적으로 서명만 검사하고 `iss` 는 안 보지만,
 4번 직후에 기존 로그인 세션이 유지되는지 반드시 확인할 것.
+
+## 예약 없는 booking_new 가 혼자 반복한다 (2026-10-20 발견)
+
+`booking_new` 는 수락될 때까지 30초마다 재발송된다. 마사지사가 놓치지 말라고 만든
+규칙인데, **booking_id 가 없는 알림은 수락될 방법이 없어서** 상한(10회)까지 혼자 울린다.
+오늘 밤 테스트 7건과 아침에 만든 점검용 6건, 합쳐서 13건이 동시에 반복하고 있었다.
+
+- [ ] claim_unpushed_notifications() 에서 `booking_id is null` 인 booking_new 는
+      재발송 대상에서 빼기 (1회만 보내고 끝)
+      → verify: booking_id 없는 booking_new 를 하나 넣고 발송기를 두 번 돌려
+        두 번째에 claimed 가 0 인지 확인
+- [ ] 테스트 스크립트는 kind 를 'notice' 로 쓸 것. booking_new 로 쏘면 반복한다.
+      (scripts/vps-test-sound.sh, vps-test-sound2.sh 둘 다 booking_new 를 쓴다)
