@@ -43,9 +43,12 @@ async function registerPush(onToken, onNotification) {
   if (Capacitor.getPlatform() === "android") {
     try {
       await PushNotifications.createChannel({
-        id: "massa_booking",
+        // ★ v2 로 올렸다 (2026-10-19). 안드로이드는 채널이 한 번 만들어지면 소리·중요도가
+        //    고정돼서, id 를 그대로 두면 이미 깔린 사람에게 새 알림음이 영영 안 먹는다.
+        id: "massa_booking_v2",
         name: "새 신청",
         description: "손님이 신청하면 바로 알립니다",
+        sound: "massa",       // android/app/src/main/res/raw/massa.wav (확장자 없이 적는다)
         importance: 5,        // IMPORTANCE_HIGH — 소리 + 화면 위 배너
         visibility: 1,        // 잠금화면에도 보임
         vibration: true,

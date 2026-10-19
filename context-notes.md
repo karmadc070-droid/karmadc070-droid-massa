@@ -1458,3 +1458,23 @@ update 로 하면 둘이 동시에 누를 때 둘 다 확정된다. RPC 가 묶�
 
 테스트 계정: providers 47482472-7f32-4d7e-af2b-e97bd5dd83f5 '[TEST] massa owner'
 (profile_id = 사장님). 인증 마크는 끄고 sort_priority -99. 끝나면 지운다.
+
+## 2026-10-19 — 알림음 "마싸"
+
+사장님이 녹음한 1.58초 파일을 44.1kHz 모노로 변환해 두 벌 만들었다.
+  capacitor/assets/sound/massa.wav   안드로이드 res/raw 용
+  capacitor/assets/sound/massa.caf   iOS 번들 용 (아직 안 붙임)
+  capacitor/assets/sound/massa_source.wav  원본
+
+채널 id 를 massa_booking → massa_booking_v2 로 올렸다. 안드로이드는 채널이 한 번
+만들어지면 소리·중요도가 고정된다. id 를 그대로 두면 이미 깔린 사람에게 새 소리가
+영영 안 먹는다. 앞으로 소리를 또 바꾸면 v3 으로 올려야 한다.
+
+서버(send-push)도 channel_id 를 v2 로 바꿨다. 두 쪽이 같은 id 여야 이 채널이 쓰인다.
+default_sound: true 는 남겨 뒀다 — Android 7.1 이하에서만 쓰이고, 그 구간은 기본음이어도 된다.
+
+iOS 는 손대지 않았다. 번들에 massa.caf 를 넣으려면 Xcode 프로젝트를 건드려야 하고,
+1.0.17 이 심사 중이라 지금은 올릴 수도 없다. 안드로이드에서 소리가 확인되면 그때 한다.
+
+B안(파트너 화면 일습 이전)은 소리와 무관하다. 소리는 FCM 채널 + 음원이 정한다.
+B 를 해도 음원을 안 붙이면 조용하고, 음원을 붙이면 B 없이도 소리가 난다.
