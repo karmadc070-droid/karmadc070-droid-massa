@@ -1691,9 +1691,28 @@ function aiReviewInsight(reviews) {
 }
 
 // 제공자 프로필 상세(소개·평점·리뷰)
+// 성·시 이름표. 고객 앱은 regions 를 미리 받아 두지만 운영 화면은 안 받는다.
+// 주소를 찍을 때만 한 번 받아 두고 재사용한다.
+let REGN = null;
+async function regNames() {
+  if (REGN) return REGN;
+  REGN = {};
+  const { data } = await sb.from('regions').select('code, name_ko, name_vi').eq('is_active', true);
+  (data || []).forEach(r => { REGN[r.code] = r.name_ko || r.name_vi; });
+  return REGN;
+}
+// 프로필에 적을 주소. 전에는 '하노이' 가 박혀 있어서 하노이 밖 9명이 전부 하노이로 나왔다.
+function provAddr(p) {
+  const n = REGN || {};
+  const city = n[p.city_code] || '';
+  const ward = (p.ward_codes && p.ward_codes.length && n[p.ward_codes[0]]) || p.base_district || '';
+  return [city, ward].filter(Boolean).join(' ') || '-';
+}
+
 async function openProfile(pid) {
   const p = CACHE.providers.find(x => x.id === pid);
   if (!p) return;
+  await regNames();
   document.getElementById('provDtl').dataset.title = p.display_name;
   const body = document.getElementById('provBody');
   body.innerHTML = '<div class="hint">불러오는 중…</div>';
@@ -1742,8 +1761,8 @@ async function openProfile(pid) {
 
   const irow = (l, v) => '<div class="pf-info-row"><span>' + l + '</span><span>' + v + '</span></div>';
   const contactHtml = '<div class="pf-sec">이용 정보</div><div class="pf-info">'
-    + irow('🕒 영업시간', p.business_hours || '-')
-    + irow('📍 주소', p.base_district ? ('하노이 ' + p.base_district) : '-')
+    + irow('🕒 영업시간', p.business_hours || '언제든 가능')
+    + irow('📍 주소', provAddr(p))
     + (isAdminUser() && p.phone ? '<div class="pf-info-row"><span>📞 전화</span><a href="tel:' + p.phone + '">' + p.phone + '</a></div>' : '')
     + (isAdminUser() && p.zalo ? irow('💬 Zalo', p.zalo) : '')
     + (isAdminUser() && p.kakao ? irow('🗨️ 카카오톡', p.kakao) : '')
@@ -3315,6 +3334,7 @@ async function loadPartnerRevenue() {
   wrap.innerHTML = html;
 }
 window.loadPartnerRevenue = loadPartnerRevenue;
+let SCHED_LIST = [];
 async function loadPartnerSchedule() {
   if (!SESSION) { openAuth(); return; }
   const wrap = document.getElementById('scheduleList'); if (!wrap) return;
@@ -3325,11 +3345,54 @@ async function loadPartnerSchedule() {
   const { data, error } = await q.order('display_name');
   if (error) { wrap.innerHTML = '<div class="notice">불러오기 실패: ' + error.message + '</div>'; return; }
   const list = data || [];
-  wrap.innerHTML = list.length ? '<div class="notice">출근/퇴근 상태와 영업시간을 관리합니다. 출근(ON)이어야 고객 목록에 노출됩니다.</div>' + list.map(p => '<div class="card" style="cursor:default"><div class="trow1"><span class="t">' + p.display_name + ' <span style="font-size:11px;color:' + (p.is_active ? '#1E6B45' : 'var(--muted)') + '">' + (p.is_active ? '● 출근 중' : '○ 퇴근') + '</span></span><label class="sw"><input type="checkbox" ' + (p.is_active ? 'checked' : '') + ' onchange="toggleActive(\'' + p.id + '\',this.checked)"><span class="sw-track"></span></label></div><div class="d">영업시간: ' + (p.business_hours || '-') + '</div><button class="chip" onclick="editHours(\'' + p.id + '\')">영업시간 수정</button></div>').join('') : '<div class="notice">관리할 제공자가 없습니다. (파트너 계정 또는 관리자만 사용)</div>';
+  SCHED_LIST = list;
+  wrap.innerHTML = list.length ? '<div class="notice">출근/퇴근 상태와 영업시간을 관리합니다. 출근(ON)이어야 고객 목록에 노출됩니다.</div>' + list.map(p => '<div class="card" style="cursor:default"><div class="trow1"><span class="t">' + p.display_name + ' <span style="font-size:11px;color:' + (p.is_active ? '#1E6B45' : 'var(--muted)') + '">' + (p.is_active ? '● 출근 중' : '○ 퇴근') + '</span></span><label class="sw"><input type="checkbox" ' + (p.is_active ? 'checked' : '') + ' onchange="toggleActive(\'' + p.id + '\',this.checked)"><span class="sw-track"></span></label></div><div class="d">영업시간: ' + (p.business_hours || '언제든 가능') + '</div><button class="chip" onclick="editHours(\'' + p.id + '\')">영업시간 수정</button></div>').join('') : '<div class="notice">관리할 제공자가 없습니다. (파트너 계정 또는 관리자만 사용)</div>';
 }
 window.loadPartnerSchedule = loadPartnerSchedule;
 window.toggleActive = async (id, on) => { await sb.from('providers').update({ is_active: on }).eq('id', id); };
-window.editHours = async (id) => { const v = prompt('영업시간 (예: 10:00 ~ 24:00)'); if (v === null) return; await sb.from('providers').update({ business_hours: v }).eq('id', id); loadPartnerSchedule(); };
+// 영업시간 고르기 (2026-10-19).
+// 전에는 prompt 자유 입력이었다. 베트남 마사지사가 한국어 예시를 보고 아무거나 적으면
+// 손님 화면에 그대로 나간다. 30분 단위 선택으로 바꾼다.
+// 안 고르면 비워 둔다 — 손님 화면에는 '언제든 가능' 으로 나간다.
+const HOUR_OPTS = (() => {
+  const a = [];
+  for (let h = 0; h < 24; h++) for (const m of ['00', '30']) a.push(String(h).padStart(2, '0') + ':' + m);
+  a.push('24:00');
+  return a;
+})();
+
+window.editHours = function (id) {
+  const p = SCHED_LIST.find(x => x.id === id) || {};
+  const cur = p.business_hours || '';
+  const m = cur.match(/^(\d{2}:\d{2})\s*~\s*(\d{2}:\d{2})$/);
+  const from = m ? m[1] : '10:00', to = m ? m[2] : '24:00';
+  const opts = (sel) => HOUR_OPTS.map(t => '<option' + (t === sel ? ' selected' : '') + '>' + t + '</option>').join('');
+
+  let ov = document.getElementById('hrOv');
+  if (!ov) { ov = document.createElement('div'); ov.id = 'hrOv'; ov.style.cssText = 'position:fixed;inset:0;z-index:230;background:rgba(20,25,28,.5);display:flex;align-items:flex-end;justify-content:center'; document.body.appendChild(ov); }
+  ov.innerHTML = '<div class="svc-sheet"><div class="svc-grip"></div><div class="svc-title">영업시간</div>'
+    + '<label style="display:flex;align-items:center;gap:10px;padding:12px 2px;font-size:15px">'
+    + '<input type="checkbox" id="hrFree"' + (cur ? '' : ' checked') + '> 언제든 가능 (시간 정하지 않음)</label>'
+    + '<div id="hrPick" style="display:' + (cur ? 'flex' : 'none') + ';align-items:center;gap:10px;padding:8px 2px">'
+    + '<select class="tx" id="hrFrom" style="flex:1">' + opts(from) + '</select><span>~</span>'
+    + '<select class="tx" id="hrTo" style="flex:1">' + opts(to) + '</select></div>'
+    + '<div class="hint" style="margin:6px 2px 14px">정하지 않으면 손님 화면에 "언제든 가능" 으로 나갑니다.</div>'
+    + '<button class="chip sel" id="hrSave" style="width:100%;padding:13px">저장</button></div>';
+  ov.style.display = 'flex';
+  ov.onclick = (e) => { if (e.target === ov) ov.style.display = 'none'; };
+
+  const free = ov.querySelector('#hrFree'), pick = ov.querySelector('#hrPick');
+  free.onchange = () => { pick.style.display = free.checked ? 'none' : 'flex'; };
+  ov.querySelector('#hrSave').onclick = async () => {
+    const f = ov.querySelector('#hrFrom').value, t = ov.querySelector('#hrTo').value;
+    if (!free.checked && f === t) { alert('시작과 종료 시각이 같습니다.'); return; }
+    const v = free.checked ? null : (f + ' ~ ' + t);
+    const { error } = await sb.from('providers').update({ business_hours: v }).eq('id', id);
+    if (error) { alert('저장 실패: ' + error.message); return; }
+    ov.style.display = 'none';
+    loadPartnerSchedule();
+  };
+};
 async function loadEvents() {
   const wrap = document.getElementById('eventsList'); if (!wrap) return;
   wrap.innerHTML = '<div class="hint">불러오는 중…</div>';
