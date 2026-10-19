@@ -25,3 +25,5 @@ massa-backup-private.asc
 # 값은 VPS .env 의 FCM_SERVICE_ACCOUNT 에만 둔다.
 *firebase-adminsdk*.json
 *service-account*.json
+
+*.bak-*
