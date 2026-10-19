@@ -133,7 +133,8 @@
   .mp-vip-bar { flex: 1; height: 42px; border-radius: 21px; background: linear-gradient(90deg,#EAC97F,#D6A648); display: flex; align-items: center; justify-content: space-between; padding: 0 7px 0 8px; box-shadow: 0 3px 10px rgba(201,154,91,.45); }
   .mp-vip-arrow { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,.55); display: flex; align-items: center; justify-content: center; color: #8a6b2e; font-weight: bold; }
   .mp-vip-badge { background: #fff; color: #C0902F; font-weight: bold; font-size: 13px; border-radius: 14px; padding: 5px 16px; letter-spacing: .5px; }
-  .mp-cards { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 16px; }
+  /* 두 칸을 같은 너비로. 2fr 1fr 이면 '친구 초대' 가 눌리게 좁아 보인다 */
+  .mp-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
   .mp-card { border-radius: 16px; padding: 14px 14px 48px; min-height: 100px; position: relative; cursor: pointer; overflow: hidden; }
   .mp-card.c-partner { background: #FBF1DF; }
   .mp-card.c-invite { background: #E7F2E7; }
@@ -2213,6 +2214,18 @@ async function setupWebPush() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
   if (Notification.permission === 'granted') return subscribeWebPush();
   // 마사지사에게 알림은 생업이다. 손님처럼 띠 하나로 두면 지나친다 — 실제로 12명 중 0명이 켰다.
+  // ★ 관리자에게도 보여 준다. 안 보여 주면 사장님이 마사지사 화면을 눈으로 확인할 길이 없다.
+  //   다만 한 세션에 한 번만 — 매번 뜨면 승인·심사 작업에 방해가 된다.
+  //   어차피 '나중에' 로 닫을 수 있으니 운영이 막히지는 않는다 (오전에 그래서 한 번 막혔다).
+  if (isAdminUser()) {
+    try {
+      if (!sessionStorage.getItem('massa.gateSeen')) {
+        sessionStorage.setItem('massa.gateSeen', '1');
+        return showPushGate();
+      }
+    } catch (e) {}
+    return showPushBanner();
+  }
   if (await isApprovedProvider()) return showPushGate();
   showPushBanner();
 }
@@ -2221,9 +2234,8 @@ let _isProv = null;
 async function isApprovedProvider() {
   if (_isProv !== null) return _isProv;
   if (!SESSION) return false;
-  // ★ 관리자는 거른다. 관리자 계정에도 providers 행이 있을 수 있는데,
-  //   그러면 승인·심사 같은 운영 작업이 알림 화면에 막힌다 (2026-10-19 실제로 막혔다).
-  if (isAdminUser()) { _isProv = false; return false; }
+  // 관리자 여부는 여기서 따지지 않는다 — setupWebPush 가 따로 처리한다.
+  // (오전에 여기서 걸렀더니 사장님 화면에 안내가 아예 안 떠서 확인을 못 했다.)
   try {
     const uid = SESSION.user.id;
     const { data } = await sb.from('providers').select('id')
