@@ -4449,6 +4449,11 @@ const DICT = {
   '🕒 영업시간': ['🕒 Giờ làm việc', '🕒 Hours', '🕒 营业时间', '🕒 営業時間'],
   '언제든 가능': ['Bất kỳ lúc nào', 'Anytime', '随时可预约', 'いつでも可能'],
   '받은 신청': ['Yêu cầu nhận được', 'Incoming requests', '收到的申请', '受けた申込'],
+  '출근 중 — 손님에게 보입니다': ['Đang làm việc — khách nhìn thấy bạn',
+    'On duty — customers can see you', '上班中 — 客人可以看到您', '出勤中 — お客様に表示されます'],
+  '퇴근 — 손님에게 보이지 않습니다': ['Đã nghỉ — khách không nhìn thấy bạn',
+    'Off duty — customers cannot see you', '已下班 — 客人看不到您', '退勤 — お客様に表示されません'],
+  '바꾸지 못했습니다.': ['Không thay đổi được.', 'Could not change it.', '无法更改。', '変更できませんでした。'],
   '수락': ['Nhận', 'Accept', '接受', '受ける'],
   '거절': ['Từ chối', 'Decline', '拒绝', '断る'],
   '채팅': ['Nhắn tin', 'Chat', '聊天', 'チャット'],
@@ -5062,7 +5067,7 @@ async function myProviderIds() {
   if (MY_PROV) return MY_PROV;
   if (!SESSION) return [];
   const uid = SESSION.user.id;
-  const { data } = await sb.from('providers').select('id, display_name')
+  const { data } = await sb.from('providers').select('id, display_name, is_active')
     .or('profile_id.eq.' + uid + ',owner_id.eq.' + uid)
     .eq('application_status', 'approved');
   MY_PROV = data || [];
@@ -5137,6 +5142,14 @@ async function loadIncoming() {
   if (!wrap) return;
   const mine = await myProviderIds();
   if (!mine.length) { wrap.innerHTML = '<div class="notice">' + rEsc(T('마사지사로 승인된 계정이 아닙니다.')) + '</div>'; return; }
+  // ★ 출퇴근 스위치 (2026-10-19). 승인된 15명 중 이걸 한 번이라도 바꾼 사람이 0명이었다 —
+  //   바꿀 데가 없었다. 14명이 새벽에도 '출근 중' 으로 손님에게 노출되고 있었다.
+  const dutyHtml = mine.map(p => '<div class="tcard" style="display:flex;align-items:center;justify-content:space-between;padding:14px">'
+    + '<div><div style="font-weight:700">' + rEsc(p.display_name || '') + '</div>'
+    + '<div id="dutyTxt_' + p.id + '" style="font-size:12.5px;color:' + (p.is_active ? '#1E6B45' : 'var(--muted)') + '">'
+    + rEsc(T(p.is_active ? '출근 중 — 손님에게 보입니다' : '퇴근 — 손님에게 보이지 않습니다')) + '</div></div>'
+    + '<label class="sw"><input type="checkbox" ' + (p.is_active ? 'checked' : '')
+    + ' onchange="toggleDuty(\'' + p.id + '\', this.checked)"><span class="sw-track"></span></label></div>').join('');
   const { data, error } = await sb.from('bookings')
     .select('*, services(name, duration_min)')
     .in('provider_id', mine.map(p => p.id))
@@ -5144,11 +5157,11 @@ async function loadIncoming() {
     .order('created_at', { ascending: false }).limit(30);
   if (error) { wrap.innerHTML = '<div class="notice">' + rEsc(error.message) + '</div>'; return; }
   const list = data || [];
-  if (!list.length) { wrap.innerHTML = '<div class="notice">' + rEsc(T('아직 받은 신청이 없습니다.')) + '</div>'; return; }
+  if (!list.length) { wrap.innerHTML = dutyHtml + '<div class="notice">' + rEsc(T('아직 받은 신청이 없습니다.')) + '</div>'; return; }
   const when = iso => { const d = new Date(iso); const p2 = n => String(n).padStart(2, '0');
     return p2(d.getMonth() + 1) + '/' + p2(d.getDate()) + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes()); };
   const STAT = { requested: '수락 대기', confirmed: '수락함', on_the_way: '이동 중', in_progress: '진행 중' };
-  wrap.innerHTML = list.map(b => {
+  wrap.innerHTML = dutyHtml + list.map(b => {
     const place = [b.hotel_name, b.room_number].filter(Boolean).join(' ') || b.address || '-';
     const acts = b.status === 'requested'
       ? '<button class="chip sel" onclick="acceptIncoming(\'' + b.id + '\')">' + rEsc(T('수락')) + '</button>'
@@ -5170,6 +5183,23 @@ async function loadIncoming() {
   }).join('');
 }
 window.loadIncoming = loadIncoming;
+
+// 출퇴근 켜고 끄기. is_active 는 DB 규칙(guard_booking_write)에서 본인이 바꿀 수 있는
+// 항목으로 이미 열려 있다 — 새 권한이 필요 없다. 정지 중이면 서버가 켜는 것을 막는다.
+window.toggleDuty = async function (pid, on) {
+  const { error } = await sb.from('providers').update({ is_active: on }).eq('id', pid);
+  const txt = document.getElementById('dutyTxt_' + pid);
+  if (error) {
+    alert(T('바꾸지 못했습니다.') + ' ' + error.message);
+    loadIncoming();   // 화면과 서버가 어긋나면 안 된다. 서버 값으로 되돌린다
+    return;
+  }
+  MY_PROV = null;     // 다음에 읽을 때 새 상태로
+  if (txt) {
+    txt.textContent = T(on ? '출근 중 — 손님에게 보입니다' : '퇴근 — 손님에게 보이지 않습니다');
+    txt.style.color = on ? '#1E6B45' : 'var(--muted)';
+  }
+};
 
 // 수락은 update 가 아니라 서버 함수로 한다. 같은 요청이 여러 사람에게 가 있을 수 있어서,
 // 둘이 같은 순간에 누르면 update 로는 둘 다 확정된다. 운영 콘솔도 같은 함수를 쓴다.
