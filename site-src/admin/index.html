@@ -410,9 +410,10 @@ svg{display:block;width:100%;height:auto;overflow:visible}
     </div>
 
     <!-- 마사지사 활동. 누가 실제로 일을 받는가를 본다.
-         기기 칸을 맨 앞에 둔 이유가 있다. 기기가 0 이면 예약 알림이 애초에 닿지
-         않는다. 그 사람의 수락률 0 은 성실도가 아니다. 둘을 나란히 보지 않으면
-         사람을 오해한다 (2026-10-20). -->
+         '알림 받는 기기' 칸을 수락률 왼쪽에 둔 이유가 있다. 그 수가 0 이면 예약 알림이
+         애초에 닿지 않는다 — 앱에 로그인한 적이 없거나, 했어도 알림을 안 켠 것이다.
+         그 사람의 수락률 0 은 성실도가 아니다. 둘을 나란히 보지 않으면 사람을 오해한다.
+         처음에는 그냥 '기기' 라고 썼는데 휴대폰이 없다는 말로 읽혔다 (2026-10-20). -->
     <div class="card" id="s-activity" style="margin-bottom:20px">
       <h3>마사지사 활동</h3>
       <p class="note" id="act-note"></p>
@@ -755,9 +756,10 @@ async function loadActivity() {
   $('act-note').innerHTML =
     `전체 예약 <b>${num(tot.got || 0)}건</b> · 수락 <b>${num(tot.accepted || 0)}건</b>`
     + ` · 완료 <b>${num(tot.completed || 0)}건</b>`
-    + (noDev ? ` · <b class="owe">기기 없는 마사지사 ${num(noDev)}명</b>` : '')
-    + `<br>기기가 0 이면 예약 알림이 닿지 않습니다. 그 사람의 수락률 0 은 성실도가 아닙니다.`
-    + ` 받은 예약이 없으면 수락률은 '-' 로 둡니다.`
+    + (noDev ? ` · <b class="owe">알림이 닿지 않는 마사지사 ${num(noDev)}명</b>` : '')
+    + `<br>'알림 받는 기기' 가 0 이면 예약이 들어와도 그 사람 휴대폰에는 아무것도 뜨지 않습니다.`
+    + ` 앱에 로그인한 적이 없거나, 로그인했어도 알림을 켜지 않은 것입니다.`
+    + ` 그 사람의 수락률 0 은 성실도가 아닙니다. 받은 예약이 없으면 수락률은 '-' 로 둡니다.`
     + `<br>'앱 들어온 날' 은 2026-10-20 부터 쌓입니다. 그 전 기록은 남아 있지 않습니다.`
     + ` 하루에 여러 번 들어와도 하루로 셉니다.`;
 
@@ -767,7 +769,7 @@ async function loadActivity() {
   rows.sort((a, b) => (b.got - a.got) || String(a.name || '').localeCompare(String(b.name || '')));
 
   box.innerHTML = '<div class="scroll"><table class="tbl"><thead><tr>'
-    + ['마사지사', '지역', '출근', '기기', '받음', '수락', '수락률', '평균 수락', '완료', '거절', '취소',
+    + ['마사지사', '지역', '출근', '알림 받는 기기', '받음', '수락', '수락률', '평균 수락', '완료', '거절', '취소',
        '앱 들어온 날', '마지막 접속']
         .map(h => `<th>${h}</th>`).join('')
     + '</tr></thead><tbody>'
@@ -780,7 +782,8 @@ async function loadActivity() {
           + `<td>${esc(r.name || '')}</td>`
           + `<td>${esc(r.city || '-')}</td>`
           + `<td>${r.is_active ? '예' : '<b class="owe">아니오</b>'}</td>`
-          + `<td>${dev ? num(dev) : '<b class="owe">0</b>'}</td>`
+          + `<td>${dev ? num(dev)
+               : '<b class="owe" title="이 사람에게는 예약 알림이 가지 않습니다. 앱 로그인 또는 알림 켜기가 필요합니다.">0</b>'}</td>`
           + `<td>${num(r.got)}</td><td>${num(r.accepted)}</td>`
           + `<td>${rate}</td><td>${sec}</td>`
           + `<td>${num(r.completed)}</td><td>${num(r.rejected)}</td><td>${num(r.cancelled)}</td>`
