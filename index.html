@@ -2207,19 +2207,32 @@ window.refreshNotiDot = refreshNotiDot;
 // registerPush 는 리스너를 붙이므로 앱 실행당 한 번만 부르고, 계정이 바뀌면 받아 둔 토큰으로 다시 등록한다.
 let PUSH_TOKEN = null, PUSH_ASKED = false, PUSH_TAP = null, BOOTED = false;
 let PUSH_PLATFORM = 'ios';   // 웹푸시로 등록했으면 'web'. 언어를 바꿔 다시 등록할 때 섞이면 안 된다
+// ★ 이 토큰을 '누구 앞으로' 저장해 뒀는지 (2026-10-20).
+//   로그아웃하면 토큰 행이 지워진다. 그 뒤 다른 계정으로 로그인하면 다시 저장해야 하는데
+//   예전에는 그걸 알 방법이 없어 한 번 등록한 뒤로는 조용히 넘어갔다.
+//   구글로 가입한 마사지사 11명이 전부 토큰 0개였던 이유가 이것이다.
+let PUSH_SAVED_FOR = null;
 function savePushToken() {
   if (!SESSION || !PUSH_TOKEN) return;
+  const uid = SESSION.user.id;
   Promise.resolve(sb.rpc('register_push_token', { p_token: PUSH_TOKEN, p_platform: PUSH_PLATFORM, p_lang: LANG }))
-    .then(function () {}, function () {});
+    .then(
+      function () { PUSH_SAVED_FOR = uid; },
+      // 실패를 삼키지 않는다. 예전에는 빈 핸들러라 등록이 깨져도 아무 흔적이 없었다.
+      function (e) { PUSH_SAVED_FOR = null; console.warn('푸시 토큰 등록 실패', e && e.message); });
 }
 function setupPush() {
   const N = window.MassaNative;
   if (!SESSION) return;
+  // 계정이 바뀌었으면 이 기기 토큰을 새 사람 앞으로 다시 저장한다.
+  if (PUSH_SAVED_FOR && PUSH_SAVED_FOR !== SESSION.user.id) PUSH_SAVED_FOR = null;
   // 네이티브 앱(아이폰 APNs · 안드로이드 FCM)이면 네이티브 경로.
   // 그 외(브라우저·옛 TWA)는 웹푸시. 웹푸시는 소리를 못 내므로 네이티브가 우선이다.
   if (!N || (N.platform !== 'ios' && N.platform !== 'android')) return setupWebPush();
   PUSH_PLATFORM = N.platform;
-  if (PUSH_TOKEN) return savePushToken();
+  // 토큰을 이미 받아 뒀으면 다시 등록하지 않는다 — registerPush 는 리스너를 붙이므로
+  // 두 번 부르면 알림이 두 번 처리된다. 대신 '누구 앞으로' 가 달라졌을 때만 다시 저장한다.
+  if (PUSH_TOKEN) { if (PUSH_SAVED_FOR !== SESSION.user.id) savePushToken(); return; }
   if (PUSH_ASKED) return;
   PUSH_ASKED = true;
   // 네이티브는 OS 권한 창이 한 번만 뜬다. 거절했으면 앱 안에서 되돌릴 수 없으므로
