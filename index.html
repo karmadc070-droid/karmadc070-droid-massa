@@ -5162,10 +5162,14 @@ async function myProviderIds() {
   if (MY_PROV) return MY_PROV;
   if (!SESSION) return [];
   const uid = SESSION.user.id;
-  const { data } = await sb.from('providers')
-    .select('id, display_name, is_active, business_hours, fee_rate, deposit_code')
+  // ★ 없는 컬럼을 하나라도 적으면 질의 전체가 실패하고 빈 배열이 돌아온다.
+  //   그러면 마사지사 기능이 통째로 사라진다 — 2026-10-20 에 fee_rate 를 추측으로
+  //   넣었다가 실제로 그렇게 됐다. 수수료율은 예약에 얼어붙은 값을 쓰므로 여기선 필요 없다.
+  const { data, error } = await sb.from('providers')
+    .select('id, display_name, is_active, business_hours, deposit_code')
     .or('profile_id.eq.' + uid + ',owner_id.eq.' + uid)
     .eq('application_status', 'approved');
+  if (error) { console.warn('마사지사 정보를 못 읽었다', error.message); return []; }
   MY_PROV = data || [];
   return MY_PROV;
 }
