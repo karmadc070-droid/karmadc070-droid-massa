@@ -1715,3 +1715,12 @@ AI 가격 분석·AI 일정 추천·직원 관리·이벤트·GPS·내 가격은
 getElementById('whatsNew') 로 집는다. 처음에 querySelectorAll('textarea')[0] 로
 썼는데 그건 promotionalText 였다 — 운 좋게 라벨 매칭이 먼저 걸려 description 을
 덮어쓰지 않았을 뿐이다. id 가 있으면 id 로 집는다.
+
+### 알림 반복 시간을 바꿀 때 보는 곳 (2026-10-20)
+claim_unpushed_notifications() 안의 숫자 둘이 전부다.
+  push_tries < N        몇 번 울릴지 (30초 간격이므로 N/2 분)
+  created_at > now() - interval 'M minutes'   그 창 안에서만 재발송
+M 은 N/2 보다 1분쯤 커야 한다. 크론이 30초 격자로 돌아 마지막 울림이 잘릴 수 있다.
+
+fanout_stale_bookings(p_wait_min=10) 과 맞물려 있다. 마사지사 알림이 끝나는 시점과
+전파 시점이 같아야 공백이 없다. 한쪽만 바꾸면 조용한 구간이 생긴다.
