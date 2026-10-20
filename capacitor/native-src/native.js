@@ -33,6 +33,11 @@ function shimGeolocation() {
 
 // 푸시 등록 (아이폰 APNs · 안드로이드 FCM). 권한 허용 시 onToken(디바이스 토큰) 을 호출한다.
 async function registerPush(onToken, onNotification) {
+  // ★ 두 번 불러도 안전하게 만든다 (2026-10-20).
+  //   예전에는 리스너가 쌓여서 알림이 두 번 처리됐고, 그래서 앱 실행당 한 번만 불렀다.
+  //   그 제약 때문에 로그아웃 후 다른 계정으로 로그인하면 토큰을 다시 받을 길이 없었다.
+  //   아침에 울렸던 경로(앱 시작 → 로그인 → 등록)를 로그인할 때마다 그대로 다시 타게 한다.
+  try { await PushNotifications.removeAllListeners(); } catch (e) {}
   const perm = await PushNotifications.requestPermissions();
   if (perm.receive !== "granted") return false;
 
