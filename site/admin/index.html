@@ -756,8 +756,8 @@ async function loadActivity() {
   $('act-note').innerHTML =
     `전체 예약 <b>${num(tot.got || 0)}건</b> · 수락 <b>${num(tot.accepted || 0)}건</b>`
     + ` · 완료 <b>${num(tot.completed || 0)}건</b>`
-    + (noDev ? ` · <b class="owe">알림이 닿지 않는 마사지사 ${num(noDev)}명</b>` : '')
-    + `<br>'알림 받는 기기' 가 0 이면 예약이 들어와도 그 사람 휴대폰에는 아무것도 뜨지 않습니다.`
+    + (noDev ? ` · <b class="owe">알림 OFF 마사지사 ${num(noDev)}명</b>` : '')
+    + `<br>'알림' 이 0 이면 예약이 들어와도 그 사람 휴대폰에는 아무것도 뜨지 않습니다.`
     + ` 앱에 로그인한 적이 없거나, 로그인했어도 알림을 켜지 않은 것입니다.`
     + ` 그 사람의 수락률 0 은 성실도가 아닙니다. 받은 예약이 없으면 수락률은 '-' 로 둡니다.`
     + `<br>'앱 들어온 날' 은 2026-10-20 부터 쌓입니다. 그 전 기록은 남아 있지 않습니다.`
@@ -769,7 +769,7 @@ async function loadActivity() {
   rows.sort((a, b) => (b.got - a.got) || String(a.name || '').localeCompare(String(b.name || '')));
 
   box.innerHTML = '<div class="scroll"><table class="tbl"><thead><tr>'
-    + ['마사지사', '지역', '출근', '알림 받는 기기', '받음', '수락', '수락률', '평균 수락', '완료', '거절', '취소',
+    + ['마사지사', '지역', '출근', '알림', '받음', '수락', '수락률', '평균 수락', '완료', '거절', '취소',
        '앱 들어온 날', '마지막 접속']
         .map(h => `<th>${h}</th>`).join('')
     + '</tr></thead><tbody>'
