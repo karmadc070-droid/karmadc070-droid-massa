@@ -2152,6 +2152,7 @@ async function refreshSession() {
   } else CUR_PROFILE = null;
   MY_PROV = null; _isProv = null;   // 계정이 바뀌면 다시 읽는다
   if (SESSION && window.paintBkTabs) paintBkTabs();   // 아래 탭 빨간 점을 바로 찍는다
+  applyProviderLang();   // 마사지사는 베트남어로 — 직접 고른 사람은 건드리지 않는다
   refreshNotiDot();
   subscribeNotifications();
   loadBlocks();
@@ -3281,6 +3282,10 @@ window.openLangPicker = function () {
 };
 window.pickLang = function (code) {
   const ov = document.getElementById('langOv'); if (ov) ov.style.display = 'none';
+  // ★ '본인이 직접 골랐다' 를 따로 남긴다 (2026-10-20).
+  //   massa_lang 은 부팅할 때도 쓰이므로 그것만으로는 기본값과 선택을 구분할 수 없다.
+  //   이 표시가 있어야 마사지사 자동 베트남어가 사람의 선택을 덮지 않는다.
+  try { localStorage.setItem('massa_lang_user', '1'); } catch (e) {}
   applyLang(code);
 };
 
@@ -5303,6 +5308,21 @@ window.toggleDuty = async function (pid, on) {
     txt.style.color = on ? '#1E6B45' : 'var(--muted)';
   }
 };
+
+// ── 마사지사는 베트남어로 (2026-10-20) ────────────────
+// 승인된 마사지사 15명은 전원 베트남 분들이다. 기기 언어가 영어로 맞춰져 있거나
+// 손님으로 먼저 써 보다가 다른 언어가 굳으면, 받은 신청·정산 화면이 남의 말로 뜬다.
+// 그 화면은 생업이다. 못 읽으면 예약을 놓친다.
+// 단, 본인이 언어를 직접 고른 적이 있으면 건드리지 않는다 — 사장님처럼 한국어로
+// 쓰는 마사지사 계정도 있다. 한 번 고르면 그 선택이 계속 이긴다.
+async function applyProviderLang() {
+  if (!SESSION) return;
+  try { if (localStorage.getItem('massa_lang_user')) return; } catch (e) { return; }
+  if (LANG === 'vi') return;
+  const mine = await myProviderIds();
+  if (!mine.length) return;
+  applyLang('vi');
+}
 
 // ── 정산 (2026-10-20) ─────────────────────────────────
 // 콘솔(admin.html loadPartnerRevenue)에 있던 것을 앱으로 옮겼다.
