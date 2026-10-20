@@ -4791,3 +4791,21 @@ Thanh hà 만 17대, Jin 과 Thảo 가 1대씩. 나머지는 알림이 닿을 �
       notify_booking_event 가 booking_taken 으로 마사지사 5명만 챙기고
       손님에게 가는 booking_cancelled 를 만들지 않는다.
       → verify: 예약 하나를 취소하고 손님 user_id 로 알림이 생기는지 확인
+
+## 2026-10-20 09:05 — Play 1.1.105 출시, 되돌렸던 둘을 되살림
+
+Play 프로덕션 활성, 최신 출시 버전 1.1.105, 178개 지역, 설치 28회.
+규칙 11 대로 **사장님 폰이 1.1.105 로 업데이트된 것을 확인한 뒤** 서버를 올렸다.
+(09:01:37 에 android 토큰이 재등록된 것이 그 증거다.)
+
+- [x] 푸시 채널 massa_booking → massa_booking_v2 (+ sound: "massa")
+      → verify: 발송 후 폰에서 **"마싸" 소리 들림. 확인됨.**
+- [x] GoTrue 허용 목록에 massa://** , massa://auth 재추가
+      → verify: 컨테이너 안 GOTRUE_URI_ALLOW_LIST 에서 두 줄 확인,
+        authorize 응답의 redirect_to 에 massa://auth 유지됨
+- [ ] 구글 로그인이 앱 안에서 끝나는지 눈으로 확인
+- [ ] Jin 에게 앱 업데이트 안내 (살아 있는 android 토큰을 가진 유일한 마사지사)
+- [ ] 구글 가입 마사지사 11명에게 베트남어 안내 — 업데이트 후 재로그인
+
+**주의.** 1.1.103 에 머문 사람은 v2 채널이 없어 알림이 가지 않는다.
+실제 영향은 Jin 한 명뿐이다 (나머지 12명은 기기가 0대, Thảo 는 웹푸시).
