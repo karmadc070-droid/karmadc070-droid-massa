@@ -93,6 +93,36 @@ Deno.serve(async (req) => {
     return json({ ok: r.ok, sent_to: TO, detail: r });
   }
 
+  // ── massaviet.com 상담·제휴 폼 ──────────────────────
+  if (action === "contact_request") {
+    const id = String(body.contact_id ?? "");
+    if (!id) return json({ error: "contact_id 없음" }, 400);
+    const { data: c } = await admin.from("contact_request")
+      .select("company, person, phone, email, region, message, lang, created_at").eq("id", id).single();
+    if (!c) return json({ error: "문의 없음" }, 404);
+
+    const rows: string[][] = [
+      ["회사", esc(c.company)],
+      ["담당자", esc(c.person)],
+      // 메일에서 바로 누를 수 있어야 한다. 번호를 옮겨 적다 틀리면 연락이 끊긴다.
+      ["연락처", `<a href="tel:${esc(c.phone)}" style="color:#1B2B31">${esc(c.phone)}</a>`],
+      ["이메일", `<a href="mailto:${esc(c.email)}" style="color:#1B2B31">${esc(c.email)}</a>`],
+    ];
+    if (c.region) rows.push(["지역", esc(c.region)]);
+    rows.push(["페이지 언어", esc(c.lang ?? "-")]);
+    rows.push(["받은 시각", new Date(c.created_at as string).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })]);
+
+    const msg = c.message
+      ? `<div style="max-width:520px;margin:0 auto;font-family:-apple-system,'Malgun Gothic',sans-serif;
+           padding:0 26px 26px"><div style="background:#fff;border:1px solid #E2D8CB;border-radius:12px;
+           padding:18px;font-size:14.5px;color:#1B2B31;white-space:pre-wrap">${esc(c.message)}</div></div>`
+      : "";
+    // 콘솔에 상담 화면이 아직 없다. 버튼을 달면 눌러도 갈 데가 없으므로 달지 않는다.
+    const r = await send(`[massa] 상담 요청 · ${c.company} ${c.person}`,
+      shell("상담 요청이 들어왔습니다", rows, false) + msg);
+    return json({ ok: r.ok, sent_to: TO, detail: r });
+  }
+
   // ── 하루 한 번 미처리 현황 ───────────────────────────
   if (action === "daily_digest") {
     const { data: pend } = await admin.from("provider_deposit")

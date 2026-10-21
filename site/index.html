@@ -20,7 +20,7 @@
 <meta name="msvalidate.01" content="0B78D4CC15B1549A5F90A122DD123EAC"><meta name="naver-site-verification" content="8b5230440cfac17b5ac2953976ea3b080f095706">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="/style.css?v=5183423d">
+<link rel="stylesheet" href="/style.css?v=d0207c77">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Noto+Serif+KR:wght@400;500&family=Inter:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Noto+Serif+KR:wght@400;500&family=Inter:wght@400;500;600&display=swap"></noscript>
 <script>(function(){try{var K="massa_site_lang";if(/bot|crawl|spider|slurp|yeti|daum|facebookexternalhit|preview/i.test(navigator.userAgent))return;if(localStorage.getItem(K))return;var l=(navigator.language||"").slice(0,2).toLowerCase();var t=l==="ko"?null:(l==="en"?"en":"vi");if(!t){localStorage.setItem(K,"ko");return;}localStorage.setItem(K,t);location.replace(t==="en"?'/en/':'/vi/');}catch(e){}})();</script>
@@ -108,7 +108,23 @@
       <svg width="22" height="26" viewBox="0 0 22 26" fill="currentColor" aria-hidden="true"><path d="M18.1 13.8c0-3 2.4-4.4 2.5-4.5-1.4-2-3.5-2.3-4.2-2.3-1.8-.2-3.5 1-4.4 1-.9 0-2.3-1-3.8-1-2 0-3.8 1.1-4.8 2.9-2 3.5-.5 8.8 1.5 11.7 1 1.4 2.1 3 3.6 2.9 1.4-.1 2-.9 3.7-.9 1.7 0 2.2.9 3.7.9 1.5 0 2.5-1.4 3.4-2.9 1.1-1.6 1.5-3.2 1.5-3.3-.1 0-2.9-1.1-2.9-4.4zM15.3 4.9c.8-1 1.3-2.3 1.2-3.7-1.2 0-2.6.8-3.4 1.8-.7.9-1.4 2.2-1.2 3.6 1.3.1 2.6-.7 3.4-1.7z"/></svg>
       <span><b>App Store</b><small>iPhone · iPad</small></span></a><a class="store" href="https://play.google.com/store/apps/details?id=app.massa.hanoi" rel="noopener">
       <svg width="22" height="26" viewBox="0 0 22 26" fill="currentColor" aria-hidden="true"><path d="M2 2.3v21.4c0 .5.3.9.7 1.1l11.5-11.8L2.7 1.2c-.4.2-.7.6-.7 1.1zm14.6 8.4L4.4 1.4l.2-.1 12.9 7.4-.9 2zM19.9 12c.5.3.8.8.8 1.3s-.3 1-.8 1.3l-2.6 1.5-1.6-2.8 1.6-2.8 2.6 1.5zM4.6 24.7l12-9.3.9 2-12.9 7.4-.2-.1z"/></svg>
-      <span><b>Google Play</b><small>Android</small></span></a></div></div></section>
+      <span><b>Google Play</b><small>Android</small></span></a></div></div></section><section class="soft"><div class="wrap"><div class="sec-head rv">
+      <span class="kicker">제휴</span>
+      <h2>함께 하실 분을 찾습니다</h2>
+      <p class="lead">호텔과 스파, 기업 복지 담당자께 특히 반갑습니다.</p>
+    </div><form class="quote rv" id="quoteForm" novalidate>
+  <h2>상담 · 제휴 문의</h2>
+  <p class="qlead">호텔·스파 제휴, 기업 복지, 단체 예약, 그 밖의 제안을 남겨 주세요. 영업일 기준 1~2일 안에 답을 드립니다.</p>
+  <label class="qf"><span>회사 · 기관<span class="req">*</span></span><input id="q_company" type="text"></label>
+  <div class="qrow"><label class="qf"><span>담당자 이름<span class="req">*</span></span><input id="q_person" type="text"></label><label class="qf"><span>연락처<span class="req">*</span></span><input id="q_phone" type="tel"></label></div>
+  <label class="qf"><span>이메일<span class="req">*</span></span><input id="q_email" type="email"></label>
+  <label class="qf"><span>지역 (도시 · 구역)</span><input id="q_region" type="text"></label>
+  <label class="qf"><span>문의 내용</span><textarea id="q_message" rows="5"></textarea></label>
+  <button type="submit" class="btn qsend">상담 요청 보내기</button>
+  <p class="qmsg" id="quoteMsg" data-ok="보냈습니다. 영업일 기준 1~2일 안에 연락드리겠습니다." data-fail="보내지 못했습니다. support@massaviet.com 으로 메일 주시면 똑같이 처리됩니다."
+     data-need="회사, 담당자, 연락처, 이메일은 꼭 적어 주세요." data-sending="보내는 중…"></p>
+  <p class="qnote">남겨 주신 연락처는 이 문의에 답하는 데만 씁니다.</p>
+</form></div></section>
 
 <footer class="site">
   <div class="wrap">
@@ -191,6 +207,40 @@
         : box.dataset.closed;
       box.hidden = false;
     }).catch(function(){});
+  })();
+
+  // 상담·제휴 폼. 값은 contact_request 로 들어가고 DB 트리거가 관리자 메일을 띄운다.
+  // 메일 함수를 여기서 직접 부르지 않는 이유는 그 함수의 시크릿이 페이지에 내려오기 때문이다.
+  (function(){
+    var form = document.getElementById('quoteForm'); if (!form) return;
+    var msg = document.getElementById('quoteMsg');
+    var btn = form.querySelector('.qsend');
+    var v = function(k){ return (document.getElementById('q_' + k).value || '').trim(); };
+    form.addEventListener('submit', function(ev){
+      ev.preventDefault();
+      var row = { company: v('company'), person: v('person'), phone: v('phone'),
+                  email: v('email'), region: v('region'), message: v('message'),
+                  lang: document.documentElement.lang || '' };
+      // 필수 네 칸. 브라우저 기본 검사는 언어가 섞여 나와서 쓰지 않는다.
+      if (!row.company || !row.person || !row.phone || !row.email) {
+        msg.textContent = msg.dataset.need; msg.className = 'qmsg bad'; return;
+      }
+      btn.disabled = true;
+      msg.textContent = msg.dataset.sending; msg.className = 'qmsg';
+      fetch('https://api.massaviet.com/rest/v1/contact_request', {
+        method: 'POST',
+        headers: { 'apikey': 'eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJyb2xlIjogImFub24iLCAiaXNzIjogInN1cGFiYXNlIiwgImlhdCI6IDE3ODc0NTg4OTMsICJleHAiOiAyMTAyODE4ODkzfQ.7taJaAzxPRIkd0PeC5qnuacficFnazkBN54ttblUv-o', 'Authorization': 'Bearer eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJyb2xlIjogImFub24iLCAiaXNzIjogInN1cGFiYXNlIiwgImlhdCI6IDE3ODc0NTg4OTMsICJleHAiOiAyMTAyODE4ODkzfQ.7taJaAzxPRIkd0PeC5qnuacficFnazkBN54ttblUv-o',
+                   'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify(row)
+      }).then(function(r){
+        if (!r.ok) throw new Error(r.status);
+        form.querySelectorAll('input,textarea').forEach(function(e){ e.value = ''; });
+        msg.textContent = msg.dataset.ok; msg.className = 'qmsg ok';
+      }).catch(function(){
+        // 실패를 성공처럼 보여 주면 손님은 기다리다 떠난다. 다른 길을 알려 준다.
+        msg.textContent = msg.dataset.fail; msg.className = 'qmsg bad';
+      }).then(function(){ btn.disabled = false; });
+    });
   })();
 
   // 앱 설치 띠는 한 번 닫으면 다시 띄우지 않는다

@@ -20,7 +20,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="/style.css?v=5183423d">
+<link rel="stylesheet" href="/style.css?v=d0207c77">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Noto+Serif+KR:wght@400;500&family=Inter:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Noto+Serif+KR:wght@400;500&family=Inter:wght@400;500;600&display=swap"></noscript>
 
@@ -44,7 +44,23 @@
       <span class="kicker">Liên hệ</span>
       <h2>Gửi cho chúng tôi<br>bất cứ điều gì</h2>
       <p class="lead">Chúng tôi đọc và trả lời theo thứ tự nhận được.</p>
-    </div><table class="tbl rv"><tr><th>Email</th><td><a href="mailto:support@massaviet.com">support@massaviet.com</a></td></tr><tr><th>Dùng dịch vụ</th><td>Vấn đề về đặt lịch, thanh toán, hủy lịch và tài khoản</td></tr><tr><th>Đối tác</th><td>Đăng ký chuyên viên và cửa hàng. Vui lòng đọc <a href="/vi/partner.html">trang đối tác</a> trước.</td></tr><tr><th>Hợp tác</th><td>Spa, khách sạn và các đề xuất khác</td></tr><tr><th>Báo lỗi</th><td>Hãy cho biết thiết bị bạn dùng và bạn đang làm gì khi lỗi xảy ra.</td></tr></table><p class="note rv">Với việc gấp trong lúc đang làm dịch vụ, nút an toàn (SOS) và chức năng báo cáo trong ứng dụng nhanh hơn email rất nhiều. Chúng gửi kèm vị trí của bạn đến đội ngũ chúng tôi.</p></div></section>
+    </div><table class="tbl rv"><tr><th>Email</th><td><a href="mailto:support@massaviet.com">support@massaviet.com</a></td></tr><tr><th>Dùng dịch vụ</th><td>Vấn đề về đặt lịch, thanh toán, hủy lịch và tài khoản</td></tr><tr><th>Đối tác</th><td>Đăng ký chuyên viên và cửa hàng. Vui lòng đọc <a href="/vi/partner.html">trang đối tác</a> trước.</td></tr><tr><th>Hợp tác</th><td>Spa, khách sạn và các đề xuất khác</td></tr><tr><th>Báo lỗi</th><td>Hãy cho biết thiết bị bạn dùng và bạn đang làm gì khi lỗi xảy ra.</td></tr></table><p class="note rv">Với việc gấp trong lúc đang làm dịch vụ, nút an toàn (SOS) và chức năng báo cáo trong ứng dụng nhanh hơn email rất nhiều. Chúng gửi kèm vị trí của bạn đến đội ngũ chúng tôi.</p></div></section><section class="soft"><div class="wrap"><div class="sec-head rv">
+      <span class="kicker">Đối tác</span>
+      <h2>Hợp tác cùng massa</h2>
+      <p class="lead">Đặc biệt chào đón khách sạn, spa và bộ phận phúc lợi doanh nghiệp.</p>
+    </div><form class="quote rv" id="quoteForm" novalidate>
+  <h2>Hợp tác &amp; liên hệ</h2>
+  <p class="qlead">Khách sạn, spa, phúc lợi doanh nghiệp, đặt lịch theo nhóm hay bất cứ đề xuất nào — hãy để lại, chúng tôi trả lời trong 1–2 ngày làm việc.</p>
+  <label class="qf"><span>Công ty hoặc tổ chức<span class="req">*</span></span><input id="q_company" type="text"></label>
+  <div class="qrow"><label class="qf"><span>Người liên hệ<span class="req">*</span></span><input id="q_person" type="text"></label><label class="qf"><span>Số điện thoại<span class="req">*</span></span><input id="q_phone" type="tel"></label></div>
+  <label class="qf"><span>Email<span class="req">*</span></span><input id="q_email" type="email"></label>
+  <label class="qf"><span>Khu vực (thành phố · quận)</span><input id="q_region" type="text"></label>
+  <label class="qf"><span>Nội dung</span><textarea id="q_message" rows="5"></textarea></label>
+  <button type="submit" class="btn qsend">Gửi yêu cầu</button>
+  <p class="qmsg" id="quoteMsg" data-ok="Đã gửi. Chúng tôi sẽ liên hệ trong 1–2 ngày làm việc." data-fail="Không gửi được. Bạn gửi mail tới support@massaviet.com cũng được xử lý như vậy."
+     data-need="Vui lòng điền công ty, người liên hệ, số điện thoại và email." data-sending="Đang gửi…"></p>
+  <p class="qnote">Thông tin này chỉ dùng để trả lời yêu cầu của bạn.</p>
+</form></div></section>
 
 <footer class="site">
   <div class="wrap">
@@ -127,6 +143,40 @@
         : box.dataset.closed;
       box.hidden = false;
     }).catch(function(){});
+  })();
+
+  // 상담·제휴 폼. 값은 contact_request 로 들어가고 DB 트리거가 관리자 메일을 띄운다.
+  // 메일 함수를 여기서 직접 부르지 않는 이유는 그 함수의 시크릿이 페이지에 내려오기 때문이다.
+  (function(){
+    var form = document.getElementById('quoteForm'); if (!form) return;
+    var msg = document.getElementById('quoteMsg');
+    var btn = form.querySelector('.qsend');
+    var v = function(k){ return (document.getElementById('q_' + k).value || '').trim(); };
+    form.addEventListener('submit', function(ev){
+      ev.preventDefault();
+      var row = { company: v('company'), person: v('person'), phone: v('phone'),
+                  email: v('email'), region: v('region'), message: v('message'),
+                  lang: document.documentElement.lang || '' };
+      // 필수 네 칸. 브라우저 기본 검사는 언어가 섞여 나와서 쓰지 않는다.
+      if (!row.company || !row.person || !row.phone || !row.email) {
+        msg.textContent = msg.dataset.need; msg.className = 'qmsg bad'; return;
+      }
+      btn.disabled = true;
+      msg.textContent = msg.dataset.sending; msg.className = 'qmsg';
+      fetch('https://api.massaviet.com/rest/v1/contact_request', {
+        method: 'POST',
+        headers: { 'apikey': 'eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJyb2xlIjogImFub24iLCAiaXNzIjogInN1cGFiYXNlIiwgImlhdCI6IDE3ODc0NTg4OTMsICJleHAiOiAyMTAyODE4ODkzfQ.7taJaAzxPRIkd0PeC5qnuacficFnazkBN54ttblUv-o', 'Authorization': 'Bearer eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJyb2xlIjogImFub24iLCAiaXNzIjogInN1cGFiYXNlIiwgImlhdCI6IDE3ODc0NTg4OTMsICJleHAiOiAyMTAyODE4ODkzfQ.7taJaAzxPRIkd0PeC5qnuacficFnazkBN54ttblUv-o',
+                   'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify(row)
+      }).then(function(r){
+        if (!r.ok) throw new Error(r.status);
+        form.querySelectorAll('input,textarea').forEach(function(e){ e.value = ''; });
+        msg.textContent = msg.dataset.ok; msg.className = 'qmsg ok';
+      }).catch(function(){
+        // 실패를 성공처럼 보여 주면 손님은 기다리다 떠난다. 다른 길을 알려 준다.
+        msg.textContent = msg.dataset.fail; msg.className = 'qmsg bad';
+      }).then(function(){ btn.disabled = false; });
+    });
   })();
 
   // 앱 설치 띠는 한 번 닫으면 다시 띄우지 않는다

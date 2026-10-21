@@ -148,9 +148,34 @@ def r_links(b, L, lang):
     """다른 페이지로 가는 링크 목록 (마사지 종류 페이지끼리, 서비스 페이지 → 종류 페이지)."""
     return '<ul class="rv">' + "".join(f'<li><a href="{h}">{esc(t)}</a></li>' for t, h in b["items"]) + "</ul>"
 
+def r_quote(b, L, lang):
+    """상담·제휴 요청 폼. 보낸 값은 contact_request 테이블에 들어가고,
+    DB 트리거가 관리자 메일을 띄운다 — 시크릿이 페이지에 내려오지 않게 하려는 구조다.
+    제출 자바스크립트는 chrome() 의 공용 스크립트에 있다 (폼이 있는 페이지에서만 동작)."""
+    f = b["fields"]
+    def tx(key, req=False, area=False):
+        star = '<span class="req">*</span>' if req else ""
+        tag = (f'<textarea id="q_{key}" rows="5"></textarea>' if area
+               else f'<input id="q_{key}" type="{f[key].get("type","text")}">')
+        return (f'<label class="qf"><span>{esc(f[key]["label"])}{star}</span>{tag}</label>')
+    return f'''<form class="quote rv" id="quoteForm" novalidate>
+  <h2>{esc(b["h2"])}</h2>
+  <p class="qlead">{esc(b["lead"])}</p>
+  {tx("company", True)}
+  <div class="qrow">{tx("person", True)}{tx("phone", True)}</div>
+  {tx("email", True)}
+  {tx("region")}
+  {tx("message", area=True)}
+  <button type="submit" class="btn qsend">{esc(b["send"])}</button>
+  <p class="qmsg" id="quoteMsg" data-ok="{esc(b["ok"])}" data-fail="{esc(b["fail"])}"
+     data-need="{esc(b["need"])}" data-sending="{esc(b["sending"])}"></p>
+  <p class="qnote">{esc(b["note"])}</p>
+</form>'''
+
 R = {"hero": r_hero, "section": r_section, "grid": r_grid, "pcards": r_pcards,
      "steps": r_steps, "table": r_table, "faq": r_faq, "pull": r_pull,
-     "note": r_note, "stores": r_stores, "cta": r_cta, "ul": r_ul, "links": r_links}
+     "note": r_note, "stores": r_stores, "cta": r_cta, "ul": r_ul, "links": r_links,
+     "quote": r_quote}
 
 def render(b, L, lang): return R[b["type"]](b, L, lang)
 
@@ -371,6 +396,40 @@ def chrome(lang, name, L, body, page):
         : box.dataset.closed;
       box.hidden = false;
     }}).catch(function(){{}});
+  }})();
+
+  // 상담·제휴 폼. 값은 contact_request 로 들어가고 DB 트리거가 관리자 메일을 띄운다.
+  // 메일 함수를 여기서 직접 부르지 않는 이유는 그 함수의 시크릿이 페이지에 내려오기 때문이다.
+  (function(){{
+    var form = document.getElementById('quoteForm'); if (!form) return;
+    var msg = document.getElementById('quoteMsg');
+    var btn = form.querySelector('.qsend');
+    var v = function(k){{ return (document.getElementById('q_' + k).value || '').trim(); }};
+    form.addEventListener('submit', function(ev){{
+      ev.preventDefault();
+      var row = {{ company: v('company'), person: v('person'), phone: v('phone'),
+                  email: v('email'), region: v('region'), message: v('message'),
+                  lang: document.documentElement.lang || '' }};
+      // 필수 네 칸. 브라우저 기본 검사는 언어가 섞여 나와서 쓰지 않는다.
+      if (!row.company || !row.person || !row.phone || !row.email) {{
+        msg.textContent = msg.dataset.need; msg.className = 'qmsg bad'; return;
+      }}
+      btn.disabled = true;
+      msg.textContent = msg.dataset.sending; msg.className = 'qmsg';
+      fetch('https://api.massaviet.com/rest/v1/contact_request', {{
+        method: 'POST',
+        headers: {{ 'apikey': '{ANON}', 'Authorization': 'Bearer {ANON}',
+                   'Content-Type': 'application/json', 'Prefer': 'return=minimal' }},
+        body: JSON.stringify(row)
+      }}).then(function(r){{
+        if (!r.ok) throw new Error(r.status);
+        form.querySelectorAll('input,textarea').forEach(function(e){{ e.value = ''; }});
+        msg.textContent = msg.dataset.ok; msg.className = 'qmsg ok';
+      }}).catch(function(){{
+        // 실패를 성공처럼 보여 주면 손님은 기다리다 떠난다. 다른 길을 알려 준다.
+        msg.textContent = msg.dataset.fail; msg.className = 'qmsg bad';
+      }}).then(function(){{ btn.disabled = false; }});
+    }});
   }})();
 
   // 앱 설치 띠는 한 번 닫으면 다시 띄우지 않는다

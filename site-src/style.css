@@ -553,3 +553,30 @@ footer.site .legal { border-top: 1px solid #27505E; padding-top: 22px; color: #7
 /* 창립 멤버 남은 자리 — 실제 승인 인원으로 계산한다. 못 세면 아예 안 뜬다(hidden) */
 .slotbar { margin: 0; padding: 9px 16px; text-align: center; font-size: 13.5px; font-weight: 600;
   color: #7A5418; background: #FFF4E2; border-bottom: 1px solid #E9C68C; }
+
+/* ── 상담·제휴 폼 ─────────────────────────────── */
+/* 손님이 직접 글자를 치는 유일한 자리라 칸을 넉넉히 잡는다.
+   16px 미만으로 두면 iOS 사파리가 입력할 때 화면을 확대해 버려서 폼이 튄다. */
+.quote { max-width: 640px; margin: 0 auto; }
+.quote h2 { margin: 0 0 10px; }
+.qlead { color: var(--ink-soft); margin: 0 0 26px; }
+.qf { display: block; margin-bottom: 18px; }
+.qf > span { display: block; font-size: 13.5px; font-weight: 500; color: var(--ink-soft); margin-bottom: 7px; }
+.qf .req { color: #B23A5B; margin-left: 3px; }
+.qf input, .qf textarea {
+  width: 100%; box-sizing: border-box; font: inherit; font-size: 16px; color: var(--ink);
+  background: var(--white); border: 1px solid var(--line-cool); border-radius: 10px;
+  padding: 13px 14px; transition: border-color .15s, box-shadow .15s;
+}
+.qf textarea { resize: vertical; min-height: 120px; }
+.qf input:focus, .qf textarea:focus {
+  outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px rgba(31,78,95,.12);
+}
+.qrow { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+@media (max-width: 560px) { .qrow { grid-template-columns: 1fr; } }
+.qsend { width: 100%; justify-content: center; margin-top: 6px; cursor: pointer; font-size: 15.5px; }
+.qsend:disabled { opacity: .55; cursor: default; transform: none; }
+.qmsg { min-height: 20px; margin: 12px 0 0; font-size: 14px; }
+.qmsg.ok  { color: #1E6B45; }
+.qmsg.bad { color: #B23A5B; }
+.qnote { margin: 8px 0 0; font-size: 12.5px; color: var(--ink-soft); }

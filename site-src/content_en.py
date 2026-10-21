@@ -47,6 +47,28 @@ _LD_HOME = """{
 
 _STORES = {"type": "stores", "ios": "iPhone · iPad", "and": "Android", "soon": "Coming soon"}
 
+# Partnership / enquiry form. Rows land in contact_request and a DB trigger mails the admin.
+# The same block is used on the home and contact pages — two copies would drift apart.
+_QUOTE = {
+ "type": "quote",
+ "h2": "Partnerships & enquiries",
+ "lead": "Hotels, spas, corporate wellness, group bookings, or anything else — leave it here and we reply within one or two business days.",
+ "fields": {
+   "company": {"label": "Company or organisation"},
+   "person":  {"label": "Contact name"},
+   "phone":   {"label": "Phone", "type": "tel"},
+   "email":   {"label": "Email", "type": "email"},
+   "region":  {"label": "Area (city · district)"},
+   "message": {"label": "Message"},
+ },
+ "send": "Send enquiry",
+ "sending": "Sending…",
+ "ok": "Sent. We will get back to you within one or two business days.",
+ "fail": "Could not send. Email support@massaviet.com and it reaches us the same way.",
+ "need": "Company, contact name, phone and email are required.",
+ "note": "We use these details only to answer this enquiry.",
+}
+
 PAGES = {
 
 "index": {
@@ -135,6 +157,12 @@ PAGES = {
    "h2": "Book straight from the app",
    "lead": "Installing and signing up are free. You only pay for the service, on the spot.",
    "blocks": [dict(_STORES)]},
+
+  {"type": "section", "soft": True,
+   "kicker": "Partners",
+   "h2": "Work with us",
+   "lead": "Hotels, spas and corporate wellness teams especially welcome.",
+   "blocks": [dict(_QUOTE)]},
  ]},
 
 "services": {
@@ -504,6 +532,12 @@ PAGES = {
       ("Bug reports", "Tell us your device and what you were doing when it went wrong."),
     ]},
     {"type": "note", "text": "For anything urgent during a service, the in-app safety button (SOS) and report function are far faster than email. They reach our team with your location attached."}]},
+
+  {"type": "section", "soft": True,
+   "kicker": "Partners",
+   "h2": "Work with us",
+   "lead": "Hotels, spas and corporate wellness teams especially welcome.",
+   "blocks": [dict(_QUOTE)]},
  ]},
 
 "terms": {

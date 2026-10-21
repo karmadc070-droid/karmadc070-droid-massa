@@ -49,6 +49,28 @@ _LD_HOME = """{
 
 _STORES = {"type": "stores", "ios": "iPhone · iPad", "and": "Android", "soon": "Sắp ra mắt"}
 
+# Biểu mẫu hợp tác / liên hệ. Dữ liệu vào contact_request, trigger DB gửi mail cho quản trị.
+# Dùng chung cho trang chủ và trang liên hệ — để hai bản sẽ lệch nhau.
+_QUOTE = {
+ "type": "quote",
+ "h2": "Hợp tác & liên hệ",
+ "lead": "Khách sạn, spa, phúc lợi doanh nghiệp, đặt lịch theo nhóm hay bất cứ đề xuất nào — hãy để lại, chúng tôi trả lời trong 1–2 ngày làm việc.",
+ "fields": {
+   "company": {"label": "Công ty hoặc tổ chức"},
+   "person":  {"label": "Người liên hệ"},
+   "phone":   {"label": "Số điện thoại", "type": "tel"},
+   "email":   {"label": "Email", "type": "email"},
+   "region":  {"label": "Khu vực (thành phố · quận)"},
+   "message": {"label": "Nội dung"},
+ },
+ "send": "Gửi yêu cầu",
+ "sending": "Đang gửi…",
+ "ok": "Đã gửi. Chúng tôi sẽ liên hệ trong 1–2 ngày làm việc.",
+ "fail": "Không gửi được. Bạn gửi mail tới support@massaviet.com cũng được xử lý như vậy.",
+ "need": "Vui lòng điền công ty, người liên hệ, số điện thoại và email.",
+ "note": "Thông tin này chỉ dùng để trả lời yêu cầu của bạn.",
+}
+
 PAGES = {
 
 "index": {
@@ -137,6 +159,12 @@ PAGES = {
    "h2": "Đặt lịch ngay trên ứng dụng",
    "lead": "Cài đặt và đăng ký miễn phí. Bạn chỉ trả tiền dịch vụ, tại chỗ.",
    "blocks": [dict(_STORES)]},
+
+  {"type": "section", "soft": True,
+   "kicker": "Đối tác",
+   "h2": "Hợp tác cùng massa",
+   "lead": "Đặc biệt chào đón khách sạn, spa và bộ phận phúc lợi doanh nghiệp.",
+   "blocks": [dict(_QUOTE)]},
  ]},
 
 "services": {
@@ -506,6 +534,12 @@ PAGES = {
       ("Báo lỗi", "Hãy cho biết thiết bị bạn dùng và bạn đang làm gì khi lỗi xảy ra."),
     ]},
     {"type": "note", "text": "Với việc gấp trong lúc đang làm dịch vụ, nút an toàn (SOS) và chức năng báo cáo trong ứng dụng nhanh hơn email rất nhiều. Chúng gửi kèm vị trí của bạn đến đội ngũ chúng tôi."}]},
+
+  {"type": "section", "soft": True,
+   "kicker": "Đối tác",
+   "h2": "Hợp tác cùng massa",
+   "lead": "Đặc biệt chào đón khách sạn, spa và bộ phận phúc lợi doanh nghiệp.",
+   "blocks": [dict(_QUOTE)]},
  ]},
 
 "terms": {
