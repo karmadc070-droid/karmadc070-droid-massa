@@ -4905,22 +4905,24 @@ ADMIN_EMAILS 에 karmadc070@gmail.com 이 들어 있다. 새로 만들 필요가
 그래서 입금 신고와 같은 길로 간다. 폼 → DB 테이블 → 트리거(pg_net) → notify-admin.
 시크릿은 DB 안에만 있고 브라우저는 보지 못한다.
 
-- [ ] contact_request 테이블 (회사·담당자·연락처·이메일·지역·메시지·lang·created_at)
-- [ ] RLS — anon 은 insert 만, select 는 admin 만
-- [ ] 트리거 → notify-admin (action=contact_request)
-- [ ] notify-admin 에 contact_request 분기 추가
-- [ ] build.py 에 quote 블록 렌더러
-- [ ] content_ko / en / vi 에 문구 3벌
-- [ ] index 와 contact 페이지에 배치
-- [ ] 배포 후 실제로 폼을 넣어 보고 메일함 확인 ← 이게 검증
+- [x] contact_request 테이블 (회사·담당자·연락처·이메일·지역·메시지·lang·created_at)
+- [x] RLS — anon 은 insert 만, select 는 admin 만
+- [x] 트리거 → notify-admin (action=contact_request)
+- [x] notify-admin 에 contact_request 분기 추가
+- [x] build.py 에 quote 블록 렌더러
+- [x] content_ko / en / vi 에 문구 3벌
+- [x] index 와 contact 페이지에 배치 (6페이지 확인)
+- [x] 배포 후 공개 엔드포인트로 실제 전송 — 201, RLS 로 남의 글 못 읽음, Resend 200
+- [x] ★ 그 과정에서 app_settings.notify.secret 이 함수 env 와 어긋난 것을 발견해 맞춤
+      (회전한 뒤로 DB 트리거 메일이 전부 401 로 죽어 있었다 — context-notes 참고)
 
 ### 2. 돌아가기 버튼 (index.html 53줄)
 
 `.appbar .back { font-size: 18px }` 하나가 원인이다.
 글자만 키우면 손가락 닿는 면적은 그대로다. 터치 영역을 같이 키운다.
 
-- [ ] font-size 와 padding 을 함께 올려 최소 44px 각
-- [ ] 화살표 글리프도 키움
+- [x] 44x44, 글자 30px, 제목 17px (브라우저에서 실측)
+- [x] 화살표 18px → 30px
 
 ### 3. 국가 목록 (index.html 3252줄)
 
@@ -4928,9 +4930,9 @@ COUNTRIES 가 5개뿐이다. 검색창은 **이미 있다** — 검색할 게 �
 가입 직후 묻는 창(openBasicsSheet)과 계정 화면(openCountryPicker)이
 둘 다 이 배열 하나를 쓴다. 배열만 늘리면 두 군데가 같이 해결된다.
 
-- [ ] COUNTRIES 를 전 세계 목록으로
-- [ ] 한국·베트남·미국·일본·중국을 맨 위 고정
-- [ ] 영문명으로도 검색되는지 확인 (renderCtry 가 이미 c[2] 를 본다)
+- [x] COUNTRIES 251개 (ISO 3166-1, 옛 코드·비국가 코드 제외)
+- [x] 앞 다섯 고정, 기존 한국어 표기 유지
+- [x] 'france' 와 '브라' 둘 다 걸리는 것 확인, 목록 56vh 스크롤
 
 ### 출시
 
@@ -4939,3 +4941,5 @@ COUNTRIES 가 5개뿐이다. 검색창은 **이미 있다** — 검색할 게 �
 기다릴 이유가 사라져 2·3번을 바로 고쳐 양쪽 스토어에 함께 올린다.
 
 - [x] iOS 1.0.18 출시 확인 (콘솔 라벨 아님, 공개 스토어 조회)
+
+- [ ] 앱 빌드 — Codemagic ios-appstore / android-play 를 걸어 2·3번을 내보낸다
