@@ -50,8 +50,13 @@
   .screen-scroll { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; position: relative; -webkit-overflow-scrolling: touch; }
   .statusbar { background: #25333A; color: #fff; font-size: 11px; padding: 6px 18px; display: flex; justify-content: space-between; }
   .appbar { background: var(--navy); color: #fff; padding: 14px 18px; display: flex; align-items: center; gap: 10px; }
-  .appbar .back { cursor: pointer; font-size: 18px; line-height: 1; user-select: none; }
-  .appbar .title { font-size: 15px; font-weight: bold; }
+  /* 돌아가기 — 글자만 키우면 손가락 닿는 면적은 그대로다. 터치 영역을 같이 키운다.
+     44px 는 애플·구글이 함께 권하는 최소 터치 크기다. 18px 글자는 그 절반도 안 됐다. */
+  .appbar .back { cursor: pointer; font-size: 30px; line-height: 1; user-select: none;
+    min-width: 44px; height: 44px; margin: -10px 0 -10px -10px;
+    display: flex; align-items: center; justify-content: center; }
+  .appbar .back:active { opacity: .55; }
+  .appbar .title { font-size: 17px; font-weight: bold; }
   .screen { min-height: 100%; padding: 16px 16px 90px; position: relative; display: none; box-sizing: border-box; }
   .screen.on { display: block; }
 
@@ -3249,13 +3254,66 @@ window.pickLocation = function (code) {
 // 아래 openCountryPicker / renderCtry / pickCountry / loadAccount 가 전부 이걸 부르는데
 // 선언이 admin.html 에만 있어서, 고객 앱에서 국적을 고르려 하면 ReferenceError 로 죽었다.
 // 국적 데이터가 하나도 안 쌓인 진짜 이유다. admin.html 2328줄과 같은 목록을 둔다.
-const COUNTRIES = [['🇰🇷','한국','Korea'],['🇻🇳','베트남','Vietnam'],['🇺🇸','미국','USA'],['🇯🇵','일본','Japan'],['🇨🇳','중국','China']];
+// ★ 2026-10-21 — 5개국만 있던 목록을 전 세계로 늘렸다.
+// 앱을 모든 나라에 열어 놓고 고를 수 있는 나라가 다섯이면, 나머지 손님은 국적을 못 적는다.
+// [ISO 코드, 한국어, 영어] 로 두고 국기는 코드에서 만든다 — 이모지를 손으로 적으면 반드시 틀린다.
+// 앞 다섯은 고정이다. 손님 대부분이 그 안에 있어 맨 위에 있어야 한다.
+// 한국어 표기는 CLDR 이 주는 이름을 쓰되 그 다섯만 기존 표기를 지킨다
+// (profiles.nationality 에 '한국' '미국' 으로 이미 쌓여 있어 '대한민국' 으로 바꾸면 과거 데이터와 어긋난다).
+const CTRY_SRC = [
+  ['KR','한국','Korea'],['VN','베트남','Vietnam'],['US','미국','USA'],['JP','일본','Japan'],['CN','중국','China'],['GH','가나','Ghana'],
+  ['GA','가봉','Gabon'],['GY','가이아나','Guyana'],['GM','감비아','Gambia'],['GG','건지','Guernsey'],['GP','과들루프','Guadeloupe'],['GT','과테말라','Guatemala'],
+  ['GU','괌','Guam'],['GD','그레나다','Grenada'],['GR','그리스','Greece'],['GL','그린란드','Greenland'],['GN','기니','Guinea'],['GW','기니비사우','Guinea-Bissau'],
+  ['NA','나미비아','Namibia'],['NR','나우루','Nauru'],['NG','나이지리아','Nigeria'],['AQ','남극 대륙','Antarctica'],['SS','남수단','South Sudan'],['ZA','남아프리카','South Africa'],
+  ['NL','네덜란드','Netherlands'],['BQ','네덜란드령 카리브','Caribbean Netherlands'],['NP','네팔','Nepal'],['NO','노르웨이','Norway'],['NF','노퍽섬','Norfolk Island'],['NZ','뉴질랜드','New Zealand'],
+  ['NC','뉴칼레도니아','New Caledonia'],['NU','니우에','Niue'],['NE','니제르','Niger'],['NI','니카라과','Nicaragua'],['TW','대만','Taiwan'],['DK','덴마크','Denmark'],
+  ['DM','도미니카','Dominica'],['DO','도미니카 공화국','Dominican Republic'],['DE','독일','Germany'],['TL','동티모르','Timor-Leste'],['LA','라오스','Laos'],['LR','라이베리아','Liberia'],
+  ['LV','라트비아','Latvia'],['RU','러시아','Russia'],['LB','레바논','Lebanon'],['LS','레소토','Lesotho'],['RE','레위니옹','Réunion'],['RO','루마니아','Romania'],
+  ['LU','룩셈부르크','Luxembourg'],['RW','르완다','Rwanda'],['LY','리비아','Libya'],['LT','리투아니아','Lithuania'],['LI','리히텐슈타인','Liechtenstein'],['MG','마다가스카르','Madagascar'],
+  ['MQ','마르티니크','Martinique'],['MH','마셜 제도','Marshall Islands'],['YT','마요트','Mayotte'],['MO','마카오(중국 특별행정구)','Macao SAR China'],['MW','말라위','Malawi'],['MY','말레이시아','Malaysia'],
+  ['ML','말리','Mali'],['IM','맨섬','Isle of Man'],['MX','멕시코','Mexico'],['MC','모나코','Monaco'],['MA','모로코','Morocco'],['MU','모리셔스','Mauritius'],
+  ['MR','모리타니','Mauritania'],['MZ','모잠비크','Mozambique'],['ME','몬테네그로','Montenegro'],['MS','몬트세라트','Montserrat'],['MD','몰도바','Moldova'],['MV','몰디브','Maldives'],
+  ['MT','몰타','Malta'],['MN','몽골','Mongolia'],['VI','미국령 버진아일랜드','U.S. Virgin Islands'],['UM','미국령 해외 제도','U.S. Outlying Islands'],['MM','미얀마','Myanmar (Burma)'],['FM','미크로네시아','Micronesia'],
+  ['VU','바누아투','Vanuatu'],['BH','바레인','Bahrain'],['BB','바베이도스','Barbados'],['VA','바티칸 시국','Vatican City'],['BS','바하마','Bahamas'],['BD','방글라데시','Bangladesh'],
+  ['BM','버뮤다','Bermuda'],['BJ','베냉','Benin'],['VE','베네수엘라','Venezuela'],['BE','벨기에','Belgium'],['BY','벨라루스','Belarus'],['BZ','벨리즈','Belize'],
+  ['BA','보스니아 헤르체고비나','Bosnia & Herzegovina'],['BW','보츠와나','Botswana'],['BO','볼리비아','Bolivia'],['BI','부룬디','Burundi'],['BF','부르키나파소','Burkina Faso'],['BV','부베섬','Bouvet Island'],
+  ['BT','부탄','Bhutan'],['MP','북마리아나제도','Northern Mariana Islands'],['MK','북마케도니아','North Macedonia'],['KP','북한','North Korea'],['BG','불가리아','Bulgaria'],['BR','브라질','Brazil'],
+  ['BN','브루나이','Brunei'],['WS','사모아','Samoa'],['SA','사우디아라비아','Saudi Arabia'],['GS','사우스조지아 사우스샌드위치 제도','South Georgia & South Sandwich Islands'],['CQ','사크','Sark'],['SM','산마리노','San Marino'],
+  ['ST','상투메 프린시페','São Tomé & Príncipe'],['MF','생마르탱','St. Martin'],['BL','생바르텔레미','St. Barthélemy'],['PM','생피에르 미클롱','St. Pierre & Miquelon'],['EH','서사하라','Western Sahara'],['SN','세네갈','Senegal'],
+  ['RS','세르비아','Serbia'],['SC','세이셸','Seychelles'],['LC','세인트루시아','St. Lucia'],['VC','세인트빈센트그레나딘','St. Vincent & Grenadines'],['KN','세인트키츠 네비스','St. Kitts & Nevis'],['SH','세인트헬레나','St. Helena'],
+  ['SO','소말리아','Somalia'],['SB','솔로몬 제도','Solomon Islands'],['SD','수단','Sudan'],['SR','수리남','Suriname'],['LK','스리랑카','Sri Lanka'],['SJ','스발바르제도-얀마웬섬','Svalbard & Jan Mayen'],
+  ['SE','스웨덴','Sweden'],['CH','스위스','Switzerland'],['ES','스페인','Spain'],['SK','슬로바키아','Slovakia'],['SI','슬로베니아','Slovenia'],['SY','시리아','Syria'],
+  ['SL','시에라리온','Sierra Leone'],['SX','신트마르턴','Sint Maarten'],['SG','싱가포르','Singapore'],['AE','아랍에미리트','United Arab Emirates'],['AW','아루바','Aruba'],['AM','아르메니아','Armenia'],
+  ['AR','아르헨티나','Argentina'],['AS','아메리칸 사모아','American Samoa'],['IS','아이슬란드','Iceland'],['HT','아이티','Haiti'],['IE','아일랜드','Ireland'],['AZ','아제르바이잔','Azerbaijan'],
+  ['AF','아프가니스탄','Afghanistan'],['AD','안도라','Andorra'],['AL','알바니아','Albania'],['DZ','알제리','Algeria'],['AO','앙골라','Angola'],['AG','앤티가 바부다','Antigua & Barbuda'],
+  ['AI','앵귈라','Anguilla'],['ER','에리트리아','Eritrea'],['SZ','에스와티니','Eswatini'],['EE','에스토니아','Estonia'],['EC','에콰도르','Ecuador'],['ET','에티오피아','Ethiopia'],
+  ['SV','엘살바도르','El Salvador'],['GB','영국','United Kingdom'],['VG','영국령 버진아일랜드','British Virgin Islands'],['IO','영국령 인도양 지역','British Indian Ocean Territory'],['YE','예멘','Yemen'],['OM','오만','Oman'],
+  ['AU','오스트레일리아','Australia'],['AT','오스트리아','Austria'],['HN','온두라스','Honduras'],['AX','올란드 제도','Åland Islands'],['WF','왈리스-푸투나 제도','Wallis & Futuna'],['JO','요르단','Jordan'],
+  ['UG','우간다','Uganda'],['UY','우루과이','Uruguay'],['UZ','우즈베키스탄','Uzbekistan'],['UA','우크라이나','Ukraine'],['IQ','이라크','Iraq'],['IR','이란','Iran'],
+  ['IL','이스라엘','Israel'],['EG','이집트','Egypt'],['IT','이탈리아','Italy'],['IN','인도','India'],['ID','인도네시아','Indonesia'],['JM','자메이카','Jamaica'],
+  ['ZM','잠비아','Zambia'],['JE','저지','Jersey'],['GQ','적도 기니','Equatorial Guinea'],['GE','조지아','Georgia'],['CF','중앙 아프리카 공화국','Central African Republic'],['DJ','지부티','Djibouti'],
+  ['GI','지브롤터','Gibraltar'],['ZW','짐바브웨','Zimbabwe'],['TD','차드','Chad'],['CZ','체코','Czechia'],['CL','칠레','Chile'],['CM','카메룬','Cameroon'],
+  ['CV','카보베르데','Cape Verde'],['KZ','카자흐스탄','Kazakhstan'],['QA','카타르','Qatar'],['KH','캄보디아','Cambodia'],['CA','캐나다','Canada'],['KE','케냐','Kenya'],
+  ['KY','케이맨 제도','Cayman Islands'],['KM','코모로','Comoros'],['XK','코소보','Kosovo'],['CR','코스타리카','Costa Rica'],['CC','코코스 제도','Cocos (Keeling) Islands'],['CI','코트디부아르','Côte d’Ivoire'],
+  ['CO','콜롬비아','Colombia'],['CG','콩고-브라자빌','Congo - Brazzaville'],['CD','콩고-킨샤사','Congo - Kinshasa'],['CU','쿠바','Cuba'],['KW','쿠웨이트','Kuwait'],['CK','쿡 제도','Cook Islands'],
+  ['CW','퀴라소','Curaçao'],['HR','크로아티아','Croatia'],['CX','크리스마스섬','Christmas Island'],['KG','키르기스스탄','Kyrgyzstan'],['KI','키리바시','Kiribati'],['CY','키프로스','Cyprus'],
+  ['TJ','타지키스탄','Tajikistan'],['TZ','탄자니아','Tanzania'],['TH','태국','Thailand'],['TC','터크스 케이커스 제도','Turks & Caicos Islands'],['TG','토고','Togo'],['TK','토켈라우','Tokelau'],
+  ['TO','통가','Tonga'],['TM','투르크메니스탄','Turkmenistan'],['TV','투발루','Tuvalu'],['TN','튀니지','Tunisia'],['TR','튀르키예','Türkiye'],['TT','트리니다드 토바고','Trinidad & Tobago'],
+  ['PA','파나마','Panama'],['PY','파라과이','Paraguay'],['PK','파키스탄','Pakistan'],['PG','파푸아뉴기니','Papua New Guinea'],['PW','팔라우','Palau'],['PS','팔레스타인 지구','Palestinian Territories'],
+  ['FO','페로 제도','Faroe Islands'],['PE','페루','Peru'],['PT','포르투갈','Portugal'],['FK','포클랜드 제도','Falkland Islands'],['PL','폴란드','Poland'],['PR','푸에르토리코','Puerto Rico'],
+  ['FR','프랑스','France'],['GF','프랑스령 기아나','French Guiana'],['TF','프랑스령 남방 지역','French Southern Territories'],['PF','프랑스령 폴리네시아','French Polynesia'],['FJ','피지','Fiji'],['FI','핀란드','Finland'],
+  ['PH','필리핀','Philippines'],['PN','핏케언 제도','Pitcairn Islands'],['HM','허드 맥도널드 제도','Heard & McDonald Islands'],['HU','헝가리','Hungary'],['HK','홍콩(중국 특별행정구)','Hong Kong SAR China']
+];
+function flagOf(cc) {
+  return String.fromCodePoint(...[...cc].map(ch => 0x1F1E6 + ch.charCodeAt(0) - 65));
+}
+const COUNTRIES = CTRY_SRC.map(([cc, ko, en]) => [flagOf(cc), ko, en]);
 function countryLabel(name) { const c = COUNTRIES.find(x => x[1] === name || x[2] === name); return c ? (c[0] + ' ' + c[1]) : name; }
 
 window.openCountryPicker = function () {
   let ov = document.getElementById('ctryOv');
   if (!ov) { ov = document.createElement('div'); ov.id = 'ctryOv'; ov.style.cssText = 'position:fixed;inset:0;z-index:210;background:rgba(20,25,28,.5);display:flex;align-items:flex-end;justify-content:center'; document.body.appendChild(ov); }
-  ov.innerHTML = '<div class="svc-sheet"><div class="svc-grip"></div><div class="svc-title">국가 선택</div><input class="tx" id="ctrySearch" placeholder="국가 검색..." oninput="renderCtry()" style="margin-bottom:8px"><div id="ctryList"></div></div>';
+  ov.innerHTML = '<div class="svc-sheet"><div class="svc-grip"></div><div class="svc-title">국가 선택</div><input class="tx" id="ctrySearch" placeholder="국가 검색..." oninput="renderCtry()" style="margin-bottom:8px"><div id="ctryList" style="max-height:56vh;overflow-y:auto;-webkit-overflow-scrolling:touch"></div></div>';
   ov.style.display = 'flex';
   renderCtry();
   ov.onclick = (e) => { if (e.target === ov) ov.style.display = 'none'; };
