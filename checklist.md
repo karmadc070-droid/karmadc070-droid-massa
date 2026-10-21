@@ -4942,4 +4942,20 @@ COUNTRIES 가 5개뿐이다. 검색창은 **이미 있다** — 검색할 게 �
 
 - [x] iOS 1.0.18 출시 확인 (콘솔 라벨 아님, 공개 스토어 조회)
 
-- [ ] 앱 빌드 — Codemagic ios-appstore / android-play 를 걸어 2·3번을 내보낸다
+- [x] 앱 빌드 걸었다 (2026-10-21, 커밋 3fdb45e)
+      - iOS  `ios-appstore`  build 6ad8c29a6b239a48fdd9f384 → 1.0.19
+      - 안드  `android-play`  build 6ad8c2a25cf0d65017a38339 → 1.1.107
+      - 두 빌드 모두 commit 3fdb45e 를 받은 것까지 확인했다.
+        (Codemagic 은 옛 이름 `karmadc070-droid/massa.git` 으로 잡혀 있는데
+         깃허브가 바뀐 이름으로 넘겨 줘서 문제없이 같은 저장소를 받는다.)
+      - ★ Codemagic 웹의 'Start new build' 모달은 브라우저 확장(AITOPIA)에 가려 안 열린다.
+        `POST https://api.codemagic.io/builds` 를 codemagic.io 탭에서 부르면 된다.
+        세션 쿠키로 통과한다 — 별도 토큰이 필요 없다.
+        body: {appId, workflowId:'ios-appstore'|'android-play', branch:'main'}
+
+- [ ] 빌드 끝난 뒤 사람이 해야 하는 일
+  - iOS — `submit_to_app_store: false` 라 TestFlight 까지만 간다.
+    App Store Connect 에서 1.0.19 를 심사 제출. **whatsNew 를 한국어·베트남어 둘 다** 채워야 한다.
+    한쪽만 채우면 "예기치 못한 오류" 만 뜨고 진짜 이유는 작은 글씨에 있다.
+  - 안드로이드 — `submit_as_draft` 라 Play 에 '임시' 로만 들어간다. 콘솔에서 세 단계를 밟는다.
+    프로덕션 → 출시 → 버전 수정 → 다음 → 저장 → 게시 개요 → 검토를 위해 변경사항 제출
