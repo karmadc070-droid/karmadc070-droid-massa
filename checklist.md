@@ -4963,13 +4963,14 @@ COUNTRIES 가 5개뿐이다. 검색창은 **이미 있다** — 검색할 게 �
       출시 노트 칸은 기본 틀("ko-KR 출시 노트를 여기에 입력하거나...")만 들어 있었다.
       그동안 빈 채로 나갔다는 뜻이다. 이번부터 실제 문구를 넣는다.
 
-- [ ] **iOS 1.0.19 심사 제출 — 사장님이 하셔야 한다**
-      App Store Connect 세션이 만료됐다 (`authResult=FAILED`).
-      비밀번호와 2단계 인증은 대신 넣을 수 없다. 로그인만 해 주시면 나머지는 진행 가능.
-      할 일: 1.0.19 새 버전 → 빌드 선택 → **whatsNew 를 한국어·베트남어 둘 다** → 심사 제출.
-      한쪽만 채우면 "예기치 못한 오류" 만 뜨고 진짜 이유는 작은 글씨에 있다.
-      whatsNew 는 `getElementById('whatsNew')` 로 집는다 — textarea 순번으로 집으면
-      promotionalText 에 쓴다 (지난번에 그럴 뻔했다).
+- [x] iOS 1.0.19 — 심사 제출 완료 (2026-10-21)
+      사장님이 App Store Connect 에 로그인해 주신 뒤 이어서 진행했다.
+      새 버전 1.0.19 생성 → whatsNew 한국어 → 언어를 베트남어로 바꿔 한 번 더 → 저장
+      → 빌드 추가(build 52) → 저장 → 심사에 추가 → 심사를 위해 제출
+      **"1개의 항목 제출됨"** 과 왼쪽 목록의 **1.0.19 심사 대기 중** 까지 확인했다.
+      whatsNew 는 `getElementById('whatsNew')` 로 집었다. textarea 순번으로 집으면
+      0번이 promotionalText 라 엉뚱한 칸에 쓴다 (실제 id 순서: promotionalText, description, whatsNew, notes, ask).
+      값은 React 라 네이티브 setter + input 이벤트로 넣어야 먹는다. 그냥 대입하면 화면만 바뀌고 저장이 안 된다.
 
 - [ ] Play 승인되면 폰 업데이트 → 돌아가기 버튼·국가 목록 눈으로 확인
 - [ ] 그 뒤에 마사지사 13명에게 베트남어 안내 발송 (계속 보류 중)
