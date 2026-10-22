@@ -234,6 +234,7 @@ const MAIL_SUBJ: Record<string, string> = {
   approved: "massa — Đơn đăng ký của bạn đã được duyệt",
   notice: "massa — Thông báo",
   info: "massa — Thông báo",
+  booking_confirmed: "massa — 예약이 확정되었습니다 · Lịch hẹn đã được xác nhận",
 };
 async function emailFallback(db: any, n: Noti): Promise<boolean> {
   if (!RESEND_KEY) return false;
@@ -247,7 +248,10 @@ async function emailFallback(db: any, n: Noti): Promise<boolean> {
       "Mở ứng dụng: https://app.massaviet.com",
       "",
       "★ Bạn nhận email này vì tài khoản chưa bật thông báo.",
-      "Hãy mở ứng dụng và bật thông báo — nếu không, đơn mới sẽ chuyển cho người khác.",
+      // 넘어간다는 경고는 마사지사용(새 예약·승인)에만. 손님에게는 알림 켜기 안내만 (2026-10-22)
+      ["booking_new", "approved"].includes(n.kind)
+        ? "Hãy mở ứng dụng và bật thông báo — nếu không, đơn mới sẽ chuyển cho người khác."
+        : "Hãy bật thông báo trong ứng dụng để nhận tin ngay. · 앱에서 알림을 켜면 바로 받을 수 있어요.",
       "",
       "massa",
     ].join("\n");
@@ -293,7 +297,7 @@ Deno.serve(async (req) => {
       noDevice++;
       // 기기가 없으면 메일로 대신 보낸다. 재시도마다 보내면 스팸이 되므로 첫 시도에만.
       let res = "no_device";
-      if ((n.push_tries ?? 1) <= 1 && ["booking_new", "approved", "notice", "info"].includes(n.kind)) {
+      if ((n.push_tries ?? 1) <= 1 && ["booking_new", "approved", "notice", "info", "booking_confirmed"].includes(n.kind)) {
         const ok = await emailFallback(db, n);
         if (ok) emailed++;
         res = ok ? "no_device+emailed" : "no_device+email_failed";

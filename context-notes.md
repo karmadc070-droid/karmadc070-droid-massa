@@ -1783,3 +1783,9 @@ exception when others then
 - 바뀐 점: display_name '[TEST]%' 제외 / 알림(push_tokens) 켠 마사지사만, 없을 때만 나머지 / 손님 ward_code 를 ward_codes 에 가진 사람 먼저.
 - 계기: MS-261022-4642(Kun, 10/22 20:00) 가 10분 미수락으로 5명에게 재배정됐고 그중 [TEST] massa owner 가 있었음. 같은 조건으로 다시 돌리면 Jin·Thảo 만 나오는 것 확인.
 - 알림 꺼진 마사지사에게는 VPS 크론 /root/massa_booking_mail.py(5분마다, 30분 간격 재발송)가 가입 메일로 알린다(채널 프로젝트 ops/).
+
+## 2026-10-22 손님 예약 확정 알림 메일 대체 (채널 세션)
+- 계기: MS-261022-1408 확정 알림(booking_confirmed)이 손님 기기 없음(no_device)으로 끝나고 메일도 안 감. 메일 대체 대상이 booking_new·approved·notice·info 뿐이었음.
+- 저장소 functions/send-push/index.ts 가 서버보다 오래돼 있어(메일 대체 없음) 먼저 서버본을 반영(0619a1a). 그다음 booking_confirmed 추가, 메일 꼬리말의 '넘어간다' 경고는 마사지사용(booking_new·approved)에만, 손님에게는 알림 켜기 안내(베트남어·한국어).
+- 배포: /root/massa/volumes/functions/send-push/index.ts (백업 /root/backups/send-push.index.ts.bak-20261022), massa-edge-functions 재시작 후 healthy, send-push 호출 정상(claimed:0).
+- 채팅 점검: messages 에 알림 트리거가 없고 화면은 열 때만 불러온다(실시간·주기 갱신 없음). 그래서 상대가 메시지를 보내도 알림이 없다. Jin 이 13:22 손님에게 보낸 첫 메시지(2자)에 손님 답 없음. 고칠지 사용자 결정 대기.
