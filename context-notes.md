@@ -1852,3 +1852,14 @@ exception when others then
 - 마사지사 받은 신청 카드에 👤 이름·국적·성별·이용 횟수·노쇼/임박취소 (provider_booking_customers RPC, 자기 신청·관리자만). 전화·이메일은 안 준다 — 직거래 방지 원칙.
 - 시험: 정보 빠진 손님 예약 → profile_required 거부(롤백). Jin 은 자기 예약 손님 조회됨, Kun 은 0건.
 - 당시 손님 104명 중 전화 15·국적 45·성별 46명만 입력.
+
+## 2026-10-23 아이폰 알림 토큰이 한 번도 저장되지 않은 이유
+- 사장님 제안: 가입·로그인 때 알림을 강제하자. 조사해 보니 강제 화면(showPushGate)·서버 가드(guard_provider_push)는 이미 있었다.
+- 실제 원인은 아이폰. push_tokens 에 ios 0건(android 29·web 5). 아이폰으로 들어온 마사지사 4명도 0건.
+  Capacitor 푸시 플러그인은 AppDelegate 의 didRegisterForRemoteNotificationsWithDeviceToken 에서
+  .capacitorDidRegisterForRemoteNotifications 로 토큰을 넘겨 줘야 registration 이벤트를 낸다. cap add ios 템플릿엔 없다.
+  register() 는 성공으로 끝나므로 registerPush 가 true → 권한만 보던 강제 화면도 안 떴다.
+- 결정: 권한 상태가 아니라 서버에 기기가 있는지(provider_has_device)로 판단해 화면을 띄운다. '나중에' 는 남긴다(권한창 고장 시 갇힘 방지).
+- 결정: 기기 0대인 출근 중 14명은 끄지 않는다. 아이폰은 1.0.20 전까지 켤 방법이 없고, 끄면 메일 대체 알림까지 끊긴다.
+- 관리자 승인·관리자 출근 켜기는 가드를 건너뛴다(10-19 결정, 10-22 승인 시 자동 출근). 이 구멍은 그대로 두고 앱 화면으로 메운다.
+- 1.0.19 는 2026-10-21 출시됨(공개 조회) → 1.0.20.

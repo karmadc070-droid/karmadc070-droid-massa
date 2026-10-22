@@ -4974,3 +4974,14 @@ COUNTRIES 가 5개뿐이다. 검색창은 **이미 있다** — 검색할 게 �
 
 - [ ] Play 승인되면 폰 업데이트 → 돌아가기 버튼·국가 목록 눈으로 확인
 - [ ] 그 뒤에 마사지사 13명에게 베트남어 안내 발송 (계속 보류 중)
+
+## 2026-10-23 마사지사 알림 강제 (사장님: "둘 다 진행하자")
+출근 중인 승인 마사지사 18명 중 실제로 알림 받는 사람 3명(Jin·Vui 안드로이드, Thảo 웹). 14명 기기 0대.
+- [x] 원인 확인: DB 전체 ios 토큰 0건. AppDelegate 에 APNs 토큰 전달 코드가 없다(Capacitor 공식 iOS 필수 설정)
+- [x] codemagic.yaml 에 'AppDelegate 에 푸시 토큰 전달 넣기' 단계 → 검증: Capacitor 8.5.3 템플릿으로 단계 실행, 주입 1회·중복 없음
+- [x] index.html checkProviderDevice — 로그인 12초 뒤 provider_has_device 가 false 면 알림 화면 → 검증: 6가지 경우 모의 실행 통과, node --check 통과
+- [x] 커밋 49b1a32(앱), 15ca5b9(iOS·1.0.20), 웹 배포(app.massaviet.com) 확인
+- [ ] Codemagic 빌드 (iOS 1.0.20 · 안드로이드) — Codemagic 로그인 대기
+- [ ] iOS 빌드 로그에서 'AppDelegate 끝부분' 출력 확인, 스토어 제출
+- [ ] 1.0.20 설치 후 사장님 아이폰 로그인 → push_tokens 에 ios 토큰 생기는지 확인
+- [ ] 출시 뒤 기기 0대 마사지사 다시 집계
