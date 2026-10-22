@@ -1319,6 +1319,7 @@ async function resolveReport(id, targetId, name) {
 
   loadReps();
   loadRoster();
+  loadActivity();   // 정지는 출근을 끈다
 }
 
 document.addEventListener('click', async (e) => {
@@ -1607,6 +1608,7 @@ async function reviewApp(id, status, reason) {
 
   loadApps();
   loadRoster();   // 승인하면 마사지사 명단에도 바로 들어간다
+  loadActivity();
   loadData();
 }
 
@@ -1911,32 +1913,33 @@ async function openProviderActions(id) {
   const i = Number(pick) - 1;
   if (!(i >= 0 && i < menu.length)) return;
   const act = menu[i][0];
+  let error = null;   // 아래 update 실패를 삼키지 않는다 (2026-10-22)
 
   if (act === 'v') {
     const k = await kycOf(id);
     // 서류 없이 인증을 주면 ✓ 가 거짓말이 된다. 예전에 그래서 서류 없는 사람에게 ✓ 가 붙었다.
     if (!k.id_front_url && !k.id_back_url) { alert('신분증이 올라와 있지 않습니다. 신원 확인을 줄 수 없습니다.'); return; }
     if (!confirm('올라온 신분증을 직접 확인하셨습니까? 확인하면 ✓ 가 손님에게 보입니다.')) return;
-    await sb.from('providers').update({ is_verified: true }).eq('id', id);
+    ({ error } = await sb.from('providers').update({ is_verified: true }).eq('id', id));
   } else if (act === 'c') {
     const k = await kycOf(id);
     if (!k.cert_url && !k.business_license_url) { alert('자격증·사업자등록증이 올라와 있지 않습니다.'); return; }
     if (!confirm('자격증 또는 사업자등록증을 직접 확인하셨습니까?')) return;
-    await sb.from('providers').update({ credential_verified: true,
-      credential_checked_at: new Date().toISOString() }).eq('id', id);
+    ({ error } = await sb.from('providers').update({ credential_verified: true,
+      credential_checked_at: new Date().toISOString() }).eq('id', id));
   } else if (act === 'u') {
     if (!confirm('이 분의 인증 표시(✓ ★)를 모두 내릴까요?')) return;
-    await sb.from('providers').update({ is_verified: false, credential_verified: false,
-      credential_checked_at: null }).eq('id', id);
+    ({ error } = await sb.from('providers').update({ is_verified: false, credential_verified: false,
+      credential_checked_at: null }).eq('id', id));
   } else if (act === 'a') {
     const on = !p.is_active;
     if (!confirm(on ? '목록에 올릴까요? 손님에게 보이게 됩니다.'
                     : '목록에서 내릴까요? 손님에게 안 보이게 됩니다.')) return;
-    await sb.from('providers').update({ is_active: on }).eq('id', id);
+    ({ error } = await sb.from('providers').update({ is_active: on }).eq('id', id));
   } else if (act === 'p') {
     if (!confirm('제재(경고·노출저하·정지)를 해제할까요?')) return;
-    await sb.from('providers').update({ penalty_level: 0, suspended_until: null,
-      reject_count: 0 }).eq('id', id);
+    ({ error } = await sb.from('providers').update({ penalty_level: 0, suspended_until: null,
+      reject_count: 0 }).eq('id', id));
   } else if (act === 't') {
     const ts = ['vip', 'shop', 'freelancer'];
     const tp = prompt('수수료 등급을 고르세요.\n\n'
@@ -1948,7 +1951,9 @@ async function openProviderActions(id) {
     const { error } = await sb.rpc('set_fee_tier', { p_provider: id, p_tier: ts[ti] });
     if (error) { alert('실패 — ' + error.message); return; }
   }
+  if (error) { alert('실패 — ' + error.message); return; }
   loadRoster();
+  loadActivity();   // 출근 칸이 바뀐다
   loadData();
 }
 
