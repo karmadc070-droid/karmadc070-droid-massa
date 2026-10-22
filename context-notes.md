@@ -1836,3 +1836,8 @@ exception when others then
 - 지금 DB 예약은 6건(확정 1 + 사본 5) → 관리자 목록 기본 1건.
 - 20:21 사장님 지시: 방금 승인한 Nguyễn Thị Vui(응에안, 알림 기기 1대) 출근을 관리자 권한으로 켬. 승인 시 출근 자동 켜기 통일은 아직 미결.
 - 20:23 지표(/admin) 승인도 출근을 같이 켜도록 바꿈(콘솔과 통일). 승인 알림 문구도 '이제 고객 목록에 보입니다 + 알림 켜 두세요'로.
+
+## 2026-10-22 22:15 마사지사 마지막 접속 시각
+- admin_provider_activity 에 last_seen = greatest(app_visit.created_at, auth.sessions.updated_at, auth.users.last_sign_in_at). 10-20 이전 사람도 나온다. 백업 /root/backups/admin_provider_activity_before_20261022.sql.
+- 지표 활동 표: '마지막 접속' 칸을 알림 옆(폰에서 스크롤 없이 보이게)으로 옮기고 'N분/시간 전' 또는 날짜·시각(하노이). 3일 넘으면 붉게.
+- Thanh hà 의 값은 demo 계정(구글 심사 기기) 접속이라 본인 접속이 아니다.

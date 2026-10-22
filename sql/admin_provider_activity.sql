@@ -46,7 +46,10 @@ begin
       -- 앱 방문. app_visit.user_id 는 2026-10-20 에 생겼으므로 그 전 기록은 없다.
       -- 하루 한 기기에 한 줄이라 '며칠 들어왔나' 에 가깝다. 횟수가 아니다.
       'visit_days', coalesce(v.days, 0),
-      'last_visit', v.last_visit
+      'last_visit', v.last_visit,
+      -- 마지막 접속 시각 (2026-10-22). 앱을 열어 두면 로그인 세션이 갱신되므로(auth.sessions.updated_at)
+      -- app_visit 이 없던 10-20 이전 사람도 시각이 나온다. 세션·로그인·방문 중 가장 늦은 것.
+      'last_seen', greatest(v.last_at, ss.last_at, ss.signin_at)
     ) as r
     from providers pr
     left join lateral (
@@ -63,10 +66,17 @@ begin
     ) b on true
     left join lateral (
       select count(*)::int     as days,
-             max(a.visit_date) as last_visit
+             max(a.visit_date) as last_visit,
+             max(a.created_at) as last_at
       from app_visit a
       where a.user_id = coalesce(pr.profile_id, pr.owner_id)
     ) v on true
+    left join lateral (
+      select (select max(se.updated_at) from auth.sessions se
+               where se.user_id = coalesce(pr.profile_id, pr.owner_id)) as last_at,
+             (select u.last_sign_in_at from auth.users u
+               where u.id = coalesce(pr.profile_id, pr.owner_id))     as signin_at
+    ) ss on true
     where pr.application_status = 'approved'
   ) s;
 

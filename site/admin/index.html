@@ -745,6 +745,15 @@ async function signedDoc(v) {
   return data ? data.signedUrl : null;
 }
 
+// 마지막 접속 — 하루 안이면 '몇 분/시간 전', 그보다 오래면 날짜·시각(하노이). 3일 넘게 안 들어왔으면 붉게 (2026-10-22)
+function seenAgo(v) {
+  if (!v) return '-';
+  const m = Math.floor((Date.now() - new Date(v).getTime()) / 60000);
+  const t = m < 60 ? `${Math.max(m, 0)}분 전` : m < 1440 ? `${Math.floor(m / 60)}시간 전`
+    : new Date(v).toLocaleString('ko-KR', { timeZone: TZ, month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+  return m >= 3 * 1440 ? `<b class="owe">${esc(t)}</b>` : esc(t);
+}
+
 // 마사지사 활동 — 받은 예약 대비 수락·완료. 서버 함수가 집계까지 끝내 준다.
 async function loadActivity() {
   const box = $('act'); box.innerHTML = '<div class="empty">불러오는 중…</div>';
@@ -761,7 +770,8 @@ async function loadActivity() {
     + `<br>'알림' 이 0 이면 예약이 들어와도 그 사람 휴대폰에는 아무것도 뜨지 않습니다.`
     + ` 앱에 로그인한 적이 없거나, 로그인했어도 알림을 켜지 않은 것입니다.`
     + ` 그 사람의 수락률 0 은 성실도가 아닙니다. 받은 예약이 없으면 수락률은 '-' 로 둡니다.`
-    + `<br>'앱 들어온 날' 은 2026-10-20 부터 쌓입니다. 그 전 기록은 남아 있지 않습니다.`
+    + `<br>'마지막 접속' 은 앱을 연 마지막 시각입니다(하노이 시간). 3일 넘게 안 들어온 사람은 붉게 표시합니다.`
+    + ` '앱 들어온 날' 은 2026-10-20 부터 쌓입니다. 그 전 기록은 남아 있지 않습니다.`
     + ` 하루에 여러 번 들어와도 하루로 셉니다.`;
 
   if (!rows.length) { box.innerHTML = '<div class="empty">마사지사가 없습니다.</div>'; return; }
@@ -770,8 +780,8 @@ async function loadActivity() {
   rows.sort((a, b) => (b.got - a.got) || String(a.name || '').localeCompare(String(b.name || '')));
 
   box.innerHTML = '<div class="scroll"><table class="tbl"><thead><tr>'
-    + ['마사지사', '지역', '출근', '알림', '받음', '수락', '수락률', '평균 수락', '완료', '거절', '취소',
-       '앱 들어온 날', '마지막 접속']
+    + ['마사지사', '지역', '출근', '알림', '마지막 접속', '받음', '수락', '수락률', '평균 수락', '완료', '거절', '취소',
+       '앱 들어온 날']
         .map(h => `<th>${h}</th>`).join('')
     + '</tr></thead><tbody>'
     + rows.map(r => {
@@ -785,10 +795,11 @@ async function loadActivity() {
           + `<td>${r.is_active ? '예' : '<b class="owe">아니오</b>'}</td>`
           + `<td>${dev ? num(dev)
                : '<b class="owe" title="이 사람에게는 예약 알림이 가지 않습니다. 앱 로그인 또는 알림 켜기가 필요합니다.">0</b>'}</td>`
+          + `<td>${seenAgo(r.last_seen)}</td>`
           + `<td>${num(r.got)}</td><td>${num(r.accepted)}</td>`
           + `<td>${rate}</td><td>${sec}</td>`
           + `<td>${num(r.completed)}</td><td>${num(r.rejected)}</td><td>${num(r.cancelled)}</td>`
-          + `<td>${num(r.visit_days || 0)}</td><td>${esc(r.last_visit || '-')}</td>`
+          + `<td>${num(r.visit_days || 0)}</td>`
           + '</tr>';
       }).join('')
     + '</tbody></table></div>';
