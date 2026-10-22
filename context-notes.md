@@ -1797,3 +1797,4 @@ exception when others then
 - send-push: TITLE·MAIL_SUBJ 에 chat/chat_first, 메일 대체 목록에 chat_first.
 - index.html: 채팅 알림 탭 → 마사지사는 받은 신청 탭, 손님은 내 예약 (iOS 는 다음 빌드부터).
 - 검증: 롤백 트랜잭션에서 Jin→손님 2건(두 번째는 2분 제한으로 생략), 손님→Jin 1건 → chat_first 2건 확인.
+- 16:12 KST 사장님 승인으로 MS-261022-1408 손님에게 Jin 의 13:22 메시지 알림을 수동 발송 (chat_first → no_device+emailed).
