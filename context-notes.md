@@ -1828,3 +1828,9 @@ exception when others then
 - 16:58 배포 스크립트에서 시안 html·twa·sql·*.yaml·google-services.json·*.bak-*·.vercelignore 제외 후 재배포(7c054da). 6개 주소 404 확인, index·sw·manifest·assetlinks·config·privacy 200 그대로. 옛 배포가 남긴 .vercelignore 는 서버에서 직접 지움(rm -rf DIR/* 가 점 파일을 못 지운다).
 - 남은 일: demo 계정 비밀번호 변경(사장님) + 애플·구글 심사 정보 갱신, Thanh hà 본인 계정으로 이전.
 - 17:00 사장님: Thanh hà 는 이메일이 없지만 전화·지역이 있으니 그대로 넣어 둔다. 예약이 오면 관리자 알림(booking_new 는 admin 에게도 감)을 보고 전화로 연결.
+
+## 2026-10-22 19:05 관리자 예약 목록에서 넘겨준 사본 숨김 (20a8933)
+- 사장님 질문: 확정되면 취소된 사람들은 이력에서 지워야 하지 않나 → 지우지 않는다(넘겨주기 '이미 받은 사람 제외'·활동 표 받음/수락률이 이 행을 쓴다). 화면에서만 숨긴다.
+- 기준은 손님 앱(10-14~)과 같다: status=cancelled·cancelled_by=system·같은 group_id 에 살아 있는 줄이 있음.
+- 지표 /admin: '넘겨준 내역 보기' 체크(bkfan), 숨긴 수를 안내 줄에 표시, 상태별 숫자도 숨긴 뒤 기준. 콘솔: abFan 체크, 상태로 거른 경우를 위해 묶음 상태를 따로 조회.
+- 지금 DB 예약은 6건(확정 1 + 사본 5) → 관리자 목록 기본 1건.
