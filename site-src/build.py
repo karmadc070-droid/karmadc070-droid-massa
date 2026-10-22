@@ -471,6 +471,7 @@ def chrome(lang, name, L, body, page):
   }}
 }})();
 </script>
+<script src="/shaders-hero.js" data-target=".hero" data-a="#F4F8F8" data-b="#D7E2E3" data-c="#FBF2E4" data-trail="#B8863B" data-opacity="0.9" defer></script>
 </body>
 </html>'''
 
@@ -527,6 +528,7 @@ def build():
     sys.path.insert(0, SRC)
     os.makedirs(OUT, exist_ok=True)
     shutil.copy(f"{SRC}/style.css", f"{OUT}/style.css")
+    shutil.copy(f"{SRC}/shaders-hero.js", f"{OUT}/shaders-hero.js")   # 첫 화면 셰이더 배경 로더 (2026-10-22)
     CSSV = css_version()
 
     # 관리자 지표 화면은 콘텐츠 페이지가 아니라 앱이다. 템플릿을 타지 않고 그대로 옮긴다.
