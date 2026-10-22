@@ -777,21 +777,43 @@ async function loadActivity() {
   if (!rows.length) { box.innerHTML = '<div class="empty">마사지사가 없습니다.</div>'; return; }
 
   // 받은 게 많은 순, 같으면 이름 순. 아직 아무도 안 받았으면 전부 이름 순이 된다.
-  rows.sort((a, b) => (b.got - a.got) || String(a.name || '').localeCompare(String(b.name || '')));
+  // 머리칸을 누르면 그 칸으로 다시 정렬된다 (2026-10-22).
+  ACTS = rows.sort((a, b) => (b.got - a.got) || String(a.name || '').localeCompare(String(b.name || '')));
+  drawActivity();
+}
 
-  box.innerHTML = '<div class="scroll"><table class="tbl"><thead><tr>'
-    + ['마사지사', '지역', '출근', '알림', '마지막 접속', '받음', '수락', '수락률', '평균 수락', '완료', '거절', '취소',
-       '앱 들어온 날']
-        .map(h => `<th>${h}</th>`).join('')
-    + '</tr></thead><tbody>'
+// 칸 정의. 값이 없는 수락률·평균 수락은 정렬할 때 맨 끝으로 보낸다.
+let ACTS = null;
+const ACOLS = [
+  { k: 'name',        h: '마사지사',    l: 1 },
+  { k: 'city',        h: '지역',        l: 1 },
+  { k: 'is_active',   h: '출근',        t: 'n', v: (r) => r.is_active ? 1 : 0 },
+  { k: 'devices',     h: '알림',        t: 'n' },
+  { k: 'last_seen',   h: '마지막 접속', t: 'd' },
+  { k: 'got',         h: '받음',        t: 'n' },
+  { k: 'accepted',    h: '수락',        t: 'n' },
+  { k: 'accept_rate', h: '수락률',      t: 'n', v: (r) => r.accept_rate == null ? -1 : r.accept_rate },
+  { k: 'accept_sec',  h: '평균 수락',   t: 'n', v: (r) => r.accept_sec == null ? 1e9 : r.accept_sec },
+  { k: 'completed',   h: '완료',        t: 'n' },
+  { k: 'rejected',    h: '거절',        t: 'n' },
+  { k: 'cancelled',   h: '취소',        t: 'n' },
+  { k: 'visit_days',  h: '앱 들어온 날', t: 'n' },
+];
+
+function drawActivity() {
+  if (!ACTS) return;
+  const rows = sortRows('act', ACTS, ACOLS);
+  $('act').innerHTML = '<div class="scroll"><table class="tbl">'
+    + thead('act', ACOLS)
+    + '<tbody>'
     + rows.map(r => {
         const dev = Number(r.devices || 0);
         const sec = r.accept_sec == null ? '-'
           : (r.accept_sec < 60 ? `${num(r.accept_sec)}초` : `${num(Math.round(r.accept_sec / 60))}분`);
         const rate = r.accept_rate == null ? '-' : `${num(r.accept_rate)}%`;
         return '<tr>'
-          + `<td>${esc(r.name || '')}</td>`
-          + `<td>${esc(r.city || '-')}</td>`
+          + `<td class="l">${esc(r.name || '')}</td>`
+          + `<td class="l">${esc(r.city || '-')}</td>`
           + `<td>${r.is_active ? '예' : '<b class="owe">아니오</b>'}</td>`
           + `<td>${dev ? num(dev)
                : '<b class="owe" title="이 사람에게는 예약 알림이 가지 않습니다. 앱 로그인 또는 알림 켜기가 필요합니다.">0</b>'}</td>`
@@ -1015,7 +1037,7 @@ document.addEventListener('click', (e) => {
   const t = th.dataset.tbl, k = th.dataset.k, s = SORT[t] || {};
   SORT[t] = { key: k, dir: s.key === k ? -s.dir : 1 };
   pageReset(t);   // 정렬이 바뀌면 3쪽에 있던 줄이 1쪽으로 온다
-  ({ members: drawMembers, roster: drawRoster, traffic: drawTraffic, bk: drawBk })[t]();
+  ({ members: drawMembers, roster: drawRoster, traffic: drawTraffic, bk: drawBk, act: drawActivity, cp: drawCps })[t]();
 });
 
 // ── 가격 승인 ─────────────────────────────────
@@ -1153,6 +1175,15 @@ async function loadCps() {
   drawCps();
 }
 
+// 쿠폰 표 칸 — 머리칸을 누르면 정렬된다 (2026-10-22)
+const CCOLS = [
+  { k: 'title',          h: '이름', l: 1 },
+  { k: 'code',           h: '코드', l: 1 },
+  { k: 'discount_value', h: '할인', l: 1, t: 'n' },
+  { k: 'is_active',      h: '상태', l: 1, t: 'n', v: (c) => c.is_active ? 1 : 0 },
+  { k: 'created_at',     h: '발행', t: 'd' },
+];
+
 function drawCps() {
   if (!CPS) return;
   const on = CPS.filter(c => c.is_active).length;
@@ -1162,10 +1193,9 @@ function drawCps() {
   if (!CPS.length) { $('cp').innerHTML = ''; return; }
 
   const d = (v) => v ? new Date(v).toLocaleDateString('ko-KR', { timeZone: TZ, month:'2-digit', day:'2-digit' }) : '-';
-  const pg = pageOf('cp', CPS);
-  $('cp').innerHTML = '<div class="scroll"><table class="tbl"><thead><tr>'
-    + ['이름','코드','할인','상태','발행'].map((h, i) => `<th class="${i < 3 ? 'l' : ''}">${esc(h)}</th>`).join('')
-    + '<th></th></tr></thead><tbody>'
+  const pg = pageOf('cp', sortRows('cp', CPS, CCOLS));
+  $('cp').innerHTML = '<div class="scroll"><table class="tbl">'
+    + thead('cp', CCOLS, true) + '<tbody>'
     + pg.rows.map(c => `<tr>
         <td class="l" style="font-weight:600">${esc(c.title)}</td>
         <td class="l" style="font-family:monospace;font-size:12px">${esc(c.code || '-')}</td>

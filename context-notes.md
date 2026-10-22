@@ -1841,3 +1841,4 @@ exception when others then
 - admin_provider_activity 에 last_seen = greatest(app_visit.created_at, auth.sessions.updated_at, auth.users.last_sign_in_at). 10-20 이전 사람도 나온다. 백업 /root/backups/admin_provider_activity_before_20261022.sql.
 - 지표 활동 표: '마지막 접속' 칸을 알림 옆(폰에서 스크롤 없이 보이게)으로 옮기고 'N분/시간 전' 또는 날짜·시각(하노이). 3일 넘으면 붉게.
 - Thanh hà 의 값은 demo 계정(구글 심사 기기) 접속이라 본인 접속이 아니다.
+- 22:20 지표 화면 표 중 정렬이 없던 두 개(마사지사 활동, 쿠폰)에 머리칸 정렬(▲▼) 추가. 나머지 4개(예약·유입·회원·마사지사 명단)는 원래 정렬됨. 운영 콘솔은 표가 아니라 카드 목록+정렬 선택이라 해당 없음.
