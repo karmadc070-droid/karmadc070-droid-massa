@@ -1804,3 +1804,9 @@ exception when others then
 - 취소된 예약 MS-261022-8880 은 남고 provider_id 만 비워짐(SET NULL).
 - 삭제 전 백업: VPS /root/backups/test_provider_before_delete_20261022/ (providers·provider_kyc·예약 참조 CSV).
 - 남은 마사지사 16명, 이름에 test 들어간 곳 0.
+
+## 2026-10-22 16:25 Quyên·Lê thị bé nhiên 출근을 관리자 권한으로 켬 (사장님 지시)
+- 둘 다 승인됐지만 알림 기기 0대라 guard_provider_push 때문에 본인이 출근을 못 켜는 상태였다. 사장님: 사용법을 몰라서일 수 있으니 우리가 켜자.
+- 관리자 jwt claims 를 세팅한 트랜잭션에서 is_active=true. 웹 목록 마사지 카드 13 → 15 확인.
+- 둘 다 기기가 없으므로 새 예약은 massa_booking_mail.py 메일(30분 간격)로 알린다. 넘겨주기(fanout)에서는 같은 도시에 알림 켠 사람이 있으면 뒤로 밀린다.
+- 한 번 끄면 알림을 켜기 전까지 본인이 다시 켤 수 없다(가드 그대로).
