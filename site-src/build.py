@@ -317,6 +317,8 @@ def chrome(lang, name, L, body, page):
 <noscript><link rel="stylesheet" href="{FONTS}"></noscript>
 {langredir}
 {ld}
+<meta name="google-adsense-account" content="ca-pub-9553196987277637">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9553196987277637" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -587,6 +589,10 @@ def build():
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n'
         '        xmlns:xhtml="http://www.w3.org/1999/xhtml">\n' + us + '</urlset>\n')
+
+    # 애드센스 판매자 확인 (2026-10-22, 모아학원과 같은 계정)
+    open(f"{OUT}/ads.txt", "w", encoding="utf-8", newline="\n").write(
+        "google.com, pub-9553196987277637, DIRECT, f08c47fec0942fa0\n")
 
     open(f"{OUT}/robots.txt", "w", encoding="utf-8", newline="\n").write(
         "# massaviet.com — 소개 사이트는 전부 열고 사이트맵 위치를 알린다\n"
