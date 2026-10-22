@@ -1825,3 +1825,5 @@ exception when others then
 - demo 계정 로그인 62회. 최근 세션은 OnePlus8Pro 웹뷰 + 구글 IP(66.102·74.125·192.178) → 구글 플레이 심사/사전 테스트 기기. 알림 기기 24대도 그쪽(android, 10-18~21).
 - 노출 문제: app.massaviet.com 에서 와이어프레임 html(데모 비밀번호 포함)·codemagic.yaml·google-services.json·index.html.bak·sql/*.sql 이 200 으로 열린다. 저장소도 공개라 비밀번호는 GitHub 에도 있다.
   demo 계정으로 로그인하면 Thanh hà 의 파트너 화면(서류·계좌)에 접근할 수 있다.
+- 16:58 배포 스크립트에서 시안 html·twa·sql·*.yaml·google-services.json·*.bak-*·.vercelignore 제외 후 재배포(7c054da). 6개 주소 404 확인, index·sw·manifest·assetlinks·config·privacy 200 그대로. 옛 배포가 남긴 .vercelignore 는 서버에서 직접 지움(rm -rf DIR/* 가 점 파일을 못 지운다).
+- 남은 일: demo 계정 비밀번호 변경(사장님) + 애플·구글 심사 정보 갱신, Thanh hà 본인 계정으로 이전.
