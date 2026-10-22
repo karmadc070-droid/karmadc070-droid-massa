@@ -37,7 +37,7 @@
           disableTelemetry: true,
           onReady: function () { c.style.opacity = d.opacity || '0.8'; },
           // 기기 분실은 라이브러리가 스스로 다시 세운다. 다시 못 쓰게 된 경우에만 캔버스를 걷어 원래 배경으로
-          onError: function (r) { if (TERMINAL.indexOf(r) >= 0) c.remove(); }
+          onError: function (r) { if (TERMINAL.indexOf(r) >= 0) { console.warn('[shaders-hero] 배경 셰이더를 끕니다:', r); c.remove(); } }
         });
       });
     }).catch(function () {});
