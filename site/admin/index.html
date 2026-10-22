@@ -345,6 +345,7 @@ svg{display:block;width:100%;height:auto;overflow:visible}
           <label class="chk"><input type="checkbox" id="bkunpaid">미결제만</label>
           <label class="chk"><input type="checkbox" id="bknone">미배정만</label>
           <label class="chk"><input type="checkbox" id="bkout">범위 밖만</label>
+          <label class="chk"><input type="checkbox" id="bkfan">넘겨준 내역 보기</label>
         </div>
       </div>
       <div id="bk"></div>
@@ -1380,10 +1381,19 @@ async function loadBk() {
   drawBk();
 }
 
+// 한 예약을 여러 마사지사에게 넘겨주면 같은 group_id 로 사본이 생기고, 한 명이 수락하면
+// 나머지는 system 취소된다. 손님 앱처럼 기본은 숨긴다 — 기록은 넘겨주기·활동 표가 쓰므로 지우지 않는다 (2026-10-22)
+function fanCopies(list) {
+  const live = new Set(list.filter(x => x.group_id && x.status !== 'cancelled').map(x => x.group_id));
+  return new Set(list.filter(b => b.status === 'cancelled' && b.cancelled_by === 'system' && live.has(b.group_id)).map(b => b.id));
+}
+
 function drawBk() {
   if (!BKS) return;
   const q = ($('bkq').value || '').trim().toLowerCase();
-  let rows = BKS;
+  const copies = fanCopies(BKS);
+  const base = $('bkfan').checked ? BKS : BKS.filter(b => !copies.has(b.id));
+  let rows = base;
   if (q) rows = rows.filter(b => [b.booking_no, b.providers && b.providers.display_name,
       b.profiles && b.profiles.full_name, b.profiles && b.profiles.phone,
       b.services && b.services.name, b.hotel_name, b.address]
@@ -1395,14 +1405,15 @@ function drawBk() {
   if ($('bkout').checked)    rows = rows.filter(isOutOfArea);
   rows = sortRows('bk', rows, BCOLS);
 
-  const cnt = (st) => BKS.filter(b => b.status === st).length;
+  const cnt = (st) => base.filter(b => b.status === st).length;
   $('bk-note').innerHTML =
-    `최근 <b>${num(BKS.length)}건</b> · 요청됨 <b>${num(cnt('requested'))}</b>`
+    `최근 <b>${num(base.length)}건</b> · 요청됨 <b>${num(cnt('requested'))}</b>`
     + ` · 진행 중 <b>${num(cnt('confirmed') + cnt('on_the_way') + cnt('in_progress'))}</b>`
     + ` · 완료 <b>${num(cnt('completed'))}</b> · 취소·노쇼 <b>${num(cnt('cancelled') + cnt('no_show'))}</b>`
     + (BKS.some(isOutOfArea)
         ? ` · <b style="color:var(--bad)">범위 밖 ${num(BKS.filter(isOutOfArea).length)}</b>` : '')
-    + (rows.length !== BKS.length ? ` · <b>지금 보이는 ${num(rows.length)}건</b>` : '')
+    + (copies.size && !$('bkfan').checked ? ` · 다른 분이 수락해 자동 취소된 사본 ${num(copies.size)}건 숨김` : '')
+    + (rows.length !== base.length ? ` · <b>지금 보이는 ${num(rows.length)}건</b>` : '')
     + `<br>머리칸을 누르면 정렬됩니다. 완료·취소는 되돌릴 수 없으니 확인하고 눌러 주세요.`;
 
   if (!rows.length) { $('bk').innerHTML = '<div class="empty">해당하는 예약이 없습니다.</div>'; return; }
@@ -2129,7 +2140,7 @@ $('q').oninput = refilter('roster');
 $('mq').oninput = refilter('members');
 ['mtype', 'mbk'].forEach(id => $(id).onchange = refilter('members'));
 ['apsort', 'apok'].forEach(id => $(id).onchange = drawApps);
-['bkst', 'bkcity', 'bkunpaid', 'bknone', 'bkout'].forEach(id => $(id).onchange = refilter('bk'));
+['bkst', 'bkcity', 'bkunpaid', 'bknone', 'bkout', 'bkfan'].forEach(id => $(id).onchange = refilter('bk'));
 $('bkq').oninput = refilter('bk');
 $('repst').onchange = refilter('rep');
 $('repq').oninput = refilter('rep');
