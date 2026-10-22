@@ -2388,6 +2388,7 @@ function openPushTap() {
   //    알림 목록까지만 가고 거기서 끝났다. 수락할 화면으로 보낸다.
   if (SESSION && d.kind === 'booking_new') { openIncoming(); }
   else if (SESSION && /^booking_(confirmed|on_the_way|completed|cancelled)$/.test(d.kind)) { window.go('myBookings'); loadMyBookings(); }
+  else if (SESSION && /^chat/.test(d.kind)) { openChatTap(); }
   else openNotifications();
 }
 
@@ -5685,8 +5686,14 @@ async function renderNotifications() {
 }
 window.renderNotifications = renderNotifications;
 // 알림 종류에 따라 갈 곳이 다르다. 마사지사용(booking_new)은 '받은 신청' 으로.
+// 채팅 알림을 누르면 채팅 버튼이 있는 예약 목록으로 — 마사지사는 받은 신청 탭, 손님은 내 예약 (2026-10-22)
+async function openChatTap() {
+  const mine = await myProviderIds();
+  if (mine.length) openIncoming(); else { window.go('myBookings'); loadMyBookings(); }
+}
 window.tapNoti = function (kind) {
   if (kind === 'booking_new') { openIncoming(); return; }
+  if (/^chat/.test(kind)) { openChatTap(); return; }
   if (/^booking_/.test(kind)) { window.go('myBookings'); loadMyBookings(); }
 };
 window.openNotifications = function () {
