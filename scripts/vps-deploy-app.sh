@@ -27,6 +27,10 @@ rm -rf "$SRC/site" "$SRC/site-src" "$SRC/store-assets" "$SRC/scripts" \
        "$SRC/capacitor" "$SRC/functions" "$SRC/android-package" "$SRC/.github"
 rm -f  "$SRC"/*.md "$SRC"/*.xlsx "$SRC"/*.docx "$SRC"/*.csv "$SRC"/vercel.json
 rm -f  "$SRC/.env" "$SRC/.gitignore" "$SRC/config.example.js"
+# 2026-10-22: 아래도 웹으로 나가고 있었다. 화면 시안(데모 계정 비밀번호가 적혀 있다)·
+# 안드로이드 빌드 폴더·SQL·빌드 설정·옛 백업. 앱은 이것들을 하나도 읽지 않는다.
+rm -rf "$SRC/twa" "$SRC/sql"
+rm -f  "$SRC"/마싸_*.html "$SRC"/*.bak-* "$SRC"/*.yaml "$SRC/google-services.json" "$SRC/.vercelignore"
 find "$SRC" -name '.~lock*' -delete 2>/dev/null || true
 
 echo '=== 3. ★ 비밀이 섞여 있지 않은가 (마지막 빗장) ==='
