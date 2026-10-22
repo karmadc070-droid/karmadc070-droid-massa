@@ -4,6 +4,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const TOPIC = "app.massa.hanoi";
 const NOTIFY_SECRET = Deno.env.get("NOTIFY_SECRET") ?? "";
+const RESEND_KEY = Deno.env.get("RESEND_KEY") ?? "";
+const MAIL_FROM = "massa <massa@moahagwon.com>";
 const json = (o: unknown, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "Content-Type": "application/json" } });
 
 function b64url(bytes: Uint8Array): string {
@@ -192,8 +194,8 @@ async function sendFcm(deviceToken: string, title: string, body: string, kind: s
           priority: "HIGH",
           notification: {
             // ★ 이 채널이 소리·헤드업 배너를 정한다. 앱이 같은 id 로 채널을 만들어 두어야 한다.
-            channel_id: "massa_booking",
-            default_sound: true,
+            channel_id: "massa_booking_v2",
+            sound: "massa",   // Android 7.1 이하용. 8.0+ 는 채널이 정한다
             notification_priority: "PRIORITY_MAX",
             // ★ tag 가 없으면 30초마다 반복할 때 알림이 10개 쌓인다 (2026-10-18).
             //   같은 tag 면 덮어쓰면서 다시 알린다. iOS 의 apns-collapse-id 와 같은 역할.
@@ -222,8 +224,47 @@ const TITLE: Record<string, Record<string, string>> = {
   booking_cancelled_by_customer: { vi: "Khách đã hủy đặt lịch", ko: "손님이 예약을 취소했습니다", en: "The customer cancelled the booking" },
 };
 
-type Noti = { id: string; user_id: string; title: string | null; body: string | null; kind: string; booking_id: string | null };
+type Noti = { id: string; user_id: string; title: string | null; body: string | null; kind: string; booking_id: string | null; push_tries: number | null };
 type Tok = { token: string; user_id: string; lang: string; platform: string | null };
+
+
+// 받을 기기가 없을 때 쓰는 마지막 수단. 베트남어로만 보낸다 — 마사지사는 전원 베트남 사람이다.
+const MAIL_SUBJ: Record<string, string> = {
+  booking_new: "massa — Có lịch đặt mới đang chờ bạn",
+  approved: "massa — Đơn đăng ký của bạn đã được duyệt",
+  notice: "massa — Thông báo",
+  info: "massa — Thông báo",
+};
+async function emailFallback(db: any, n: Noti): Promise<boolean> {
+  if (!RESEND_KEY) return false;
+  try {
+    const { data: to, error: ue } = await db.rpc("user_email", { p: n.user_id });
+    if (ue) { console.error("메일실패: 사용자조회", ue.message); return false; }
+    if (!to) { console.error("메일실패: 메일주소 없음", n.user_id); return false; }
+    const body = [
+      n.body ?? "",
+      "",
+      "Mở ứng dụng: https://app.massaviet.com",
+      "",
+      "★ Bạn nhận email này vì tài khoản chưa bật thông báo.",
+      "Hãy mở ứng dụng và bật thông báo — nếu không, đơn mới sẽ chuyển cho người khác.",
+      "",
+      "massa",
+    ].join("\n");
+    const r = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: MAIL_FROM,
+        to: [to],
+        subject: MAIL_SUBJ[n.kind] ?? "massa — Thông báo",
+        text: body,
+      }),
+    });
+    if (!r.ok) console.error("메일실패: Resend", r.status, (await r.text()).slice(0, 300));
+    return r.ok;
+  } catch (e) { console.error("메일실패: 예외", String(e).slice(0, 300)); return false; }
+}
 
 Deno.serve(async (req) => {
   if (!NOTIFY_SECRET || req.headers.get("x-notify-secret") !== NOTIFY_SECRET) return json({ error: "unauthorized" }, 401);
@@ -242,7 +283,7 @@ Deno.serve(async (req) => {
   const { data: toks, error: e2 } = await db.from("push_tokens").select("token, user_id, lang, platform").in("user_id", users).returns<Tok[]>();
   if (e2) return json({ error: e2.message }, 500);
 
-  let sent = 0, removed = 0, noDevice = 0;
+  let sent = 0, removed = 0, noDevice = 0, emailed = 0;
   const errors: string[] = [];
   for (const n of notis) {
     const mine = toks.filter((x) => x.user_id === n.user_id);
@@ -250,7 +291,14 @@ Deno.serve(async (req) => {
     //   아무에게도 안 갔는데 전부 발송된 것처럼 보였다 (2026-10-18 수정).
     if (!mine.length) {
       noDevice++;
-      await db.from("notifications").update({ push_result: "no_device" }).eq("id", n.id);
+      // 기기가 없으면 메일로 대신 보낸다. 재시도마다 보내면 스팸이 되므로 첫 시도에만.
+      let res = "no_device";
+      if ((n.push_tries ?? 1) <= 1 && ["booking_new", "approved", "notice", "info"].includes(n.kind)) {
+        const ok = await emailFallback(db, n);
+        if (ok) emailed++;
+        res = ok ? "no_device+emailed" : "no_device+email_failed";
+      }
+      await db.from("notifications").update({ push_result: res }).eq("id", n.id);
       continue;
     }
     let okAny = false;
@@ -273,5 +321,5 @@ Deno.serve(async (req) => {
       .update({ push_result: okAny ? "sent" : `failed: ${errs.join(" | ").slice(0, 300)}` })
       .eq("id", n.id);
   }
-  return json({ ok: true, claimed: notis.length, sent, removed, noDevice, errors: errors.slice(0, 3) });
+  return json({ ok: true, claimed: notis.length, sent, removed, noDevice, emailed, errors: errors.slice(0, 3) });
 });
