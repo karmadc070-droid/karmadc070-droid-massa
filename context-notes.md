@@ -1798,3 +1798,9 @@ exception when others then
 - index.html: 채팅 알림 탭 → 마사지사는 받은 신청 탭, 손님은 내 예약 (iOS 는 다음 빌드부터).
 - 검증: 롤백 트랜잭션에서 Jin→손님 2건(두 번째는 2분 제한으로 생략), 손님→Jin 1건 → chat_first 2건 확인.
 - 16:12 KST 사장님 승인으로 MS-261022-1408 손님에게 Jin 의 13:22 메시지 알림을 수동 발송 (chat_first → no_device+emailed).
+
+## 2026-10-22 시험 마사지사 삭제 (사장님 지시)
+- providers '[TEST] massa owner' 1건 삭제. 딸린 provider_kyc 1건도 같이 지워짐. 로그인 계정(관리자, 사장님 본인)은 그대로 둠.
+- 취소된 예약 MS-261022-8880 은 남고 provider_id 만 비워짐(SET NULL).
+- 삭제 전 백업: VPS /root/backups/test_provider_before_delete_20261022/ (providers·provider_kyc·예약 참조 CSV).
+- 남은 마사지사 16명, 이름에 test 들어간 곳 0.
