@@ -1789,3 +1789,11 @@ exception when others then
 - 저장소 functions/send-push/index.ts 가 서버보다 오래돼 있어(메일 대체 없음) 먼저 서버본을 반영(0619a1a). 그다음 booking_confirmed 추가, 메일 꼬리말의 '넘어간다' 경고는 마사지사용(booking_new·approved)에만, 손님에게는 알림 켜기 안내(베트남어·한국어).
 - 배포: /root/massa/volumes/functions/send-push/index.ts (백업 /root/backups/send-push.index.ts.bak-20261022), massa-edge-functions 재시작 후 healthy, send-push 호출 정상(claimed:0).
 - 채팅 점검: messages 에 알림 트리거가 없고 화면은 열 때만 불러온다(실시간·주기 갱신 없음). 그래서 상대가 메시지를 보내도 알림이 없다. Jin 이 13:22 손님에게 보낸 첫 메시지(2자)에 손님 답 없음. 고칠지 사용자 결정 대기.
+
+## 2026-10-22 채팅 알림 + 실시간 (사장님 "고쳐")
+- 문제: messages 에 알림 트리거가 없었고, supabase_realtime publication 이 비어 있어 앱의 postgres_changes 구독(채팅창·알림 토스트)이 아무것도 받지 못했다. 앱 코드는 이미 구독하고 있었다 — 서버 쪽만 빠져 있었다.
+- scripts/sql-chat-notify.sql: trg_notify_new_message → 받는 사람에게 notifications. 예약별 첫 알림 'chat_first'(기기 없으면 메일), 이후 'chat'(푸시만). 같은 사람·같은 예약 2분 안 재알림 없음. 알림 실패가 메시지 저장을 막지 않는다.
+- publication 에 messages·notifications 추가 → 채팅창 실시간 갱신, 앱 안 알림 토스트가 iOS 포함 재빌드 없이 동작.
+- send-push: TITLE·MAIL_SUBJ 에 chat/chat_first, 메일 대체 목록에 chat_first.
+- index.html: 채팅 알림 탭 → 마사지사는 받은 신청 탭, 손님은 내 예약 (iOS 는 다음 빌드부터).
+- 검증: 롤백 트랜잭션에서 Jin→손님 2건(두 번째는 2분 제한으로 생략), 손님→Jin 1건 → chat_first 2건 확인.

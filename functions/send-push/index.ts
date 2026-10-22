@@ -222,6 +222,8 @@ const TITLE: Record<string, Record<string, string>> = {
   booking_completed: { vi: "Dịch vụ đã hoàn tất. Hãy để lại đánh giá nhé.", ko: "서비스가 완료되었습니다. 평가를 남겨주세요", en: "Your service is complete. Please leave a review." },
   booking_cancelled: { vi: "Đã hủy đặt lịch.", ko: "예약이 취소되었습니다.", en: "Your booking has been cancelled." },
   booking_cancelled_by_customer: { vi: "Khách đã hủy đặt lịch", ko: "손님이 예약을 취소했습니다", en: "The customer cancelled the booking" },
+  chat: { vi: "Tin nhắn mới", ko: "새 메시지가 왔습니다", en: "New message" },
+  chat_first: { vi: "Tin nhắn mới", ko: "새 메시지가 왔습니다", en: "New message" },
 };
 
 type Noti = { id: string; user_id: string; title: string | null; body: string | null; kind: string; booking_id: string | null; push_tries: number | null };
@@ -235,6 +237,7 @@ const MAIL_SUBJ: Record<string, string> = {
   notice: "massa — Thông báo",
   info: "massa — Thông báo",
   booking_confirmed: "massa — 예약이 확정되었습니다 · Lịch hẹn đã được xác nhận",
+  chat_first: "massa — 새 메시지가 왔습니다 · Bạn có tin nhắn mới",
 };
 async function emailFallback(db: any, n: Noti): Promise<boolean> {
   if (!RESEND_KEY) return false;
@@ -297,7 +300,7 @@ Deno.serve(async (req) => {
       noDevice++;
       // 기기가 없으면 메일로 대신 보낸다. 재시도마다 보내면 스팸이 되므로 첫 시도에만.
       let res = "no_device";
-      if ((n.push_tries ?? 1) <= 1 && ["booking_new", "approved", "notice", "info", "booking_confirmed"].includes(n.kind)) {
+      if ((n.push_tries ?? 1) <= 1 && ["booking_new", "approved", "notice", "info", "booking_confirmed", "chat_first"].includes(n.kind)) {
         const ok = await emailFallback(db, n);
         if (ok) emailed++;
         res = ok ? "no_device+emailed" : "no_device+email_failed";
