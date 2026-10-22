@@ -1827,3 +1827,4 @@ exception when others then
   demo 계정으로 로그인하면 Thanh hà 의 파트너 화면(서류·계좌)에 접근할 수 있다.
 - 16:58 배포 스크립트에서 시안 html·twa·sql·*.yaml·google-services.json·*.bak-*·.vercelignore 제외 후 재배포(7c054da). 6개 주소 404 확인, index·sw·manifest·assetlinks·config·privacy 200 그대로. 옛 배포가 남긴 .vercelignore 는 서버에서 직접 지움(rm -rf DIR/* 가 점 파일을 못 지운다).
 - 남은 일: demo 계정 비밀번호 변경(사장님) + 애플·구글 심사 정보 갱신, Thanh hà 본인 계정으로 이전.
+- 17:00 사장님: Thanh hà 는 이메일이 없지만 전화·지역이 있으니 그대로 넣어 둔다. 예약이 오면 관리자 알림(booking_new 는 admin 에게도 감)을 보고 전화로 연결.
