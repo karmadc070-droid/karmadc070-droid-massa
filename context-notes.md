@@ -1846,3 +1846,9 @@ exception when others then
 ## 2026-10-22 23:40 애드센스 심사 준비
 - massaviet.com 전 페이지 head 에 애드센스 코드(ca-pub-9553196987277637, 모아학원과 같은 계정) + /ads.txt. build.py 가 생성(7aa0d6c). 배포 후 ads.txt 200, 페이지 4곳 코드 확인.
 - 남은 일: 애드센스 콘솔에서 massaviet.com 사이트 추가·심사 요청 (사장님 계정).
+
+## 2026-10-23 손님 기본정보 필수 + 마사지사에게 손님 정보 표시 (사장님 지시)
+- 예약 전 필수: 성명·전화·성별·국적(이메일은 계정). askContactIfMissing 확장. 서버도 trg_require_customer_basics 로 막는다(손님 본인 insert 만, 크론·관리자 통과). 옛 iOS 빌드는 서버 메시지로 계정 화면 입력 안내.
+- 마사지사 받은 신청 카드에 👤 이름·국적·성별·이용 횟수·노쇼/임박취소 (provider_booking_customers RPC, 자기 신청·관리자만). 전화·이메일은 안 준다 — 직거래 방지 원칙.
+- 시험: 정보 빠진 손님 예약 → profile_required 거부(롤백). Jin 은 자기 예약 손님 조회됨, Kun 은 0건.
+- 당시 손님 104명 중 전화 15·국적 45·성별 46명만 입력.
