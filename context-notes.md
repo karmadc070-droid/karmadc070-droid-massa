@@ -1777,3 +1777,9 @@ exception when others then
    끝에서 끝까지 확인하다 우연히 걸렸다. 우연이 아니었으면 계속 몰랐을 것이다.
 
 고친 뒤 재시도해 Resend 가 200 과 메일 id 를 돌려주는 것까지 확인했다.
+
+## 2026-10-22 미수락 예약 재배정 대상 변경 (사용자 지시, 채널 세션에서 작업)
+- scripts/sql-fanout-push-ward.sql 로 fanout_stale_bookings 교체. 적용 전 정의 백업 VPS /root/backups/fanout_stale_bookings_before_20261022.sql.
+- 바뀐 점: display_name '[TEST]%' 제외 / 알림(push_tokens) 켠 마사지사만, 없을 때만 나머지 / 손님 ward_code 를 ward_codes 에 가진 사람 먼저.
+- 계기: MS-261022-4642(Kun, 10/22 20:00) 가 10분 미수락으로 5명에게 재배정됐고 그중 [TEST] massa owner 가 있었음. 같은 조건으로 다시 돌리면 Jin·Thảo 만 나오는 것 확인.
+- 알림 꺼진 마사지사에게는 VPS 크론 /root/massa_booking_mail.py(5분마다, 30분 간격 재발송)가 가입 메일로 알린다(채널 프로젝트 ops/).
