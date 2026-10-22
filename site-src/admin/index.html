@@ -2130,7 +2130,7 @@ $('repst').onchange = refilter('rep');
 $('repq').oninput = refilter('rep');
 $('frlv').onchange = refilter('fraud');
 $('tzero').onchange = refilter('traffic');
-$('rf').onclick = () => { loadData(); loadRoster(); loadMembers(); loadApps();
+$('rf').onclick = () => { loadData(); loadActivity(); loadRoster(); loadMembers(); loadApps();
                           loadBk(); loadReps(); loadPrices(); loadFraud(); loadCps(); };
 $('out').onclick = async () => { await sb.auth.signOut(); location.reload(); };
 
