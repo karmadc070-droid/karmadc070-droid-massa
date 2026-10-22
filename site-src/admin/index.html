@@ -1595,7 +1595,8 @@ async function reviewApp(id, status, reason) {
   // (guard_provider_push) 가 막아서 '알림을 켜야 영업을 시작할 수 있습니다' 로 승인 자체가 실패했다.
   const patch = { application_status: status,
     reviewed_at: new Date().toISOString(), reject_reason: status === 'rejected' ? (reason || null) : null };
-  if (status !== 'approved') patch.is_active = false;   // 반려·보류는 즉시 내린다
+  // 승인하면 출근도 같이 켠다 — 마사지사가 스위치를 몰라 승인 후에도 안 보이는 일이 반복됐다 (2026-10-22, 콘솔과 통일)
+  patch.is_active = status === 'approved';   // 반려·보류는 즉시 내린다
   const { data: me } = await sb.auth.getUser();
   if (me && me.user) patch.reviewed_by = me.user.id;
 
@@ -1611,7 +1612,7 @@ async function reviewApp(id, status, reason) {
       user_id: uid,
       title: status === 'approved' ? '등록 승인 안내' : '등록 반려 안내',
       body: status === 'approved'
-        ? '등록 신청이 승인되었습니다. 앱에서 알림을 켜고 「영업 시작」을 누르면 고객 목록에 보입니다.'
+        ? '등록 신청이 승인되었습니다. 이제 고객 목록에 보이며 예약을 받을 수 있어요. 예약을 놓치지 않게 앱에서 알림을 켜 두세요.'
         : '등록 신청이 반려되었습니다.\n사유: ' + (reason || '-')
           + '\n계정 → 제공자 등록 신청에서 고쳐서 다시 보내실 수 있습니다.',
       kind: status === 'approved' ? 'approved' : 'rejected' });
