@@ -2162,6 +2162,7 @@ async function refreshSession() {
   subscribeNotifications();
   loadBlocks();
   setupPush();
+  setTimeout(checkProviderDevice, 12000);   // 등록이 끝날 시간을 준 뒤 서버에 기기가 있는지 본다
   maybeAskBasics();   // 가입 직후 한 번만 성별·국적을 묻는다
 }
 // 제공자 연락처는 앱을 거치지 않는 직거래를 막기 위해 관리자에게만 보인다
@@ -2286,7 +2287,7 @@ async function setupWebPush() {
   showPushBanner();
 }
 // 승인된 마사지사인가. 신청자 본인(profile_id)과 업체 소유자(owner_id) 둘 다 본다 — 목록 화면과 같은 조건.
-let _isProv = null;
+let _isProv = null, _provId = null;
 async function isApprovedProvider() {
   if (_isProv !== null) return _isProv;
   if (!SESSION) return false;
@@ -2298,14 +2299,32 @@ async function isApprovedProvider() {
       .or('profile_id.eq.' + uid + ',owner_id.eq.' + uid)
       .eq('application_status', 'approved').limit(1);
     _isProv = !!(data && data.length);
+    _provId = _isProv ? data[0].id : null;
   } catch (e) { _isProv = false; }
   return _isProv;
 }
+// 승인된 마사지사인데 서버에 알림 기기가 하나도 없으면 알림 화면을 띄운다 (2026-10-23).
+// 권한 상태가 아니라 '서버에 기기가 실제로 있는지' 로 판단한다 — 아이폰 1.0.19 까지는
+// 허용을 눌러도 토큰이 저장되지 않아(ios 0건) 권한만 보는 화면이 한 번도 뜨지 않았다.
+async function checkProviderDevice() {
+  if (!SESSION || document.getElementById('pushGate')) return;
+  if (!(await isApprovedProvider()) || !_provId) return;
+  const { data: has, error } = await sb.rpc('provider_has_device', { p_provider: _provId });
+  if (error || has !== false) return;
+  const N = window.MassaNative;
+  if (N && N.checkPush && (N.platform === 'ios' || N.platform === 'android')) {
+    const r = await N.checkPush();
+    return showPushGate(r === 'denied', true);
+  }
+  if (!('Notification' in window) || !('PushManager' in window)) return;   // 이 브라우저는 알림 자체가 안 된다
+  showPushGate(Notification.permission === 'denied', true);
+}
 // 마사지사 전용 전체 화면. 'default' 면 닫을 수 없다(허용해야 지나간다).
 // 'denied' 면 앱 안에서 되돌릴 방법이 없으므로 안내만 하고 닫게 해 준다 — 안 그러면 앱을 못 쓴다.
-function showPushGate(forceDenied) {
+function showPushGate(forceDenied, noDevice) {
   if (document.getElementById('pushGate')) return;
-  const denied = forceDenied === true || Notification.permission === 'denied';
+  // ★ iOS 앱 WebView 에는 Notification 이 없다. 그냥 읽으면 ReferenceError 로 화면이 안 뜬다.
+  const denied = forceDenied === true || (typeof Notification !== 'undefined' && Notification.permission === 'denied');
   const d = document.createElement('div');
   d.id = 'pushGate';
   d.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#1F4E5F;color:#fff;'
@@ -2320,6 +2339,7 @@ function showPushGate(forceDenied) {
           + 'border-radius:10px;padding:12px 22px;font-size:15px">닫기</button>'
         : '<button id="gateOn" style="background:#fff;color:#1F4E5F;border:0;border-radius:12px;'
           + 'padding:15px 30px;font-weight:800;font-size:17px">알림 켜기</button>'
+          + (noDevice ? '<div style="max-width:420px;opacity:.85;font-size:13px">계속 이 화면이 나오면 스토어에서 massa 를 최신 버전으로 업데이트해 주세요.</div>' : '')
           // ★ 빠져나갈 문을 반드시 둔다. 권한창이 안 뜨거나 구독이 실패하면
           //   닫을 수 없는 화면에 갇혀 앱을 아예 못 쓰게 된다.
           + '<button id="gateClose" style="background:transparent;color:#fff;border:0;'
@@ -2328,6 +2348,14 @@ function showPushGate(forceDenied) {
   const close = d.querySelector('#gateClose'); if (close) close.onclick = () => d.remove();
   const on = d.querySelector('#gateOn');
   if (on) on.onclick = async () => {
+    // 네이티브 앱은 OS 권한창으로 다시 등록하고, 잠시 뒤 서버에 기기가 생겼는지 다시 본다
+    const N = window.MassaNative;
+    if (N && N.registerPush && (N.platform === 'ios' || N.platform === 'android')) {
+      d.remove(); PUSH_TOKEN = null; PUSH_ASKED = false; PUSH_SAVED_FOR = null;
+      setupPush();
+      setTimeout(checkProviderDevice, 8000);
+      return;
+    }
     if (await Notification.requestPermission() !== 'granted') { d.remove(); showPushGate(); return; }
     if (await subscribeWebPush()) d.remove();
   };
@@ -4109,6 +4137,11 @@ const DICT = {
     'Notifications are blocked in your browser. Click the lock icon left of the address bar → Notifications → Allow.',
     '浏览器已屏蔽通知。点击地址栏左侧的锁形图标 → 通知 → 允许。',
     'ブラウザで通知がブロックされています。アドレスバー左の鍵アイコン → 通知 → 許可 に変更してください。'],
+  '계속 이 화면이 나오면 스토어에서 massa 를 최신 버전으로 업데이트해 주세요.': [
+    'Nếu màn hình này vẫn hiện, hãy cập nhật massa lên phiên bản mới nhất trên cửa hàng ứng dụng.',
+    'If this screen keeps appearing, update massa to the latest version in the app store.',
+    '如果此画面持续出现，请在应用商店将 massa 更新到最新版本。',
+    'この画面が続く場合は、ストアで massa を最新バージョンに更新してください。'],
   '닫기': ['Đóng', 'Close', '关闭', '閉じる'],
 
   // 베트남어를 앞세우고 25개 화면을 전부 훑었더니 여기 세 군데만 한국어로 남아 있었다.
