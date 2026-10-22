@@ -42,6 +42,7 @@
       });
     }).catch(function () {});
   }
-  function later() { if (window.requestIdleCallback) requestIdleCallback(start, { timeout: 2000 }); else setTimeout(start, 300); }
-  if (document.readyState === 'complete') later(); else addEventListener('load', later);
+  function later() { if (window.requestIdleCallback) requestIdleCallback(start, { timeout: 1500 }); else setTimeout(start, 300); }
+  // load 까지 기다리면 사진·글꼴이 많은 페이지에서 10초 넘게 걸렸다. 첫 화면이 그려진 직후 한가할 때 시작한다 (라이브러리는 비동기로 받는다)
+  later();
 })();
