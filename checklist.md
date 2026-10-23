@@ -4981,7 +4981,9 @@ COUNTRIES 가 5개뿐이다. 검색창은 **이미 있다** — 검색할 게 �
 - [x] codemagic.yaml 에 'AppDelegate 에 푸시 토큰 전달 넣기' 단계 → 검증: Capacitor 8.5.3 템플릿으로 단계 실행, 주입 1회·중복 없음
 - [x] index.html checkProviderDevice — 로그인 12초 뒤 provider_has_device 가 false 면 알림 화면 → 검증: 6가지 경우 모의 실행 통과, node --check 통과
 - [x] 커밋 49b1a32(앱), 15ca5b9(iOS·1.0.20), 웹 배포(app.massaviet.com) 확인
-- [ ] Codemagic 빌드 (iOS 1.0.20 · 안드로이드) — Codemagic 로그인 대기
-- [ ] iOS 빌드 로그에서 'AppDelegate 끝부분' 출력 확인, 스토어 제출
+- [x] Codemagic 빌드 — iOS #40(build 54, 6adaa92a8a524d15d6a637ae) · 안드 #15(1.1.108), 커밋 11e8d81
+- [x] iOS 빌드 로그 'AppDelegate 끝부분' 에 두 메서드 주입 확인, IPA 컴파일 성공(post-processing 실패는 TestFlight 베타 제출 단계로 예전과 같음)
+- [x] iOS 1.0.20 버전 생성(build 54)·whatsNew ko/vi·심사 제출 → WAITING_FOR_REVIEW (2026-10-23 09:58)
+- [x] 안드 1.1.108 출시 노트 ko/en/vi → 저장 → 검토를 위해 제출 → '검토 중인 변경사항' 확인
 - [ ] 1.0.20 설치 후 사장님 아이폰 로그인 → push_tokens 에 ios 토큰 생기는지 확인
 - [ ] 출시 뒤 기기 0대 마사지사 다시 집계
