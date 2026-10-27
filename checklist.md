@@ -4987,3 +4987,24 @@ COUNTRIES 가 5개뿐이다. 검색창은 **이미 있다** — 검색할 게 �
 - [x] 안드 1.1.108 출시 노트 ko/en/vi → 저장 → 검토를 위해 제출 → '검토 중인 변경사항' 확인
 - [ ] 1.0.20 설치 후 사장님 아이폰 로그인 → push_tokens 에 ios 토큰 생기는지 확인
 - [ ] 출시 뒤 기기 0대 마사지사 다시 집계
+
+
+## 2026-10-27 매장 지도 화면 (OpenStreetMap + Leaflet)
+계획 — 스파 안내의 `🗺 지도로…` 버튼이 여는 `map` 화면을 실제 지도로 바꾼다.
+지금 화면은 가짜 좌표판 위에 **마사지사(providers)와 매장을 함께** 찍는다. 마사지사 위치는 안전상 지도에 올리지 않기로 했으므로 매장(`stores`)만 남긴다.
+타일은 OpenStreetMap 표준 타일(키 없음), 라이브러리는 Leaflet 1.9.4 를 jsdelivr 에서 지도 화면을 열 때만 불러온다(앱이 supabase-js 를 jsdelivr 에서 받는 방식과 같다).
+
+- [x] M-1. `stores` 읽기 권한 확인 → 검증: `stores_public_read`(USING true) + anon SELECT 권한 → 앱이 이미 `select('*')` 로 읽는다
+- [x] M-2. 사진 컬럼 마이그레이션 `sql/stores_photo_url.sql` 작성 → 검증: massa-db 에서 BEGIN … ROLLBACK 으로만 시험, 실제 적용은 하지 않는다
+- [x] M-3. `map` 화면 — 반경 칩·범례·가짜 좌표판 제거, Leaflet 지도 + 매장 핀(둥근 사진, 없으면 업종 아이콘) → 검증: node --check(scripts/check_syntax.js)
+- [x] M-4. 핀을 누르면 사진·이름·지역 팝업 → 검증: Playwright 에서 핀 클릭, 팝업 '🏨 | 롯데호텔 하노이 | 📍 바딘'
+      `매장 상세` 버튼은 뺐다. 기존 `openStoreDtl` 이 원래부터 `avatarImg is not defined` 로 멈춘다(모듈 안 함수를 일반 스크립트에서 부름).
+      고쳐도 목업 `STAFF_POOL` 마사지사를 '소속'으로 보여 주므로, 사장님 결정 전까지 잇지 않는다.
+- [x] M-5. 버튼 문구와 새 문구 4개 언어 번역, 안 쓰게 된 반경 문구 번역 제거
+- [x] M-6. Playwright 390x844 로 화면 캡처 → `C:\Users\user\Claude\Projects\emoi-tmp\massa-map.png` 눈으로 확인
+- [x] M-7. 의미 단위 커밋 (push·배포·스토어 빌드는 하지 않는다)
+- 결과 — 핀 8개, 타일 정상, 출처 'Leaflet | © OpenStreetMap contributors' 표시, check_syntax 오류 0
+- [ ] 리드 — `sql/stores_photo_url.sql` 적용 (BEGIN…ROLLBACK 시험 통과)
+- [ ] 사장님 — 매장 8곳 실제 좌표 입력 (지금은 시드 격자라 실제 지도에서 엉뚱한 곳에 찍힌다). 그 전에는 배포하지 않는다
+- [ ] 사장님 — 매장 상세 화면을 고칠지(목업 마사지사 제거) 결정
+- [ ] iOS·안드로이드 앱은 index.html 을 빌드 때 넣으므로 새 스토어 빌드가 있어야 앱에 보인다
