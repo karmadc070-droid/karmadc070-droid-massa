@@ -5008,3 +5008,21 @@ COUNTRIES 가 5개뿐이다. 검색창은 **이미 있다** — 검색할 게 �
 - [ ] 사장님 — 매장 8곳 실제 좌표 입력 (지금은 시드 격자라 실제 지도에서 엉뚱한 곳에 찍힌다). 그 전에는 배포하지 않는다
 - [ ] 사장님 — 매장 상세 화면을 고칠지(목업 마사지사 제거) 결정
 - [ ] iOS·안드로이드 앱은 index.html 을 빌드 때 넣으므로 새 스토어 빌드가 있어야 앱에 보인다
+
+## 2026-10-27 마사지사 사진 핀 지도 (사장님 결정 — 아침의 '마사지사는 지도에 안 올린다'를 뒤집음)
+계획 — 지도에 매장 대신 마사지사를 **본인 프로필 사진의 둥근 핀**으로 찍는다. 위치는 마사지사가 직접 고른 '활동 기준 위치'이고, 소수 둘째 자리(약 1km)로 반올림한 값만 DB 에 남는다.
+사진 업로드는 이미 있다(신청·승인 후 '내 정보·서류 저장', 공개 버킷 provider-photos, 신분증은 비공개 kyc-docs). 새로 만들지 않는다.
+읽기도 이미 열려 있다(providers_public_read, 손님 목록이 select('*')). 그래서 새 RPC 없이 저장 시점에 반올림을 강제하는 트리거만 둔다.
+
+- [x] T-1. `sql/provider_area_latlng.sql` — providers.lat/lng 를 소수 둘째 자리로 반올림하는 BEFORE INSERT/UPDATE 트리거 → 검증: BEGIN … ROLLBACK, 마사지사 본인(authenticated) 저장 시 반올림·남의 행 0건·anon 0건
+- [x] T-2. 승인 안내 칸에 `📍 활동 기준 위치(대략)` 버튼 → Leaflet 시트(눌러서/끌어서 핀, 핀은 반올림 칸에 붙는다, 저장·지우기) → 검증: check_syntax, Playwright 캡처
+- [x] T-3. `openMap()` — 매장 핀을 걷어내고 CACHE.providers(출근 is_active + 승인) 중 좌표 있는 사람을 사진 핀으로. 같은 칸은 핀 하나+숫자, 누르면 작은 목록. 누르면 openProfile → 검증: Playwright(목업 데이터는 시험 스크립트 안에서만)
+- [x] T-4. 문구 4개 언어 번역, 안 쓰게 된 매장 핀 문구·CSS 정리
+- [x] T-5. 캡처 `emoi-tmp\massa-ther-picker.png`, `massa-ther-map.png` 눈으로 확인
+- [x] T-6. 의미 단위 커밋 (push·배포·DB 적용·스토어 빌드는 하지 않는다)
+- 결과 — SQL 51ca509(롤백 시험: 본인 21.028512345→21.03, 남의 행 0건, anon 0건, null 지우기 가능, 롤백 뒤 트리거·값 0), 앱 0b349c1
+- 결과 — Playwright: 핀 5개(같은 칸 3명 → 숫자 3), 매장 핀 0, 타일 정상, 출처 'Leaflet | © OpenStreetMap contributors', 목록 줄·한 명 핀 → provDtl, 오류 0, providers 쓰기 요청 0
+  시험 좌표는 스크립트(emoi-tmp\shot-massa-ther.js)가 응답에 끼워 넣은 것이고 DB 에는 쓰지 않았다. 위치 고르기는 Jin 행을 읽기만 하고 저장은 누르지 않았다
+- [ ] 리드 — `sql/provider_area_latlng.sql` 적용 (앱보다 먼저. 옛 앱은 lat/lng 를 쓰지 않아 영향 없다)
+- [ ] 리드 — 웹 배포(scripts/vps-deploy-app.sh) 후 마사지사에게 위치 등록 안내. 스토어 앱은 새 빌드가 나가야 보인다
+- [ ] 사장님 — 매장 8곳 실제 좌표가 들어오면 매장을 지도에 다시 올릴지 결정
