@@ -5026,3 +5026,31 @@ COUNTRIES 가 5개뿐이다. 검색창은 **이미 있다** — 검색할 게 �
 - [ ] 리드 — `sql/provider_area_latlng.sql` 적용 (앱보다 먼저. 옛 앱은 lat/lng 를 쓰지 않아 영향 없다)
 - [ ] 리드 — 웹 배포(scripts/vps-deploy-app.sh) 후 마사지사에게 위치 등록 안내. 스토어 앱은 새 빌드가 나가야 보인다
 - [ ] 사장님 — 매장 8곳 실제 좌표가 들어오면 매장을 지도에 다시 올릴지 결정
+
+## 2026-10-27 마사지사 실시간 위치 (배민식 '오는 중') — 사진 핀 지도 철회
+사장님 결정 — (1) 예약 전에는 마사지사 위치를 어떤 형태로도 보여 주지 않는다. 오늘 넣은 사진 핀 지도·활동 기준 위치 고르기를 걷어낸다.
+(2) 마사지사가 수락한 뒤 `출발` 을 누르면, 앱을 켜 둔 동안(포그라운드)만 약 10초마다 위치를 보낸다. 그 예약의 손님·담당 마사지사·관리자만 도착까지 지도에서 본다. 백그라운드 위치는 쓰지 않는다.
+계획 — 위치는 새 표 `booking_locations`(예약당 한 줄)에만 둔다. providers.last_lat/last_lng 는 providers_public_read(USING true)로 누구나 읽으므로 쓰지 않는다.
+상태 전환(confirmed→on_the_way→in_progress)은 기존 가드(guard_booking_write: 담당 마사지사는 status 변경 가능)와 정책(bookings_admin_update)으로 이미 된다 → 새 RPC 없이 update 에 `.eq('status', 이전 상태)` 를 붙인다.
+손님 알림은 기존 notify_booking_event 가 on_the_way 에서 'booking_on_the_way'(테라피스트가 출발했습니다)를 이미 만든다 → 새 알림 코드 없음.
+
+- [x] L-1. `sql/drop_provider_area_latlng.sql` — 이미 적용된 반올림 트리거·함수 제거 (적용은 리드)
+- [x] L-2. `sql/booking_locations.sql` — 표·RLS(쓰기: 담당 마사지사 + on_the_way 일 때만 / 읽기: 손님·담당·관리자)·updated_at 서버 시각·on_the_way 를 벗어나면 행 삭제 트리거·supabase_realtime 추가 → 검증: massa-db BEGIN … ROLLBACK
+      시험 — 담당 쓰기 OK, 다른 마사지사 거부, 손님 읽기 OK, 다른 손님·anon 0건, on_the_way 아닐 때 쓰기 거부, 도착(in_progress) 시 행 삭제
+- [x] L-3. index.html — 지도 버튼·openMap·provThumb 다핀·openAreaPicker·위치 버튼·관련 CSS·번역 제거 (map 화면·loadLeaflet 은 추적 화면으로 다시 쓴다)
+- [x] L-4. 마사지사 받은 신청 — confirmed 에 `출발`, on_the_way 에 `도착`. 출발 시 watchPosition + 10초에 한 번 upsert, '위치 공유 중' 표시, 권한 거부 안내. 새로고침 뒤 받은 신청을 열면 on_the_way 건은 공유를 다시 시작
+- [x] L-5. 손님 내 예약 — on_the_way 에 `오는 중 보기` → 지도(마사지사 사진 핀 + 예약 좌표가 있으면 장소 핀), realtime 구독 + 15초 폴링, 마지막 갱신 시각, 닫으면 구독 해제
+- [x] L-6. 새 문구 4개 언어 번역
+- [x] L-7. 검증 — scripts/check_syntax.js, Playwright(응답은 시험 스크립트 안에서만 가짜) 캡처 눈으로 확인. 실제 DB 에 시험 데이터 쓰지 않는다
+- [x] L-8. 의미 단위 커밋 (db / app / docs). push·배포·DB 적용·스토어 빌드는 하지 않는다
+- 결과 — SQL a71d691·ed6e30b(BEGIN…ROLLBACK 10개 통과: confirmed 쓰기 거부, 담당 출발·upsert·서버 시각, delete 없음, 손님 출발 알림 1건, 다른 마사지사 거부·0건, 손님 1건, 다른 손님 0건, anon 권한 없음, 관리자 1건, 도착 시 줄 삭제·이후 쓰기 거부), 앱 efb1ee6
+- 결과 — Playwright(emoi-tmp\shot-massa-track.js): 출발 PATCH on_the_way·첫 위치 즉시 1건·10초 뒤 새 위치 1건, 새로고침 후 재개 1건, 도착 PATCH in_progress 뒤 전송 0건, 권한 거부 토스트·'위치 공유 꺼짐'·전송 0건,
+  손님 시트 핀 2개(사진 1·장소 1)·타일 9·OSM 출처·마지막 갱신 시각, 도착 시 '마사지사가 도착했습니다.'·사진 핀 제거, 닫은 뒤 폴링 0건, 페이지 오류 0(Push API 시크릿 모드 경고만)
+  캡처 emoi-tmp\massa-track-1~7.png. 응답은 스크립트 안에서만 가짜이고 DB 에는 쓰지 않았다
+- [ ] 리드 — 적용 순서 ① sql/drop_provider_area_latlng.sql ② sql/booking_locations.sql ③ sql/provider_private.sql → 웹 배포 → 스토어 빌드
+- [ ] 안드로이드 — 지금 안드로이드 앱은 Capacitor 네이티브(codemagic `cap add android`)인데 매니페스트에 ACCESS_FINE/COARSE_LOCATION 이 없다(@capacitor/geolocation 8.2.2 는 권한을 넣어 주지 않고 앱이 넣으라고 한다). 이대로면 안드로이드 앱 마사지사는 '출발' 해도 위치를 못 보낸다(권한 토스트). codemagic 매니페스트 패치에 두 권한을 추가하고 새 빌드가 필요하다(이번에 손대지 않음)### 추가 — providers 공개 범위 줄이기 (사장님 승인 추가 작업)
+- [x] P-1. `sql/provider_private.sql` — 위치(lat·lng·last_lat·last_lng·last_seen_at)·연락처(zalo·kakao)·원본 사진(photo_url_orig·photo_urls_orig)을 본인·관리자만 읽는 `provider_private` 로 옮김. 이후 providers 에 들어오는 값도 트리거(trg_provider_zz_private)가 옮기고 providers 쪽은 null. 공개 읽기(providers_public_read)는 승인된 행만
+      → 검증: BEGIN … ROLLBACK (`sql/test_provider_private.sql`) — anon select * OK·미승인 0행·provider_private 거부 / 손님 미승인 0·비공개 0 / 본인 위치 쓰기 → providers null·비공개 본인 행 읽기·직접 쓰기 거부 / 다른 마사지사 0 / 관리자 미승인·비공개 전체 / 신청 insert(deferred FK) OK
+- [ ] 리드 — 적용 순서: ① drop_provider_area_latlng.sql ② booking_locations.sql ③ provider_private.sql → 그 뒤 웹 배포 → 스토어 빌드
+- [ ] 후속 — 남은 내부 칸(reviewed_by·reject_reason·reject_count·fee_tier*·deposit_code·founding_no·profile_id·owner_id 등)은 아직 공개. 옛 앱이 모두 내려간 뒤 손님 앱 select 를 칸 목록으로 바꾸고 칸 권한으로 닫는다
+- [ ] 후속 — 관리자 화면에서 zalo·kakao·파트너 위치를 보려면 provider_private 를 읽게 바꿔야 한다(지금 값 0건)

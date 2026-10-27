@@ -1891,3 +1891,29 @@ exception when others then
 - 한 명 핀은 바로 프로필, 여러 명 칸만 목록 팝업. 지도에는 이름·사진만, 전화·주소·정확한 좌표는 없다.
 - 매장(stores)은 지도에서 빠졌다. 실제 좌표가 들어오면 openMap 에 다시 올린다(이전 구현은 f9568ee 참고). CACHE.stores 와 다른 매장 화면은 그대로다.
 - 승인 안내 칸 자체 문구는 원래 한국어만이다(이번에 고치지 않았다). 새 버튼·시트 문구는 4개 언어 번역을 넣었다.
+
+## 2026-10-27 마사지사 실시간 위치 — 결정과 근거
+- 사장님 결정으로 오늘 오후의 '마사지사 사진 핀 지도'를 철회한다. 예약 전에는 대략 위치도 보이지 않는다. 대신 배민처럼 '출발 → 도착' 사이에만, 그 예약 당사자에게만 위치를 보인다.
+- 저장 위치 — 새 표 `booking_locations`(booking_id 기본키, 예약당 최신 한 줄). 기록(이력)은 남기지 않는다. 필요한 것은 '지금 어디'뿐이고, 이력은 더 큰 개인정보다.
+  providers.lat/lng·last_lat/last_lng 는 providers_public_read(USING true)라 누구나 읽는다. 실시간 좌표를 거기 두면 바로 샌다.
+- 쓰기 — 담당 마사지사(providers.profile_id 또는 owner_id = 본인, 가드와 같은 기준)이고 예약이 on_the_way 일 때만 insert/update. delete 권한은 주지 않는다. updated_at 은 트리거가 서버 시각으로 덮는다.
+- 지우기 — bookings.status 가 on_the_way 를 벗어나면(도착·취소·완료 무엇이든) 트리거가 그 줄을 지운다. 도착 뒤에는 손님도 위치를 못 본다.
+- 읽기 — 그 예약의 손님, 담당 마사지사, 관리자(is_admin()). 다른 손님·anon 은 0건.
+- 실시간 — supabase_realtime 발행에 표를 추가한다. Realtime 은 구독자의 RLS 로 거른다. 연결이 끊겨도 보이게 15초 폴링을 같이 둔다.
+- 상태 전환 — 가드(guard_booking_write)가 담당 마사지사의 status 변경을 이미 허용하고, 정책 bookings_admin_update 도 담당 마사지사를 허용한다. 새 RPC 를 만들지 않고 앱이 `.eq('status', 이전 상태)` 로 조건부 update 한다(두 번 눌러도 한 번만 바뀐다).
+  가드는 전환 순서를 검사하지 않는다(예: requested → on_the_way 도 서버는 막지 않는다). 원래 그랬고 이번 범위 밖이다.
+- 알림 — notify_booking_event 가 on_the_way 로 바뀌면 손님에게 'booking_on_the_way' 알림(테라피스트가 출발했습니다)을 이미 넣고, trg_kick_send_push 가 푸시를 보낸다. 앱의 알림 누르기도 이미 내 예약으로 간다. 새 코드 없음.
+- 포그라운드만 — 웹 watchPosition 은 화면이 꺼지거나 앱이 뒤로 가면 멈춘다. 사장님 결정대로 백그라운드 위치는 쓰지 않는다. 보내기는 10초에 한 번으로 묶는다(위치가 더 자주 와도).
+- 11번 규칙(서버보다 앱 먼저?) — 새 표는 옛 앱이 모르는 것이라 먼저 만들어도 옛 앱에 영향이 없다. 반대로 새 앱이 표보다 먼저 나가면 '출발'은 되지만 위치 저장이 실패한다. 그래서 SQL 먼저 → 웹 배포 → 스토어 빌드.
+  반올림 트리거 제거도 옛 앱에 영향이 없다(옛 앱은 providers.lat/lng 를 쓰지 않는다. 19명 전원 null).
+- providers 노출 (추가 작업) — 칸 권한(column grant)은 쓰지 않았다. 스토어의 옛 앱이 providers 를 select('*') 로 읽고, 칸 하나라도 막으면 '*' 전체가 permission denied 가 되어 목록이 죽는다(sql-hide-provider-phone.sql 과 같은 판단).
+  view 로 바꿔치기(providers 를 view 로, 원본은 다른 이름)는 안 했다. 쓰기(INSTEAD OF)·임베딩·다른 함수·정책이 모두 providers 를 이름으로 부르고 있어 바뀌는 범위가 너무 크다.
+  대신 phone 때 쓴 방식을 넓혔다 — 칸은 남기고 값만 `provider_private`(본인·관리자 읽기, 직접 쓰기 없음)로 옮기고, 이후 들어오는 값도 트리거가 옮긴 뒤 providers 에는 null 로 남긴다. 옛 앱의 select('*')·insert·update 가 그대로 돈다.
+  옮긴 칸 — 위치(lat·lng·last_lat·last_lng·last_seen_at), 연락처(zalo·kakao), 보정 전 원본 사진(photo_url_orig·photo_urls_orig). 지금 값이 있는 것은 원본 사진 2명뿐이다.
+  손님 앱은 providers.lat 가 비면 활동 프엉 중심을 쓴다(19명 전원 이미 null) — 동작이 바뀌지 않는다. zalo·kakao 는 관리자에게만 보이던 칸이다(값 0건).
+  행 — 공개 읽기를 승인된 행만으로 줄였다. 신청 중·반려된 사람은 본인·관리자만 본다(providers_owner_read). 지금은 19명 전원 승인이라 목록 변화 없음.
+  남긴 것(트레이드오프) — reviewed_by·reject_reason·reject_count·penalty_floor·fee_tier*·deposit_code·founding_no·sort_priority·profile_id·owner_id 같은 내부 칸은 여전히 누구나 읽는다. 위치·연락처가 아닌 운영 칸이고, 막으려면 칸 권한이 필요해 옛 앱이 깨진다. 손님 앱이 penalty_level·suspended_until 은 실제로 쓴다(목록 정렬·정지 숨김).
+  알려진 부작용 — admin.html 의 파트너 위치 패널(last_lat 표시)은 '미설정'으로 보이고, 관리자 화면의 zalo·kakao 줄도 비게 된다. 둘 다 지금 값이 없다.
+- 안드로이드 확인 — 스토어의 안드로이드 앱은 TWA 가 아니라 Capacitor 네이티브다(codemagic android-play: `npx cap add android`, native.js 가 navigator.geolocation 을 플러그인으로 바꿈). 그런데 매니페스트 패치는 massa:// 스킴만 넣고 위치 권한은 넣지 않는다. @capacitor/geolocation 8.2.2 의 자체 매니페스트는 비어 있고 README 가 ACCESS_COARSE_LOCATION·ACCESS_FINE_LOCATION 을 앱에 넣으라고 한다. 그래서 안드로이드 앱에서는 위치 요청이 실패할 것이고, 앱은 '위치 권한' 토스트를 띄우고 공유를 끈다. iOS 는 NSLocationWhenInUseUsageDescription 이 있어 포그라운드에서 동작한다. 웹(app.massaviet.com)은 브라우저 권한으로 동작한다.
+- 화면 — 손님 지도는 별도 화면이 아니라 시트로 띄운다. 닫기 버튼에서 구독·타이머·지도를 확실히 정리하려는 것이다. 시트는 알림 켜기 띠(z-index 9999)보다 위(10000)에 둔다 — 띠가 지도 출처와 갱신 시각을 가렸다.
+- 갱신 시각은 '몇 초 전' 대신 시:분:초로 보인다. 번역 문구 조합(숫자+단위) 없이 4개 언어에서 같은 모양이 나온다. 마사지사가 멈춰 있어 새 위치가 없으면 보내지 않으므로, 시각이 오래되면 실제로 위치가 오래된 것이다.
