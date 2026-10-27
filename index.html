@@ -237,15 +237,8 @@
   .pf-rev-comment { font-size: 14px; margin: 8px 0 6px; }
   .pf-trans { font-size: 12px; color: var(--muted); cursor: pointer; }
   .pf-trans b { color: var(--text); text-decoration: underline; }
-  .map-cta { width: 100%; margin-top: 12px; background: #EAF1EC; color: #1F4E5F; border: 1.5px solid #CFE6D8; border-radius: 14px; padding: 14px; font-size: 14px; font-weight: bold; cursor: pointer; }
-  #mapArea { position: relative; z-index: 0; border: 1.5px solid var(--line); border-radius: 16px; height: 520px; overflow: hidden; background: #EAF1EC; }
-  .prov-wrap { position: relative; width: 44px; height: 44px; }
   .prov-pin { width: 44px; height: 44px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.35); background: #EAF1EC center/cover no-repeat; box-sizing: border-box; }
-  .prov-cnt { position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: #1F4E5F; color: #fff; font-size: 12px; font-weight: bold; line-height: 20px; text-align: center; border: 2px solid #fff; box-sizing: border-box; }
-  .prov-list { min-width: 160px; max-height: 220px; overflow-y: auto; }
-  .prov-row { display: flex; align-items: center; gap: 8px; padding: 5px 2px; cursor: pointer; }
-  .prov-ph { width: 36px; height: 36px; flex: none; border-radius: 50%; background: #EAF1EC center/cover no-repeat; }
-  #areaMap { height: 320px; border-radius: 12px; overflow: hidden; margin: 10px 0; }
+  #trackMap { position: relative; z-index: 0; height: 55vh; border-radius: 12px; overflow: hidden; margin: 10px 0; background: #EAF1EC; }
   .pf-detail { display: grid; grid-template-columns: 1fr 1fr; gap: 7px 16px; background: var(--card); border: 1.5px solid var(--line); border-radius: 14px; padding: 12px 14px; margin-bottom: 12px; }
   .pf-detail-row { display: flex; justify-content: space-between; font-size: 13px; }
   .pf-detail-row span:last-child { color: #E8A33D; font-weight: bold; }
@@ -713,7 +706,6 @@
 
   <!-- 스파 안내 — 프로모션 + 카테고리 그리드 -->
   <div class="screen" id="spa" data-title="스파 안내">
-    <button class="map-cta" style="margin-bottom:12px" onclick="openMap()">🗺 지도로 마사지사 찾기</button>
     <div class="pf-sec" style="margin-top:4px">✨ AI 맞춤 추천</div>
     <div id="aiRecos"><div class="hint">추천을 불러오는 중…</div></div>
     <div class="promo-scroll">
@@ -998,10 +990,6 @@
   <div class="screen" id="notifications" data-title="알림">
     <div id="notiList"></div>
   </div>
-  <div class="screen" id="map" data-title="지도 검색">
-    <div id="mapArea"></div>
-    <div class="hint" id="mapHint" style="margin-top:8px"></div>
-  </div>
   <div class="screen" id="favorites" data-title="즐겨찾기">
     <div id="favList"></div>
   </div>
@@ -1080,7 +1068,7 @@ const MAIN_FLOW = ['home', 'thList', 'menu', 'time', 'loc', 'confirm', 'done'];
 const NAMES = { home: '홈', thList: '마사지 홈서비스', therapy: '홈 뷰티', spa: '스파 안내',
                 stores: '매장 리스트', storeDtl: '매장 상세', provDtl: '프로필', menu: '코스', time: '시간', loc: '위치', confirm: '확인(후불)', done: '완료',
                 myBookings: '내 신청·예약', myDash: '내 이용 현황', applyForm: '제공자 등록',
-                location: '지역 선택', account: '계정 정보', profileInfo: '개인 정보', notifications: '알림', map: '지도 검색', favorites: '즐겨찾기', coupons: '쿠폰함', chat: '채팅' };
+                location: '지역 선택', account: '계정 정보', profileInfo: '개인 정보', notifications: '알림', favorites: '즐겨찾기', coupons: '쿠폰함', chat: '채팅' };
 let stack = ['home'];
 
 const flowEl = document.getElementById('flow');
@@ -2834,7 +2822,7 @@ async function loadMyBookings() {
   const empty = document.getElementById('myBookingsEmpty');
   wrap.innerHTML = '<div class="hint">불러오는 중…</div>';
   const { data, error } = await sb.from('bookings')
-    .select('*, services(name), providers(display_name)')
+    .select('*, services(name), providers(display_name, photo_url, photo_urls)')
     .eq('customer_id', SESSION.user.id).order('created_at', { ascending: false });
   if (error) { wrap.innerHTML = `<div class="notice">불러오기 실패: ${error.message}</div>`; return; }
   // '받은 신청' 칸을 보고 있으면 손님용 빈 안내를 띄우지 않는다 — 둘이 겹쳐 보인다.
@@ -2868,6 +2856,7 @@ async function loadMyBookings() {
       <div class="d">${b.providers?.display_name || '미배정'} · ${new Date(b.scheduled_at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
       <div class="d">${b.hotel_name || ''} ${b.room_number || ''} · ${b.amount_vnd.toLocaleString()}₫${payTxt}</div>
       <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+        ${b.status === 'on_the_way' && b.provider_id ? `<button class="chip sel" onclick="openTrack('${b.id}')">🛵 ${T('오는 중 보기')}</button>` : ''}
         ${canChat ? `<button class="chip sel" onclick="openChat('${b.provider_id}','${(b.providers?.display_name || '테라피스트').replace(/'/g, "\\'")}')">💬 채팅</button>` : ''}
         ${waitChat ? `<span class="hint" style="align-self:center"><span>${T('테라피스트가 먼저 연락드립니다.')}</span></span>` : ''}
         ${canPay ? `<button class="chip sel" onclick="openPayment('${b.id}',${b.amount_vnd})">결제하기</button>` : ''}
@@ -3693,8 +3682,7 @@ async function loadApplyStatus() {
     // 예전에는 승인되면 이 문구만 뜨고 신분증·계좌를 넣을 곳이 아예 없었다.
     return '<div class="notice" style="border-color:#3E7C4F;color:#1E6B45">✅ <b>' + p.display_name + '</b> — 승인 완료. 고객 목록에 노출됩니다.'
       + '<div style="margin-top:8px;color:var(--muted);font-size:12.5px">신분증·계좌가 비어 있으면 정산을 받을 수 없습니다. 아래 내용을 채우고 저장해 주세요.</div>'
-      + '<div style="margin-top:8px"><button class="chip sel" onclick="updateApproved(\'' + p.id + '\')">내 정보·서류 저장</button></div>'
-      + '<div style="margin-top:8px"><button class="chip" onclick="openAreaPicker(\'' + p.id + '\')">' + rEsc(T('📍 활동 기준 위치(대략)')) + '</button></div></div>';
+      + '<div style="margin-top:8px"><button class="chip sel" onclick="updateApproved(\'' + p.id + '\')">내 정보·서류 저장</button></div></div>';
   }).join('');
 }
 
@@ -4086,7 +4074,6 @@ const TITLE_I18N = {
   '국가별 통계': ['Thống kê theo quốc gia','Country Stats','国家统计','国別統計'],
   '계정 정보': ['Thông tin tài khoản', 'Account', '账户信息', 'アカウント情報'],
   '제공자 등록 신청': ['Đăng ký làm nhà cung cấp', 'Provider application', '服务者注册申请', '提供者登録申請'],
-  '지도 검색': ['Tìm trên bản đồ', 'Map search', '地图搜索', '地図検索'],
   '지역 선택': ['Chọn khu vực', 'Select area', '选择地区', 'エリア選択'],
   '채팅': ['Trò chuyện', 'Chat', '聊天', 'チャット'],
 };
@@ -4293,14 +4280,20 @@ const DICT = {
   '🛡 인증 마크는 신분증과 자격 서류 확인이 끝난 마사지사에게만 붙습니다. 확인 전인 분에게는 붙지 않습니다.': ['🛡 Dấu xác thực chỉ hiển thị với chuyên viên đã được kiểm tra giấy tờ tùy thân và chứng chỉ. Người chưa kiểm tra thì không có dấu này.', '🛡 The verified badge is shown only on therapists whose ID and credentials we have checked. Therapists not yet checked carry no badge.', '🛡 认证标识仅显示于已核验身份证件与资格文件的按摩师。未核验者不显示该标识。', '🛡 認証マークは身分証と資格書類の確認が済んだセラピストにのみ表示されます。未確認の方には付きません。'],
   '🏨 호텔별 외부 방문자 정책이 다릅니다. 출입이 제한되는 호텔은 검색 단계에서 미리 안내됩니다.': ['🏨 Chính sách khách bên ngoài khác nhau tùy khách sạn. Những nơi hạn chế ra vào sẽ được báo trước khi bạn tìm kiếm.', '🏨 Visitor policies differ by hotel. Hotels with entry restrictions are flagged during search.', '🏨 各酒店对外来访客的规定不同。出入受限的酒店会在搜索时提前提示。', '🏨 ホテルごとに外部訪問者の規定が異なります。入館が制限されるホテルは検索時に事前にご案内します。'],
   '💳 결제는 서비스가 끝난 뒤 진행됩니다. 단, 예약 시간 1시간 전 이후 취소·노쇼 시 다음 예약이 제한될 수 있습니다.': ['💳 Thanh toán sau khi dịch vụ kết thúc. Tuy nhiên, hủy trong vòng 1 giờ trước giờ hẹn hoặc không đến có thể khiến lần đặt sau bị hạn chế.', '💳 Payment is taken after the service. However, cancelling within 1 hour of the appointment or not showing up may restrict future bookings.', '💳 服务结束后付款。但预约前1小时内取消或爽约，可能会限制下次预约。', '💳 お支払いはサービス終了後です。ただし予約1時間前以降のキャンセル・無断不参加は次回予約が制限される場合があります。'],
-  '🗺 지도로 마사지사 찾기': ['🗺 Tìm chuyên viên trên bản đồ', '🗺 Find therapists on the map', '🗺 在地图上找按摩师', '🗺 地図でセラピストを探す'],
-  '📍 약 1km 범위의 대략적인 활동 위치입니다. 사진을 누르면 프로필이 열립니다.': ['📍 Đây là khu vực hoạt động gần đúng (khoảng 1km). Chạm vào ảnh để xem hồ sơ.', '📍 These are approximate areas (about 1 km). Tap a photo to open the profile.', '📍 显示的是大致活动区域（约1公里）。点击照片查看资料。', '📍 おおよその活動エリア（約1km）です。写真をタップするとプロフィールが開きます。'],
-  '아직 지도에 위치를 등록한 마사지사가 없습니다.': ['Chưa có chuyên viên nào đăng ký vị trí trên bản đồ.', 'No therapist has set an area on the map yet.', '还没有按摩师在地图上登记位置。', 'まだ地図に位置を登録したセラピストはいません。'],
-  '📍 활동 기준 위치(대략)': ['📍 Khu vực hoạt động (gần đúng)', '📍 Base area (approximate)', '📍 活动基准位置（大致）', '📍 活動の拠点エリア（おおよそ）'],
-  '지도를 누르거나 핀을 끌어 평소 활동하는 곳을 고르세요. 손님에게는 약 1km 범위의 대략적인 위치만 보이고, 주소·정확한 위치는 보이지 않습니다.': ['Chạm vào bản đồ hoặc kéo ghim để chọn nơi bạn thường hoạt động. Khách chỉ thấy khu vực gần đúng khoảng 1km, không thấy địa chỉ hay vị trí chính xác.', 'Tap the map or drag the pin to where you usually work. Customers only see an approximate area of about 1 km, never your address or exact location.', '点击地图或拖动图钉，选择您平时活动的地方。顾客只能看到约1公里范围的大致位置，看不到地址或准确位置。', '地図をタップするかピンをドラッグして、普段活動している場所を選んでください。お客様には約1km範囲のおおよその位置だけが表示され、住所や正確な位置は表示されません。'],
-  '위치 지우기': ['Xóa vị trí', 'Remove area', '清除位置', '位置を削除'],
-  '저장했습니다.': ['Đã lưu.', 'Saved.', '已保存。', '保存しました。'],
-  '저장 실패': ['Lưu thất bại', 'Save failed', '保存失败', '保存に失敗しました'],
+  '출발': ['Xuất phát', 'Depart', '出发', '出発'],
+  '도착': ['Đã đến', 'Arrived', '已到达', '到着'],
+  '출발할까요? 도착할 때까지 이 화면을 켜 두면 손님이 지도에서 오는 길을 봅니다.': ['Bắt đầu di chuyển? Hãy giữ màn hình này mở cho đến khi tới nơi để khách theo dõi bạn trên bản đồ.', 'Head out now? Keep this screen open until you arrive so the customer can follow you on the map.', '现在出发吗？到达前请保持此页面打开，顾客可以在地图上看到您的行程。', '出発しますか？到着まで この画面を開いたままにすると、お客様が地図で向かう様子を確認できます。'],
+  '📡 위치 공유 중': ['📡 Đang chia sẻ vị trí', '📡 Sharing location', '📡 正在共享位置', '📡 位置を共有中'],
+  '위치 공유 꺼짐': ['Chưa chia sẻ vị trí', 'Location sharing off', '未共享位置', '位置共有オフ'],
+  '이 기기에서는 위치를 쓸 수 없습니다.': ['Thiết bị này không dùng được vị trí.', 'Location is not available on this device.', '此设备无法使用定位。', 'この端末では位置情報を使えません。'],
+  '위치 권한이 꺼져 있어 손님에게 위치를 보낼 수 없습니다. 설정에서 위치를 허용해 주세요.': ['Quyền vị trí đang tắt nên không gửi được vị trí cho khách. Vui lòng cho phép vị trí trong cài đặt.', 'Location permission is off, so your location cannot be sent to the customer. Please allow location in settings.', '定位权限已关闭，无法向顾客发送位置。请在设置中允许定位。', '位置情報の権限がオフのため、お客様に位置を送れません。設定で位置情報を許可してください。'],
+  '오는 중 보기': ['Xem chuyên viên đang đến', 'Track arrival', '查看行程', '向かう様子を見る'],
+  '마사지사가 오는 중입니다': ['Chuyên viên đang đến', 'Your therapist is on the way', '按摩师正在赶来', 'セラピストが向かっています'],
+  '예약 장소': ['Địa điểm đặt lịch', 'Booking location', '预约地点', '予約場所'],
+  '마지막 갱신': ['Cập nhật lần cuối', 'Last updated', '最后更新', '最終更新'],
+  '마사지사가 도착했습니다.': ['Chuyên viên đã đến.', 'Your therapist has arrived.', '按摩师已到达。', 'セラピストが到着しました。'],
+  '위치 공유가 끝났습니다.': ['Đã kết thúc chia sẻ vị trí.', 'Location sharing has ended.', '位置共享已结束。', '位置共有は終了しました。'],
+  '아직 위치가 오지 않았습니다. 마사지사 앱이 켜져 있으면 곧 보입니다.': ['Chưa nhận được vị trí. Vị trí sẽ hiện ngay khi chuyên viên mở ứng dụng.', 'No location yet. It will appear shortly while the therapist has the app open.', '尚未收到位置。按摩师打开应用后很快就会显示。', 'まだ位置が届いていません。セラピストがアプリを開いていれば、まもなく表示されます。'],
   '지도를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.': ['Không tải được bản đồ. Vui lòng kiểm tra kết nối Internet.', 'Could not load the map. Please check your internet connection.', '无法加载地图，请检查网络连接。', '地図を読み込めませんでした。インターネット接続を確認してください。'],
   '✓ 외부 방문자 등록 필요 호텔 — 프론트에 방문자 등록 후 입장 가능합니다.': ['✓ Khách sạn yêu cầu đăng ký khách — cần đăng ký tại lễ tân mới vào được.', '✓ This hotel requires visitor registration — entry after registering at the front desk.', '✓ 需登记访客的酒店 — 在前台登记后方可进入。', '✓ 外部訪問者の登録が必要なホテル — フロントで登録後に入館できます。'],
   '🆘 서비스 중 문제가 생기면 앱 내': ['🆘 Nếu có sự cố trong lúc dịch vụ, hãy dùng trong ứng dụng', '🆘 If something goes wrong during the service, use the in-app', '🆘 服务过程中出现问题时，请使用应用内的', '🆘 サービス中に問題が起きたらアプリ内の'],
@@ -5383,7 +5376,7 @@ async function loadIncoming() {
     .order('created_at', { ascending: false }).limit(30);
   if (error) { wrap.innerHTML = '<div class="notice">' + rEsc(error.message) + '</div>'; return; }
   const list = data || [];
-  if (!list.length) { wrap.innerHTML = dutyHtml + '<div class="notice">' + rEsc(T('아직 받은 신청이 없습니다.')) + '</div>'; return; }
+  if (!list.length) { stopSharing(); wrap.innerHTML = dutyHtml + '<div class="notice">' + rEsc(T('아직 받은 신청이 없습니다.')) + '</div>'; return; }
   const when = iso => { const d = new Date(iso); const p2 = n => String(n).padStart(2, '0');
     return p2(d.getMonth() + 1) + '/' + p2(d.getDate()) + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes()); };
   const STAT = { requested: '수락 대기', confirmed: '수락함', on_the_way: '이동 중', in_progress: '진행 중' };
@@ -5407,6 +5400,12 @@ async function loadIncoming() {
     const acts = b.status === 'requested'
       ? '<button class="chip sel" onclick="acceptIncoming(\'' + b.id + '\')">' + rEsc(T('수락')) + '</button>'
         + '<button class="chip" onclick="rejectIncoming(\'' + b.id + '\')">' + rEsc(T('거절')) + '</button>'
+      // 수락한 뒤 — 출발하면 손님이 지도에서 오는 길을 본다(앱을 켜 둔 동안만). 도착하면 공유가 끝난다
+      : b.status === 'confirmed'
+        ? '<button class="chip sel" onclick="departIncoming(\'' + b.id + '\')">🚗 ' + rEsc(T('출발')) + '</button>'
+      : b.status === 'on_the_way'
+        ? '<button class="chip sel" onclick="arriveIncoming(\'' + b.id + '\')">📍 ' + rEsc(T('도착')) + '</button>'
+          + '<span data-share="' + b.id + '" style="align-self:center;font-size:12.5px;font-weight:700"></span>'
       : '';
     return '<div class="tcard" style="display:block;padding:14px">'
       + '<div style="display:flex;justify-content:space-between;align-items:center">'
@@ -5423,6 +5422,9 @@ async function loadIncoming() {
       + '<button class="chip" onclick="openChatAsProvider(\'' + b.id + '\',\'' + b.customer_id + '\',\'' + b.provider_id + '\')">💬 '
       + rEsc(T('채팅')) + '</button></div></div>';
   }).join('');
+  // 새로고침·재실행 뒤 받은 신청을 열면, 이동 중인 예약의 위치 공유를 다시 켠다. 없으면 끈다
+  const otw = list.find(b => b.status === 'on_the_way');
+  if (otw) startSharing(otw.id); else stopSharing();
 }
 window.loadIncoming = loadIncoming;
 
@@ -5692,10 +5694,10 @@ window.openBot = function () {
   ov.onclick = (e) => { if (e.target === ov) ov.style.display = 'none'; };
 };
 
-// 지도 검색 — 마사지사를 본인 프로필 사진 핀으로 OpenStreetMap 위에 찍는다 (대략 위치, 약 1km. 2026-10-27 사장님 결정).
-// Leaflet 은 지도 화면을 처음 열 때만 불러온다 (첫 화면 로딩을 늘리지 않으려고).
+// Leaflet 은 지도를 처음 열 때만 불러온다 (첫 화면 로딩을 늘리지 않으려고). 지금은 손님의 '오는 중 보기' 에만 쓴다.
+// 2026-10-27 사장님 결정 — 예약 전에는 마사지사 위치(대략 위치 포함)를 어디에도 보이지 않는다. 사진 핀 지도는 걷어냈다.
 const LEAFLET = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/';
-let leafletP = null, mapObj = null, pinLayer = null;
+let leafletP = null;
 function loadLeaflet() {
   if (!leafletP) leafletP = new Promise((ok, no) => {
     const css = document.createElement('link');
@@ -5710,100 +5712,143 @@ function loadLeaflet() {
   });
   return leafletP;
 }
-// 마사지사 프로필 사진을 둥근 핀으로
-function provThumb(p, cls) {
-  return '<div class="' + cls + '" style="background-image:url(&quot;' + rEsc(encodeURI(avatarFor(p))) + '&quot;)"></div>';
+// ── 출발~도착 실시간 위치 (2026-10-27 사장님 결정, 배민식) ─────────────
+// 마사지사가 '출발'을 누르면 앱을 켜 둔 동안만(포그라운드) 새 위치가 있을 때 10초에 한 번 booking_locations 에
+// 최신 한 줄을 쓴다. 백그라운드 위치는 쓰지 않는다. 읽기는 그 예약의 손님·담당 마사지사·관리자만(RLS),
+// '도착'(in_progress)·취소로 on_the_way 를 벗어나면 서버 트리거가 줄을 지운다.
+// providers.last_lat/last_lng 는 누구나 읽는 표(providers_public_read)라 쓰지 않는다.
+let SHARE = null;
+function paintSharing() {
+  document.querySelectorAll('[data-share]').forEach(el => {
+    const on = SHARE && SHARE.id === el.dataset.share;
+    el.textContent = T(on ? '📡 위치 공유 중' : '위치 공유 꺼짐');
+    el.style.color = on ? '#1E6B45' : '#E5484D';
+  });
 }
-window.openMap = async function () {
-  window.go('map');
-  try { await loadLeaflet(); } catch (e) {
-    document.getElementById('mapArea').innerHTML = '<div class="notice">' + rEsc(T('지도를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.')) + '</div>';
-    return;
-  }
-  if (!mapObj) {
-    document.getElementById('mapArea').innerHTML = '';
-    mapObj = L.map('mapArea').setView([21.0285, 105.8342], 13);
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(mapObj);
-    pinLayer = L.layerGroup().addTo(mapObj);
-  }
-  mapObj.invalidateSize();
-  pinLayer.clearLayers();
-  // 손님 목록과 같은 사람(CACHE.providers = 출근 중 + 승인) 중 위치를 고른 사람만.
-  // 좌표는 마사지사가 고른 대략 위치이고 DB 에서 소수 둘째 자리(약 1km)로 잘려 있다. 실시간 위치·주소가 아니다.
-  // 매장(stores)은 좌표가 시드 격자라 실제 좌표가 들어올 때까지 지도에 올리지 않는다.
-  const groups = {};
-  (CACHE.providers || []).filter(p => p.lat != null && p.lng != null).forEach(p => {
-    const k = p.lat + ',' + p.lng;
-    (groups[k] = groups[k] || []).push(p);
-  });
-  const pts = [];
-  Object.values(groups).forEach(arr => {
-    const ll = [arr[0].lat, arr[0].lng];
-    const badge = arr.length > 1 ? '<span class="prov-cnt">' + arr.length + '</span>' : '';
-    const icon = L.divIcon({ className: '', html: '<div class="prov-wrap">' + provThumb(arr[0], 'prov-pin') + badge + '</div>', iconSize: [44, 44], iconAnchor: [22, 22], popupAnchor: [0, -22] });
-    const m = L.marker(ll, { icon, title: arr.length > 1 ? String(arr.length) : arr[0].display_name }).addTo(pinLayer);
-    if (arr.length === 1) { m.on('click', () => openProfile(arr[0].id)); }
-    else {
-      // 같은 칸에 여러 명이면 작은 목록. 누르면 그 사람 프로필.
-      const pop = document.createElement('div');
-      pop.className = 'prov-list';
-      arr.forEach(p => {
-        const row = document.createElement('div');
-        row.className = 'prov-row';
-        row.innerHTML = provThumb(p, 'prov-ph') + '<b>' + rEsc(p.display_name) + '</b>';
-        row.onclick = () => openProfile(p.id);
-        pop.appendChild(row);
-      });
-      m.bindPopup(pop);
-    }
-    pts.push(ll);
-  });
-  if (pts.length) mapObj.fitBounds(pts, { padding: [40, 40], maxZoom: 14 });
-  document.getElementById('mapHint').textContent = T(pts.length ? '📍 약 1km 범위의 대략적인 활동 위치입니다. 사진을 누르면 프로필이 열립니다.' : '아직 지도에 위치를 등록한 마사지사가 없습니다.');
+function stopSharing() {
+  if (SHARE) { if (SHARE.watch != null) navigator.geolocation.clearWatch(SHARE.watch); clearInterval(SHARE.timer); }
+  SHARE = null;
+  paintSharing();
+}
+function startSharing(bookingId) {
+  if (SHARE && SHARE.id === bookingId) { paintSharing(); return; }
+  stopSharing();
+  if (!navigator.geolocation) { showToast(T('이 기기에서는 위치를 쓸 수 없습니다.')); return; }
+  const s = SHARE = { id: bookingId, watch: null, timer: null, pos: null, sent: null };
+  const send = async () => {
+    if (SHARE !== s || !s.pos || s.pos === s.sent) return;   // 새 위치가 없으면 보내지 않는다(갱신 시각이 거짓말하지 않게)
+    s.sent = s.pos;
+    const c = s.pos.coords;
+    const { error } = await sb.from('booking_locations')
+      .upsert({ booking_id: bookingId, lat: c.latitude, lng: c.longitude, accuracy: c.accuracy });
+    if (error) { console.warn('위치 저장 실패', error.message); if (error.code === '42501' && SHARE === s) stopSharing(); }
+  };
+  s.watch = navigator.geolocation.watchPosition(pos => {
+    const first = !s.pos; s.pos = pos;
+    if (first) send();   // 첫 위치는 바로, 그다음은 10초마다
+  }, err => {
+    if (SHARE !== s) return;
+    if (err && (err.code === 1 || /denied|permission/i.test(err.message || ''))) {
+      stopSharing();
+      showToast(T('위치 권한이 꺼져 있어 손님에게 위치를 보낼 수 없습니다. 설정에서 위치를 허용해 주세요.'));
+    } else console.warn('위치 오류', err && err.message);
+  }, { enableHighAccuracy: true, maximumAge: 5000 });
+  s.timer = setInterval(send, 10000);
+  paintSharing();
+}
+// 상태 전환은 가드(guard_booking_write)가 담당 마사지사에게 이미 허용한다. 이전 상태를 조건으로 걸어 두 번 눌러도 한 번만 바뀐다.
+// 손님 알림('테라피스트가 출발했습니다')은 서버 notify_booking_event 가 보낸다.
+window.departIncoming = async function (id) {
+  if (!confirm(T('출발할까요? 도착할 때까지 이 화면을 켜 두면 손님이 지도에서 오는 길을 봅니다.'))) return;
+  const { data, error } = await sb.from('bookings').update({ status: 'on_the_way' })
+    .eq('id', id).eq('status', 'confirmed').select('id');
+  if (error || !data || !data.length) { alert(T('바꾸지 못했습니다.') + (error ? ' ' + error.message : '')); loadIncoming(); return; }
+  startSharing(id);
+  loadIncoming();
+};
+window.arriveIncoming = async function (id) {
+  const { data, error } = await sb.from('bookings').update({ status: 'in_progress' })
+    .eq('id', id).eq('status', 'on_the_way').select('id');
+  if (error || !data || !data.length) { alert(T('바꾸지 못했습니다.') + (error ? ' ' + error.message : '')); loadIncoming(); return; }
+  stopSharing();
+  loadIncoming();
 };
 
-// 마사지사가 고르는 활동 기준 위치(대략). 손님 지도에는 약 1km 칸만 보인다.
-// 핀은 소수 둘째 자리 칸에 붙여 보여 주고 그 값으로 보낸다. 서버 트리거(trg_provider_zz_round_latlng)가 한 번 더 자른다.
-const r2 = v => Math.round(v * 100) / 100;
-window.openAreaPicker = async function (providerId) {
-  try { await loadLeaflet(); } catch (e) { alert(T('지도를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.')); return; }
-  const { data: me } = await sb.from('providers').select('lat, lng, city_code, ward_codes').eq('id', providerId).maybeSingle();
-  let ov = document.getElementById('areaSheet');
-  if (!ov) { ov = document.createElement('div'); ov.id = 'areaSheet'; ov.style.cssText = 'position:fixed;inset:0;z-index:210;background:rgba(20,25,28,.5);display:flex;align-items:flex-end;justify-content:center'; document.body.appendChild(ov); }
-  ov.innerHTML = '<div class="svc-sheet"><div class="svc-grip"></div><div class="svc-title">' + rEsc(T('📍 활동 기준 위치(대략)')) + '</div>'
-    + '<div class="hint">' + rEsc(T('지도를 누르거나 핀을 끌어 평소 활동하는 곳을 고르세요. 손님에게는 약 1km 범위의 대략적인 위치만 보이고, 주소·정확한 위치는 보이지 않습니다.')) + '</div>'
-    + '<div id="areaMap"></div>'
-    + '<button class="cta" id="areaSave" style="position:static;width:100%">' + rEsc(T('저장')) + '</button>'
-    + '<div style="display:flex;gap:8px;margin-top:8px"><button class="chip" id="areaClear">' + rEsc(T('위치 지우기')) + '</button><button class="chip" id="areaClose">' + rEsc(T('닫기')) + '</button></div></div>';
+// 손님 — '오는 중 보기'. 마사지사 사진 핀과(예약 좌표가 있으면) 예약 장소 핀.
+// Realtime 으로 받고, 연결이 끊겨도 보이게 15초마다 다시 읽는다. 닫으면 구독·타이머·지도를 모두 정리한다.
+let TRACK = null;
+function endTrack() {
+  const t = TRACK; if (!t) return;
+  clearInterval(t.poll);
+  if (t.ch) { sb.removeChannel(t.ch); t.ch = null; }
+}
+window.closeTrack = function () {
+  endTrack();
+  if (TRACK && TRACK.map) TRACK.map.remove();
+  TRACK = null;
+  const ov = document.getElementById('trackSheet');
+  if (ov) ov.style.display = 'none';
+};
+window.openTrack = async function (bookingId) {
+  const b = (window.__myBookings || []).find(x => x.id === bookingId);
+  if (!b) return;
+  closeTrack();
+  let ov = document.getElementById('trackSheet');
+  if (!ov) { ov = document.createElement('div'); ov.id = 'trackSheet'; ov.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(20,25,28,.5);display:flex;align-items:flex-end;justify-content:center'; document.body.appendChild(ov); }
+  // 닫기는 제목 줄에 둔다. 시트는 알림 켜기 띠(z-index 9999) 위에 띄운다 — 지도 출처·갱신 시각이 가리지 않게
+  ov.innerHTML = '<div class="svc-sheet"><div class="svc-grip"></div>'
+    + '<div class="svc-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px">'
+    + '<span>🛵 ' + rEsc(T('마사지사가 오는 중입니다')) + '</span><button class="chip" id="trackClose">' + rEsc(T('닫기')) + '</button></div>'
+    + '<div id="trackMap"></div><div class="hint" id="trackHint"></div></div>';
   ov.style.display = 'flex';
-  // 처음 위치: 저장된 값 → 활동 프엉/성 중심 → 하노이 중심
-  const c = me && provCoord(me);
-  const start = (me && me.lat != null) ? [me.lat, me.lng] : c ? [Number(c.lat), Number(c.lng)] : [21.0285, 105.8342];
-  const map = L.map('areaMap').setView(start, 14);
+  ov.querySelector('#trackClose').onclick = closeTrack;
+  ov.onclick = e => { if (e.target === ov) closeTrack(); };
+  const t = TRACK = { map: null, ch: null, poll: null };
+  const hint = txt => { const el = document.getElementById('trackHint'); if (el && TRACK === t) el.textContent = txt; };
+  try { await loadLeaflet(); } catch (e) { hint(T('지도를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.')); return; }
+  if (TRACK !== t) return;   // 불러오는 사이에 닫았다
+  const home = (b.lat != null && b.lng != null) ? [b.lat, b.lng] : null;
+  t.map = L.map('trackMap').setView(home || [21.0285, 105.8342], 14);
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-  }).addTo(map);
-  const mk = L.marker([r2(start[0]), r2(start[1])], { draggable: true }).addTo(map);
-  const snap = (ll) => mk.setLatLng([r2(ll.lat), r2(ll.lng)]);
-  map.on('click', e => snap(e.latlng));
-  mk.on('dragend', () => snap(mk.getLatLng()));
-  setTimeout(() => map.invalidateSize(), 50);
-  const close = () => { map.remove(); ov.style.display = 'none'; };
-  const save = async (lat, lng) => {
-    const { error } = await sb.from('providers').update({ lat, lng }).eq('id', providerId);
-    if (error) { alert(T('저장 실패') + ': ' + error.message); return; }
-    const cp = (CACHE.providers || []).find(x => x.id === providerId);
-    if (cp) { cp.lat = lat; cp.lng = lng; }
-    alert(T('저장했습니다.'));
-    close();
+  }).addTo(t.map);
+  if (home) L.marker(home, { title: T('예약 장소') }).addTo(t.map);
+  const pv = Object.assign({ id: b.provider_id }, b.providers || {});
+  const icon = L.divIcon({ className: '', html: '<div class="prov-pin" style="background-image:url(&quot;' + rEsc(encodeURI(avatarFor(pv))) + '&quot;)"></div>', iconSize: [44, 44], iconAnchor: [22, 22] });
+  let pin = null;
+  const p2 = n => String(n).padStart(2, '0');
+  const show = row => {
+    if (TRACK !== t) return;
+    const ll = [row.lat, row.lng];
+    if (!pin) {
+      pin = L.marker(ll, { icon, title: pv.display_name || '' }).addTo(t.map);
+      t.map.fitBounds(home ? [ll, home] : [ll], { padding: [40, 40], maxZoom: 16 });
+    } else pin.setLatLng(ll);
+    const d = new Date(row.updated_at);
+    hint(T('마지막 갱신') + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes()) + ':' + p2(d.getSeconds()));
   };
-  ov.querySelector('#areaSave').onclick = () => { const ll = mk.getLatLng(); save(r2(ll.lat), r2(ll.lng)); };
-  ov.querySelector('#areaClear').onclick = () => save(null, null);
-  ov.querySelector('#areaClose').onclick = close;
+  const pull = async () => {
+    const { data } = await sb.from('booking_locations').select('lat, lng, updated_at').eq('booking_id', bookingId).maybeSingle();
+    if (TRACK !== t) return;
+    if (data) { show(data); return; }
+    // 줄이 없으면 아직 안 보냈거나, 도착·취소로 지워졌다
+    const { data: bk } = await sb.from('bookings').select('status').eq('id', bookingId).maybeSingle();
+    if (TRACK !== t) return;
+    if (bk && bk.status !== 'on_the_way') {
+      endTrack();
+      if (pin) { pin.remove(); pin = null; }
+      hint(T(bk.status === 'in_progress' ? '마사지사가 도착했습니다.' : '위치 공유가 끝났습니다.'));
+      loadMyBookings();
+    } else if (!pin) hint(T('아직 위치가 오지 않았습니다. 마사지사 앱이 켜져 있으면 곧 보입니다.'));
+  };
+  t.ch = sb.channel('track-' + bookingId)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'booking_locations', filter: 'booking_id=eq.' + bookingId },
+      p => { if (p.new && p.new.lat != null) show(p.new); else pull(); })
+    .subscribe();
+  t.poll = setInterval(pull, 15000);
+  setTimeout(() => { if (TRACK === t) t.map.invalidateSize(); }, 50);
+  pull();
 };
 
 // 알림
