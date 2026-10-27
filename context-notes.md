@@ -1938,3 +1938,11 @@ exception when others then
 - massa bot 제거(dd415c7) 뒤 CACHE.priceMap 을 읽는 코드가 0곳이다(git grep). 로드 때마다 돌던 provider_services 조회와 그 캐시만 지웠다. CACHE.provPrice 는 메뉴 가격에 쓰이므로 남긴다.
 ## 2026-10-27 — 관리자 위치 보기
 - admin.html 에는 Leaflet 로더가 없어서 index.html 의 loadLeaflet(jsdelivr 1.9.4 + SRI)을 그대로 옮겼다. Realtime 은 쓰지 않고 열려 있는 동안 15초마다 다시 읽는다. 닫으면 타이머와 지도를 정리한다.
+
+
+## 2026-10-27 — 넘겨준 사본 리셋
+- 문제: 한 요청을 여러 마사지사에게 보내면(group_id) 한 명이 수락할 때 나머지가 status='cancelled', cancelled_by='system' 으로 남았다. 이 행이 취소 건수·예약 수를 부풀리고 진 마사지사의 받은 신청·이력, 손님 목록에 남았다.
+- 결정: 진 사본은 예약이 아니므로 bookings 에서 지우고 booking_superseded 에 그대로 옮겨 둔다(관리자만 읽음). 같은 트랜잭션·같은 잠금 순서(묶음 전체 id 오름차순) 안에서 한다.
+- 알림: 진 사본의 booking_new 알림은 지운다(반복 푸시도 같이 멈춤). 손님의 '다른 테라피스트에게도 요청했습니다'(info)는 원본이 질 수 있으므로 수락된 예약으로 옮긴다. 진 마사지사에게 '다른 테라피스트가 먼저 수락했습니다' 알림은 계속 보내되 booking_id 를 비워 없는 예약을 가리키지 않게 한다 — 받은 신청이 말없이 사라지면 마사지사가 혼란스럽다.
+- 경쟁: 두 명이 동시에 누르면 늦은 쪽은 잠금을 기다린 뒤 자기 행이 지워진 것을 본다. 그때와, 나중에 옛 화면에서 누를 때 모두 booking_superseded 를 보고 already_taken 으로 답한다. 앱의 오류 매핑(/already_taken|먼저 수락/)은 그대로 맞는다.
+- 손님 취소·fanout_stale_bookings 는 진 사본을 만들지 않는다(손님 취소는 한 행씩, fanout 은 requested 만 추가). 바꿀 필요 없다.

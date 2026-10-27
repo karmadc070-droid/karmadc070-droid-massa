@@ -5096,3 +5096,14 @@ vi:
 - [x] verify: check_syntax 오류 0, 헤드리스(완료 PATCH·관리자 지도 핀·페이지 오류 0), 스크린샷 확인 → 오류 0, PATCH {status:completed, completed_at} ?status=eq.in_progress, 관리자 지도 핀·OSM 출처·닫으면 폴링 멈춤, 페이지 오류 0
 - [x] 커밋·push·VPS 배포(vps-deploy-app.sh), 라이브 app.massaviet.com/index.html 에 completeIncoming 확인 (스토어 빌드는 하지 않음)
 - [ ] 관리자 「위치 보기」 는 아직 라이브 아님 — 운영 콘솔(massaviet.com/admin/console/)은 vps-deploy-massaviet.sh 가 따로 배포한다. 라이브 콘솔은 10-22 본(봇 제거 전). 사장님 확인 후 배포
+
+
+## 2026-10-27 넘겨준 사본 리셋 (사장님 요청 — 실제 데이터가 안 맞음)
+- [x] sql/booking_superseded.sql: booking_superseded 표(bookings 열 + superseded_at + accepted_booking_id, 관리자만 읽기) + accept_booking 이 지는 사본을 취소 대신 옮기고 지운다
+  - 참조 처리: notifications(손님 것은 수락된 예약으로 옮김, booking_taken 은 booking_id 비움, 나머지 booking_new 등은 지움), booking_locations·reviews(CASCADE, 0건), payment_transactions·safety_alerts(SET NULL, 0건). messages 는 예약을 참조하지 않음
+  - 지워진 id 로 accept_booking 을 부르면 '다른 테라피스트가 먼저 수락했습니다.'(hint already_taken)
+- [x] 기존 7건 이전(sql/booking_superseded_migrate.sql): cancel_reason='다른 테라피스트가 먼저 수락했습니다' AND cancelled_by='system' 이고 같은 묶음에 confirmed~completed 가 있는 행만 → 7건 옮김(묶음 2개), 남은 system 취소 0, 끊긴 알림 0. 백업: bookings_backup_20261027_superseded·notifications_backup_20261027_superseded 표 + VPS /root/massa-backups/20261027-*
+- [x] admin.html 「넘겨준 내역 보기」 체크박스와 숨김 로직 제거 (행이 더 이상 없음)
+- [x] verify: sql/test_booking_superseded.sql BEGIN…ROLLBACK PASS 11/11, check_syntax 오류 0, 헤드리스(지워진 사본 수락 → "Kỹ thuật viên khác đã nhận trước." 후 목록 비움, 관리자 목록 정상·abFan 없음, 페이지 오류 0)
+- [x] 앱: 「먼저 수락」 알림(booking_taken)이 오면 받은 신청 목록을 다시 읽는다
+- [ ] 커밋·push·앱/콘솔 배포
