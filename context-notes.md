@@ -1917,3 +1917,8 @@ exception when others then
 - 안드로이드 확인 — 스토어의 안드로이드 앱은 TWA 가 아니라 Capacitor 네이티브다(codemagic android-play: `npx cap add android`, native.js 가 navigator.geolocation 을 플러그인으로 바꿈). 그런데 매니페스트 패치는 massa:// 스킴만 넣고 위치 권한은 넣지 않는다. @capacitor/geolocation 8.2.2 의 자체 매니페스트는 비어 있고 README 가 ACCESS_COARSE_LOCATION·ACCESS_FINE_LOCATION 을 앱에 넣으라고 한다. 그래서 안드로이드 앱에서는 위치 요청이 실패할 것이고, 앱은 '위치 권한' 토스트를 띄우고 공유를 끈다. iOS 는 NSLocationWhenInUseUsageDescription 이 있어 포그라운드에서 동작한다. 웹(app.massaviet.com)은 브라우저 권한으로 동작한다.
 - 화면 — 손님 지도는 별도 화면이 아니라 시트로 띄운다. 닫기 버튼에서 구독·타이머·지도를 확실히 정리하려는 것이다. 시트는 알림 켜기 띠(z-index 9999)보다 위(10000)에 둔다 — 띠가 지도 출처와 갱신 시각을 가렸다.
 - 갱신 시각은 '몇 초 전' 대신 시:분:초로 보인다. 번역 문구 조합(숫자+단위) 없이 4개 언어에서 같은 모양이 나온다. 마사지사가 멈춰 있어 새 위치가 없으면 보내지 않으므로, 시각이 오래되면 실제로 위치가 오래된 것이다.
+
+## 2026-10-27 — 실시간 위치 빌드 준비
+- 안드로이드 versionName 은 1.1.<버전코드> 이고 버전코드는 Play 최신+1 이라 손으로 올리지 않는다. iOS 만 package.json 을 올린다.
+- 이번 빌드는 처음으로 위치 권한을 쓰는 안드로이드 빌드다. Play 데이터 보안 양식에 위치 수집이 없으면 검토에서 거절될 수 있으니 제출 전에 고친다.
+- PC 에는 Codemagic API 토큰이 없다. 빌드는 codemagic.io 탭의 세션 쿠키로 POST 해서 건다.

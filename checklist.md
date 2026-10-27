@@ -5054,3 +5054,32 @@ COUNTRIES 가 5개뿐이다. 검색창은 **이미 있다** — 검색할 게 �
 - [ ] 리드 — 적용 순서: ① drop_provider_area_latlng.sql ② booking_locations.sql ③ provider_private.sql → 그 뒤 웹 배포 → 스토어 빌드
 - [ ] 후속 — 남은 내부 칸(reviewed_by·reject_reason·reject_count·fee_tier*·deposit_code·founding_no·profile_id·owner_id 등)은 아직 공개. 옛 앱이 모두 내려간 뒤 손님 앱 select 를 칸 목록으로 바꾸고 칸 권한으로 닫는다
 - [ ] 후속 — 관리자 화면에서 zalo·kakao·파트너 위치를 보려면 provider_private 를 읽게 바꿔야 한다(지금 값 0건)
+
+## 2026-10-27 스토어 빌드 — 실시간 위치(출발·도착·오는 중 보기)
+웹(app.massaviet.com)에는 오늘 배포됨. 앱은 index.html 을 빌드 때 넣으므로 새 빌드가 있어야 보인다.
+- [x] iOS 마케팅 버전 1.0.20 → 1.0.21 (capacitor/package.json, 커밋 865af8f). 1.0.20 은 2026-10-23 출시 확인(공개 조회)
+- [x] 안드로이드 버전은 codemagic 이 Play 최신 버전코드+1 로 정한다 → 1.1.109 예상 (1.1.108 다음)
+- [x] 안드로이드 위치 권한(ACCESS_COARSE/FINE_LOCATION) 매니페스트 패치는 49f10d7 에 이미 들어감
+- [ ] Codemagic 빌드 걸기 — PC 에 Codemagic API 토큰이 없다. 지난번처럼 codemagic.io 탭에서
+      `POST https://api.codemagic.io/builds` body {appId:'6a8c482d21afff14a210fad7', workflowId:'ios-appstore'|'android-play', branch:'main'}
+- [ ] 빌드 성공 확인 (iOS 는 TestFlight 까지, 안드는 Play 프로덕션 초안까지 Codemagic 이 올린다)
+- [ ] Play 콘솔: 앱 콘텐츠 → 데이터 보안에 '위치(대략·정확)' 수집 추가, 권한 선언 확인 (백그라운드 위치는 안 씀)
+- [ ] 출시 노트 입력 후 검토 제출 (아래 문구)
+- [ ] 설치 후 마사지사 '출발' → 손님 '오는 중 보기' 지도에 위치가 오는지 확인
+
+### 출시 노트 (안드로이드 ko-KR·en-US·vi / iOS 한국어·베트남어)
+ko:
+• 마사지사가 출발하면 '오는 중 보기'로 지도에서 오는 위치를 실시간으로 볼 수 있어요.
+• 마사지사 화면에 '출발'·'도착' 버튼이 생겼어요.
+• 예약 전 지도 화면을 없애 예약이 더 간단해졌어요.
+• 이동 중 위치를 보내기 위해 마사지사에게 위치 권한을 요청해요.
+en:
+• See your therapist on the map in real time with "On the way" once they set off.
+• Therapists now have "Depart" and "Arrived" buttons.
+• The map before booking is gone, so booking is simpler.
+• Therapists are asked for location permission to share their location while on the way.
+vi:
+• Khi kỹ thuật viên xuất phát, bạn xem vị trí của họ trên bản đồ theo thời gian thực bằng "Đang đến".
+• Kỹ thuật viên có thêm nút "Xuất phát" và "Đã đến".
+• Bỏ bản đồ trước khi đặt lịch để đặt lịch đơn giản hơn.
+• Ứng dụng xin quyền vị trí của kỹ thuật viên để chia sẻ vị trí khi đang di chuyển.
