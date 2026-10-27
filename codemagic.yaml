@@ -313,6 +313,16 @@ workflows:
           grep -q 'android:scheme="massa"' "$MF" || { echo "★ 스킴 등록 실패 - 중단"; exit 1; }
           echo "----- URL 스킴 확인 -----"
           grep -A1 -B3 'android:scheme="massa"' "$MF"
+      # 위치 권한 (2026-10-27). 마사지사가 「출발」 뒤 앱이 켜진 동안 위치를 보내는 데 필요하다.
+      # @capacitor/geolocation 은 권한을 스스로 넣지 않는다. 백그라운드 위치는 쓰지 않는다.
+      - name: 위치 권한 추가
+        script: |
+          MF=android/app/src/main/AndroidManifest.xml
+          for perm in ACCESS_COARSE_LOCATION ACCESS_FINE_LOCATION; do
+            grep -q "android.permission.$perm" "$MF" || sed -i "s#<application#<uses-permission android:name=\"android.permission.$perm\" />\n    <application#" "$MF"
+          done
+          grep -c 'ACCESS_FINE_LOCATION\|ACCESS_COARSE_LOCATION' "$MF" | grep -q 2 || { echo "★ 위치 권한 추가 실패 - 중단"; exit 1; }
+          grep 'LOCATION' "$MF"
       - name: Firebase 설정 넣기
         script: |
           test -f ../google-services.json || { echo "★ google-services.json 이 없다 - 중단"; exit 1; }
