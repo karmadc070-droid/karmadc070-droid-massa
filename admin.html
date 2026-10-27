@@ -1102,7 +1102,6 @@
       <div class="chip" data-s="cancelled" onclick="pick(this);loadAdminBookings()">취소</div>
       <div class="chip" data-s="no_show" onclick="pick(this);loadAdminBookings()">노쇼</div>
     </div>
-    <label style="display:block;font-size:12.5px;color:var(--muted);margin:2px 0 8px"><input type="checkbox" id="abFan" onchange="loadAdminBookings()"> 넘겨준 내역 보기 (다른 분이 수락해 자동 취소된 사본)</label>
     <div id="adminBkList"></div>
   </div>
   <div class="screen" id="adminProviders" data-title="기사(마사지사) 관리">
@@ -4129,16 +4128,9 @@ async function loadAdminBookings() {
   const st = selEl ? selEl.dataset.s : 'all';
   let q = sb.from('bookings').select('*, providers(display_name), services(name)').order('created_at', { ascending: false }).limit(100);
   if (st !== 'all') q = q.eq('status', st);
-  let { data, error } = await q;
+  const { data, error } = await q;
   if (error) { wrap.innerHTML = '<div class="notice">불러오기 실패: ' + error.message + '</div>'; return; }
-  // 넘겨준 사본(한 명이 수락해 system 취소된 나머지)은 기본으로 숨긴다. 손님 앱과 같은 기준.
-  // 상태로 거르면 같은 묶음의 살아 있는 줄이 안 딸려 오므로 묶음 상태를 따로 묻는다 (2026-10-22)
-  const fanG = [...new Set((data || []).filter(b => b.status === 'cancelled' && b.cancelled_by === 'system' && b.group_id).map(b => b.group_id))];
-  if (fanG.length && !document.getElementById('abFan').checked) {
-    const { data: lv } = await sb.from('bookings').select('group_id').in('group_id', fanG).neq('status', 'cancelled');
-    const live = new Set((lv || []).map(x => x.group_id));
-    data = data.filter(b => !(b.status === 'cancelled' && b.cancelled_by === 'system' && live.has(b.group_id)));
-  }
+  // 넘겨준 사본은 2026-10-27 부터 bookings 에 남지 않는다(booking_superseded 로 옮김). 따로 숨길 것이 없다.
   // 실제 상태값(booking_status enum)과 하나씩 맞춘다.
   const ST = { requested: ['요청됨','#E8A33D'], confirmed: ['확정','#2E8B8B'],
                on_the_way: ['이동 중','#2E8B8B'], in_progress: ['진행 중','#2E8B8B'],
