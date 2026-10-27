@@ -5089,9 +5089,10 @@ vi:
 
 
 ## 2026-10-27 완료 버튼·위치 문구·priceMap 정리·관리자 위치 보기 (사장님 승인 4건)
-- [ ] 마사지사 받은 신청: 진행 중(in_progress) 예약에 「완료」 버튼(확인창) → status=completed, completed_at, .eq('status','in_progress'). 새 문구 4개 언어 번역
-- [ ] codemagic.yaml iOS 위치 권한 문구를 실제 용도(이동 중 위치 공유)로 교체
-- [ ] CACHE.priceMap 읽는 곳 0 확인(git grep) → index.html·admin.html 의 provider_services 조회와 캐시 칸 제거
-- [ ] admin.html 예약 목록: 이동 중(on_the_way) 예약에 「위치 보기」 → Leaflet+OSM 지도, booking_locations 15초마다 다시 읽기
-- [ ] verify: check_syntax 오류 0, 헤드리스(완료 PATCH·관리자 지도 핀·페이지 오류 0), 스크린샷 확인
-- [ ] 커밋·push·VPS 배포, 라이브 index.html 에 완료 버튼 확인 (스토어 빌드는 하지 않음)
+- [x] 마사지사 받은 신청: 진행 중(in_progress) 예약에 「완료」 버튼(확인창) → status=completed, completed_at, .eq('status','in_progress'). 새 문구 4개 언어 번역
+- [x] codemagic.yaml iOS 위치 권한 문구를 실제 용도(이동 중 위치 공유)로 교체
+- [x] CACHE.priceMap 읽는 곳 0 확인(git grep) → index.html·admin.html 의 provider_services 조회와 캐시 칸 제거
+- [x] admin.html 예약 목록: 이동 중(on_the_way) 예약에 「위치 보기」 → Leaflet+OSM 지도, booking_locations 15초마다 다시 읽기
+- [x] verify: check_syntax 오류 0, 헤드리스(완료 PATCH·관리자 지도 핀·페이지 오류 0), 스크린샷 확인 → 오류 0, PATCH {status:completed, completed_at} ?status=eq.in_progress, 관리자 지도 핀·OSM 출처·닫으면 폴링 멈춤, 페이지 오류 0
+- [x] 커밋·push·VPS 배포(vps-deploy-app.sh), 라이브 app.massaviet.com/index.html 에 completeIncoming 확인 (스토어 빌드는 하지 않음)
+- [ ] 관리자 「위치 보기」 는 아직 라이브 아님 — 운영 콘솔(massaviet.com/admin/console/)은 vps-deploy-massaviet.sh 가 따로 배포한다. 라이브 콘솔은 10-22 본(봇 제거 전). 사장님 확인 후 배포
