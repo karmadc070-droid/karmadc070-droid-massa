@@ -5745,15 +5745,6 @@ async function load() {
     if (window.renderMenu) renderMenu();
     const { data: stores, error: e2 } = await sb.from('stores').select('*').order('view_count', { ascending: false });
     if (e2) throw e2; CACHE.stores = stores;
-    // 카드에 뜨는 '최저가'. 개인 가격을 정한 코스는 그 값으로 봐야 실제와 맞는다.
-    const { data: psPrice } = await sb.from('provider_services').select('provider_id, service_id, services(price_vnd)');
-    const pm = {};
-    (psPrice || []).forEach(r => {
-      const own = CACHE.provPrice[r.provider_id] && CACHE.provPrice[r.provider_id][r.service_id];
-      const pr = own != null ? Number(own) : (r.services && r.services.price_vnd);
-      if (pr != null) pm[r.provider_id] = Math.min(pm[r.provider_id] == null ? Infinity : pm[r.provider_id], pr);
-    });
-    CACHE.priceMap = pm;
     const grouped = {};
     stores.forEach(s => {
       (grouped[s.category] = grouped[s.category] || []).push({

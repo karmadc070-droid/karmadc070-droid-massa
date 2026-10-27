@@ -5375,14 +5375,6 @@ async function load() {
     if (e2) throw e2; CACHE.stores = stores;
     // 마사지사가 직접 정한 가격 (승인된 것만). { 마사지사id: { 코스id: 금액 } }
     try { const { data: pp } = await sb.rpc('public_provider_prices'); CACHE.provPrice = pp || {}; } catch (e) { CACHE.provPrice = {}; }
-    const { data: psPrice } = await sb.from('provider_services').select('provider_id, service_id, services(price_vnd)');
-    const pm = {};
-    (psPrice || []).forEach(r => {
-      const own = CACHE.provPrice[r.provider_id] && CACHE.provPrice[r.provider_id][r.service_id];
-      const pr = own != null ? Number(own) : (r.services && r.services.price_vnd);
-      if (pr != null) pm[r.provider_id] = Math.min(pm[r.provider_id] == null ? Infinity : pm[r.provider_id], pr);
-    });
-    CACHE.priceMap = pm;
     const grouped = {};
     stores.forEach(s => {
       (grouped[s.category] = grouped[s.category] || []).push({
