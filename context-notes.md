@@ -1925,3 +1925,16 @@ exception when others then
 
 ## 2026-10-27 — massa bot 제거
 - 사장님이 massa bot 이 필요 없다고 결정해 앱·관리자 사본에서 걷어냈다. 서버 쪽은 손대지 않았다(봇은 서버 함수를 쓰지 않았다). 손님-마사지사 채팅이 같은 .bmsg 스타일을 쓰므로 그것은 남겼다.
+
+
+## 2026-10-27 — 마사지사 「완료」 버튼
+- 지금까지 앱 어디에서도 status='completed' 로 바꾸지 않았다(관리자 콘솔만 가능). 마사지사가 「도착」 뒤 직접 끝내게 한다.
+- 관리자 완료 처리는 클라이언트에서 status 와 completed_at 만 보낸다. 수수료 행을 만드는 등 추가 작업은 없다. 그래서 같은 두 값을 보낸다.
+- 완료 때 서버가 하는 일 — notify_booking_event 가 손님에게 'booking_completed'('서비스가 완료되었습니다. 평가를 남겨주세요') 알림. guard_booking_write 가 마사지사가 보낸 completed_at 을 서버 시각 now() 로 덮는다. 수수료율은 예약 생성 때 이미 얼어 있고(fee_rate), 정산(close_settlement_cycle)·수수료(admin_provider_fees)·대시보드는 status='completed' 와 completed_at 으로 서버에서 센다. 손님 화면의 리뷰·결제 버튼도 status='completed' 를 본다.
+- 따라서 SQL 변경은 필요 없다. 이전 상태를 in_progress 로 걸어 두 번 눌러도 한 번만 바뀐다.
+## 2026-10-27 — iOS 위치 권한 문구
+- '내 주변 테라피스트 검색' 은 더 이상 없다(예약 전 마사지사 위치 비공개). 다만 손님 위치는 아직 두 곳에서 쓴다 — 마사지사와의 거리 표시(askMyPos), 안전 메뉴의 SOS·내 위치 공유. 문구가 실제 용도를 다 말해야 심사에서 문제가 없으므로, 마사지사 이동 중 공유를 앞에 두고 이 둘도 함께 적었다.
+## 2026-10-27 — priceMap 제거
+- massa bot 제거(dd415c7) 뒤 CACHE.priceMap 을 읽는 코드가 0곳이다(git grep). 로드 때마다 돌던 provider_services 조회와 그 캐시만 지웠다. CACHE.provPrice 는 메뉴 가격에 쓰이므로 남긴다.
+## 2026-10-27 — 관리자 위치 보기
+- admin.html 에는 Leaflet 로더가 없어서 index.html 의 loadLeaflet(jsdelivr 1.9.4 + SRI)을 그대로 옮겼다. Realtime 은 쓰지 않고 열려 있는 동안 15초마다 다시 읽는다. 닫으면 타이머와 지도를 정리한다.
