@@ -172,21 +172,9 @@
   .flt-actions button { flex: 1; border: none; border-radius: 14px; padding: 15px; font-size: 15px; font-weight: bold; cursor: pointer; }
   .flt-reset { background: #EAF1EC; color: #3E7C4F; }
   .flt-apply { background: #3E7C4F; color: #fff; }
-  .bot-wrap { width: 390px; max-width: 100%; height: 82vh; max-height: 640px; background: #F4F6F7; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; overflow: hidden; }
-  .bot-head { background: var(--navy); color: #fff; padding: 14px 16px; display: flex; align-items: center; gap: 10px; }
-  .bot-ava { width: 34px; height: 34px; border-radius: 50%; background: #fff; color: var(--navy); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; }
-  .bot-name { font-weight: bold; font-size: 15px; }
-  .bot-sub { font-size: 11px; opacity: .8; }
-  .bot-close { margin-left: auto; cursor: pointer; font-size: 17px; }
-  .bot-msgs { flex: 1; overflow: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
   .bmsg { max-width: 80%; padding: 10px 13px; border-radius: 14px; font-size: 13.5px; line-height: 1.55; white-space: pre-wrap; }
   .bmsg.bot { background: #fff; align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.05); }
   .bmsg.me { background: var(--navy); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
-  .bot-quick { display: flex; gap: 7px; flex-wrap: wrap; padding: 8px 12px; background: #F4F6F7; }
-  .bot-quick .q { background: #fff; border: 1.5px solid var(--line); border-radius: 16px; padding: 7px 12px; font-size: 12px; cursor: pointer; }
-  .bot-input { display: flex; gap: 8px; padding: 10px 12px; background: #fff; border-top: 1px solid var(--line); }
-  .bot-input input { flex: 1; border: 1.5px solid var(--line); border-radius: 20px; padding: 10px 14px; font-size: 13.5px; }
-  .bot-input button { background: var(--navy); color: #fff; border: none; border-radius: 20px; padding: 0 16px; font-weight: bold; cursor: pointer; }
   .noti-row { display: flex; gap: 12px; padding: 16px 4px; border-bottom: 1px solid #EEF2F0; }
   .noti-ico { width: 42px; height: 42px; border-radius: 50%; background: #EAF1EC; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
   .noti-title { font-weight: bold; font-size: 15px; }
@@ -286,11 +274,6 @@
   .sw .sw-track:before { content: ""; position: absolute; width: 20px; height: 20px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; }
   .sw input:checked + .sw-track { background: #3E7C4F; }
   .sw input:checked + .sw-track:before { transform: translateX(20px); }
-  .massa-fab { position: absolute; z-index: 60; bottom: 66px; right: 14px; width: 62px; height: 62px; border-radius: 50%; background: linear-gradient(145deg,#2E8B8B,#1F4E5F); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; box-shadow: 0 6px 18px rgba(31,78,95,.45); cursor: pointer; animation: fabPulse 2.6s ease-in-out infinite; }
-  .massa-fab .fab-ic { font-size: 19px; line-height: 1; }
-  .massa-fab .fab-name { font-size: 8.5px; font-weight: bold; letter-spacing: .2px; line-height: 1; }
-  .massa-fab:active { transform: scale(.94); }
-  .massa-fab .fab-badge { position: absolute; top: -3px; right: -3px; background: #E8A33D; color: #fff; font-size: 9px; font-weight: bold; border-radius: 8px; padding: 1px 5px; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
   @keyframes fabPulse { 0%,100% { box-shadow: 0 6px 18px rgba(31,78,95,.4); } 50% { box-shadow: 0 6px 26px rgba(46,139,139,.62); } }
   /* .on 을 붙이지 않으면 .screen{display:none}을 덮어써 비활성 상태에서도 화면에 남는다 */
   #chat.on { display: flex; flex-direction: column; padding-bottom: 16px; }
@@ -1031,7 +1014,6 @@
     <div id="safetyList"></div>
   </div>
   </div>
-  <div class="massa-fab" onclick="openBot()" title="massa bot" aria-label="massa bot"><span class="fab-ic">💬</span><span class="fab-name">massa bot</span><span class="fab-badge">AI</span></div>
   <div class="tabbar globaltab">
     <div class="on"><span class="ti">🧭</span>탐색</div>
     <div><span class="ti">📋</span>예약 내역</div>
@@ -4663,7 +4645,6 @@ const DICT = {
   '🚩 이 제공자 신고하기': ['🚩 Báo cáo người này', '🚩 Report this provider', '🚩 举报该服务者', '🚩 この提供者を通報する'],
   '이 제공자 차단하기': ['Chặn người này', 'Block this provider', '屏蔽该服务者', 'この提供者をブロックする'],
   '차단 해제하기': ['Bỏ chặn', 'Unblock', '解除屏蔽', 'ブロックを解除'],
-  '프로필 보기 ›': ['Xem hồ sơ ›', 'View profile ›', '查看档案 ›', 'プロフィールを見る ›'],
   '불러오는 중…': ['Đang tải…', 'Loading…', '加载中…', '読み込み中…'],
   '등록된 서비스가 없습니다.': ['Chưa có dịch vụ nào.', 'No services registered.', '暂无登记的服务。', '登録されたサービスがありません。'],
   '오일 마사지 + 부항 요법': ['Massage dầu + giác hơi', 'Oil massage + cupping', '精油按摩＋拔罐', 'オイルマッサージ＋カッピング'],
@@ -4682,33 +4663,6 @@ const DICT = {
   '시간 전': ['giờ trước', 'hours ago', '小时前', '時間前'],
   '일 전': ['ngày trước', 'days ago', '天前', '日前'],
   '연결됨': ['Đã kết nối', 'Connected', '已连接', '接続済み'],
-  'AI 자연어 검색 · 보통 몇 초 내 응답': ['Tìm kiếm bằng ngôn ngữ tự nhiên · thường trả lời trong vài giây', 'Natural-language search · usually replies in seconds', '自然语言搜索 · 通常几秒内回复', '自然言語検索 · 通常数秒で返信'],
-  '예: 커플 마사지 10만원 이하': ['VD: massage cặp đôi dưới 2 triệu ₫', 'e.g. couple massage under 2,000,000₫', '例：情侣按摩 200万₫以下', '例：カップルマッサージ 200万₫以下'],
-  '예약 방법': ['Cách đặt lịch', 'How to book', '如何预约', '予約方法'],
-  '가격 안내': ['Bảng giá', 'Pricing', '价格说明', '料金案内'],
-  '커플 마사지 가능한 곳': ['Nơi có massage cặp đôi', 'Places with couple massage', '可做情侣按摩的店', 'カップルマッサージ可'],
-  '한국인이 많이 가는 곳': ['Nơi người Hàn hay đến', 'Popular with Koreans', '韩国人常去的店', '韓国人に人気の店'],
-  '발마사지 잘하는 곳': ['Nơi massage chân tốt', 'Good foot massage', '足疗做得好的店', '足マッサージが上手な店'],
-  '10만원 이하': ['Dưới 2 triệu ₫', 'Under 2,000,000₫', '200万₫以下', '200万₫以下'],
-  'AI가 이해한 조건': ['Điều kiện AI hiểu được', 'What the AI understood', 'AI 理解的条件', 'AIが理解した条件'],
-  '곳을 찾았어요!': ['nơi phù hợp!', 'places found!', '家符合！', '件見つかりました！'],
-  '조건에 맞는 곳을 못 찾았어요 🙏': ['Không tìm thấy nơi nào phù hợp 🙏', 'No matching places found 🙏', '没有找到符合条件的店 🙏', '条件に合う店が見つかりませんでした 🙏'],
-  '안녕하세요! massa봇이에요 😊 원하는 조건을 자연어로 말해보세요. 예: "커플 마사지 10만원 이하", "여성전용 네일".': ['Xin chào! Mình là massa bot 😊 Hãy nói điều kiện bạn muốn bằng lời thường. VD: "massage cặp đôi dưới 2 triệu ₫", "làm nail chỉ dành cho nữ".', 'Hello! I am the massa bot 😊 Just describe what you want. e.g. "couple massage under 2,000,000₫", "women-only nails".', '您好！我是 massa 机器人 😊 请用日常语言说出您的需求。例如"情侣按摩 200万₫以下"、"女性专用美甲"。', 'こんにちは！massaボットです 😊 ご希望を普通の言葉でどうぞ。例：「カップルマッサージ 200万₫以下」「女性専用ネイル」。'],
-  'massa봇이에요 😊 "커플 마사지 가능한 곳", "발마사지 10만원 이하"처럼 자연어로 물어보셔도 돼요.': ['Mình là massa bot 😊 Bạn có thể hỏi tự nhiên như "nơi có massage cặp đôi", "massage chân dưới 2 triệu ₫".', 'I am the massa bot 😊 You can ask naturally, like "places with couple massage" or "foot massage under 2,000,000₫".', '我是 massa 机器人 😊 您可以像"可做情侣按摩的店""足疗 200万₫以下"这样自然提问。', 'massaボットです 😊「カップルマッサージ可の店」「足マッサージ 200万₫以下」のように自然に聞いてください。'],
-  '원하시는 조건을 말씀해 주세요. 예: "여성전용 네일", "24시간 타이 마사지", "아이랑 갈 수 있는 곳".': ['Hãy cho mình biết điều kiện bạn muốn. VD: "nail chỉ dành cho nữ", "massage Thái 24 giờ", "nơi đi cùng trẻ em được".', 'Tell me what you are looking for. e.g. "women-only nails", "24-hour Thai massage", "kid-friendly places".', '请告诉我您的条件。例如"女性专用美甲""24小时泰式按摩""可带孩子的店"。', 'ご希望の条件をお知らせください。例：「女性専用ネイル」「24時間タイマッサージ」「子ども同伴可の店」。'],
-  '예약은 홈에서 서비스 선택 → 마사지사·코스 → 시간·위치 입력 → 예약 확정 순이에요. 결제는 서비스 완료 후 현장 결제(후불)입니다.': ['Đặt lịch theo thứ tự: chọn dịch vụ ở trang chủ → chọn chuyên viên và gói → nhập giờ và địa điểm → xác nhận. Thanh toán sau khi xong dịch vụ, trả trực tiếp.', 'Booking order: pick a service on Home → choose a therapist and course → enter time and place → confirm. You pay on the spot after the service is finished.', '预约顺序：首页选择服务 → 选择理疗师与套餐 → 输入时间与地点 → 确认预约。服务结束后现场付款。', '予約の流れ：ホームでサービス選択 → セラピストとコース選択 → 時間と場所を入力 → 予約確定。お支払いはサービス完了後の現地払いです。'],
-  '1회용 위생 키트와 신원·자격 검증(인증 마크), 앱 내 안전 버튼으로 안전을 지켜요.': ['Chúng tôi dùng bộ vệ sinh dùng một lần, xác minh nhân thân và chứng chỉ (dấu xác thực), cùng nút an toàn trong ứng dụng.', 'We use single-use hygiene kits, verify identity and credentials (verified badge), and provide an in-app safety button.', '我们使用一次性卫生用品，核验身份与资质（认证标识），并在应用内提供安全按钮。', '使い捨て衛生キット、本人・資格の確認（認証マーク）、アプリ内の安全ボタンで安全を守ります。'],
-  '계정 → 활동 내역(내 예약)에서 예약 상태와 시간을 확인할 수 있어요. 완료 후 결제·리뷰도 여기서 진행합니다.': ['Xem trạng thái và giờ đặt tại Tài khoản → Lịch sử hoạt động (Lịch của tôi). Thanh toán và đánh giá sau khi hoàn tất cũng ở đây.', 'Check status and time under Account → Activity (My bookings). Payment and reviews after completion happen there too.', '在 账户 → 活动记录（我的预约）中可查看预约状态与时间。完成后的付款与评价也在这里。', 'アカウント → 活動履歴（マイ予約）で予約状況と時間を確認できます。完了後の支払い・レビューもここです。'],
-  '후불 결제입니다. 서비스 완료 후 현장 카드·현금·QR(MoMo·ZaloPay·VNPay)·계좌이체 중에 고르실 수 있어요. 쿠폰은 결제 화면에서 적용됩니다.': ['Thanh toán sau. Sau khi xong dịch vụ, bạn chọn thẻ tại chỗ, tiền mặt, QR (MoMo·ZaloPay·VNPay) hoặc chuyển khoản. Mã giảm giá áp dụng ở màn hình thanh toán.', 'Payment is after the service. You can choose card on site, cash, QR (MoMo, ZaloPay, VNPay) or bank transfer. Coupons apply on the payment screen.', '为后付款。服务结束后可选择现场刷卡、现金、QR（MoMo·ZaloPay·VNPay）或转账。优惠券在付款页面使用。', '後払いです。サービス完了後、現地でのカード・現金・QR（MoMo・ZaloPay・VNPay）・振込から選べます。クーポンは支払い画面で適用します。'],
-  '계정 → 쿠폰함에서 보유 쿠폰을 확인하고 받을 수 있어요. 결제 시 자동으로 적용 가능한 쿠폰이 표시됩니다.': ['Xem và nhận mã giảm giá tại Tài khoản → Ví mã giảm giá. Khi thanh toán, các mã dùng được sẽ tự hiện ra.', 'View and claim coupons under Account → Coupons. Applicable coupons appear automatically at payment.', '在 账户 → 优惠券 中查看并领取。付款时会自动显示可用的优惠券。', 'アカウント → クーポンで確認・受け取りができます。支払い時に使えるクーポンが自動で表示されます。'],
-  '마음에 드는 마사지사는 카드 우측 상단 ♡를 눌러 찜해두세요. 계정 → 즐겨찾기에서 모아볼 수 있어요.': ['Nhấn ♡ ở góc trên bên phải thẻ để lưu chuyên viên bạn thích. Xem lại ở Tài khoản → Yêu thích.', 'Tap the ♡ at the top right of a card to save a therapist. Find them under Account → Favorites.', '点击卡片右上角的 ♡ 收藏喜欢的理疗师。可在 账户 → 收藏 中查看。', 'カード右上の ♡ で気に入ったセラピストを保存できます。アカウント → お気に入りでまとめて見られます。'],
-  '계정 → 마사지사·홈뷰티 파트너 되기에서 신청할 수 있어요. 프리랜서/마사지샵을 고르고 신분증·계좌·사진을 올리면 관리자 확인 후 승인됩니다.': ['Đăng ký tại Tài khoản → Trở thành đối tác. Chọn freelancer hoặc tiệm, tải lên giấy tờ tùy thân, tài khoản ngân hàng và ảnh; quản trị viên sẽ duyệt.', 'Apply under Account → Become a partner. Choose freelancer or shop, upload your ID, bank account and photos, and an admin will review it.', '在 账户 → 成为合作伙伴 中申请。选择自由职业者或店铺，上传身份证件、银行账户与照片，管理员审核后通过。', 'アカウント → パートナーになるから申請できます。フリーランスか店舗を選び、身分証・口座・写真をアップすると管理者の確認後に承認されます。'],
-  '홈 우상단 🌐 버튼에서 한국어·베트남어·영어·중국어·일본어로 바꿀 수 있어요.': ['Đổi ngôn ngữ bằng nút 🌐 ở góc trên bên phải trang chủ: Hàn, Việt, Anh, Trung, Nhật.', 'Use the 🌐 button at the top right of Home to switch between Korean, Vietnamese, English, Chinese and Japanese.', '点击首页右上角的 🌐 按钮，可切换韩语、越南语、英语、中文、日语。', 'ホーム右上の 🌐 ボタンから韓国語・ベトナム語・英語・中国語・日本語に切り替えられます。'],
-  '홈 상단의 ✨ AI 맞춤 추천을 확인해 보세요. 이용 이력·평점·지역을 분석해 어울리는 마사지사를 골라드려요. 조건을 말해주시면 바로 찾아드릴게요.': ['Hãy xem ✨ Gợi ý AI ở đầu trang chủ. Chúng tôi phân tích lịch sử, đánh giá và khu vực để chọn chuyên viên phù hợp. Bạn cứ nói điều kiện, mình tìm ngay.', 'Check ✨ AI picks at the top of Home. We look at your history, ratings and area to suggest a good match. Just tell me your conditions and I will search.', '请看首页上方的 ✨ AI 推荐。我们会分析使用记录、评分与地区来挑选合适的理疗师。说出条件，我马上帮您找。', 'ホーム上部の ✨ AIおすすめをご覧ください。利用履歴・評価・エリアから合うセラピストを選びます。条件を教えていただければすぐ探します。'],
-  '코스와 시간에 따라 달라집니다. 홈에서 서비스를 고르면 정확한 금액이 표시돼요.': ['Giá thay đổi theo gói và thời lượng. Chọn dịch vụ ở trang chủ sẽ thấy số tiền chính xác.', 'It depends on the course and duration. Pick a service on Home to see the exact amount.', '价格因套餐与时长而异。在首页选择服务即可看到准确金额。', 'コースと時間によって変わります。ホームでサービスを選ぶと正確な金額が表示されます。'],
-  '가장 저렴한 코스가 {p}₫부터예요. 코스와 시간에 따라 달라집니다.': ['Gói rẻ nhất từ {p}₫. Giá thay đổi theo gói và thời lượng.', 'The cheapest course starts at {p}₫. It varies by course and duration.', '最便宜的套餐自 {p}₫ 起。价格因套餐与时长而异。', '一番安いコースは {p}₫ からです。コースと時間によって変わります。'],
-  '예약 {h}시간 전까지는 자유롭게 취소할 수 있어요. 그 이후 취소와 노쇼는 최근 {w}일 기준 {a}회 누적 시 경고, {b}회 누적 시 {d}일간 예약이 제한됩니다.': ['Bạn có thể hủy thoải mái đến trước giờ hẹn {h} tiếng. Sau mốc đó, hủy muộn và không đến sẽ được tính trong {w} ngày gần nhất: {a} lần sẽ nhận cảnh báo, {b} lần sẽ bị hạn chế đặt lịch trong {d} ngày.', 'You can cancel freely up to {h} hour(s) before the appointment. After that, late cancellations and no-shows are counted over the last {w} days: {a} of them triggers a warning, and {b} means booking is restricted for {d} days.', '预约开始前 {h} 小时之前可自由取消。此后的临时取消与爽约将计入最近 {w} 天：累计 {a} 次会收到警告，累计 {b} 次将限制预约 {d} 天。', '予約の {h} 時間前までは自由にキャンセルできます。それ以降のキャンセルとノーショーは直近 {w} 日間で数え、{a} 回で警告、{b} 回で {d} 日間予約が制限されます。'],
-  '앱 내 채팅으로 마사지사와 직접 대화할 수 있어요. 그 외 문의는 {m} 으로 메일 주시면 순서대로 답변드립니다.': ['Bạn có thể nhắn trực tiếp với chuyên viên qua chat trong ứng dụng. Các thắc mắc khác xin gửi email tới {m}, chúng tôi sẽ trả lời theo thứ tự nhận được.', 'You can chat directly with the therapist in the app. For anything else, email {m} and we will reply in the order received.', '您可以在应用内与理疗师直接聊天。其他咨询请发送邮件至 {m}，我们会按顺序回复。', 'アプリ内チャットでセラピストと直接やり取りできます。その他のお問い合わせは {m} までメールいただければ順にお返事します。'],
   '문의': ['Liên hệ', 'Contact', '咨询', 'お問い合わせ'],
   '웹사이트': ['Website', 'Website', '网站', 'ウェブサイト'],
   'massa 로그인': ['Đăng nhập massa', 'Sign in to massa', '登录 massa', 'massa にログイン'],
@@ -5083,125 +5037,6 @@ window.openFilterSheet = function (screenId) {
   ov.querySelector('.flt-reset').onclick = () => { g = '전체'; st = '전체'; tags = new Set(); ov.querySelectorAll('.segbtn').forEach(x => x.classList.toggle('on', x.dataset.v === '전체')); ov.querySelectorAll('.flt-check').forEach(x => x.classList.remove('on')); };
   ov.querySelector('.flt-apply').onclick = () => { f.gender = g; f.status = st; f.tags = [...tags]; ov.style.display = 'none'; const chip = document.getElementById('fltChip_' + screenId); if (chip) chip.classList.toggle('sel', g !== '전체' || st !== '전체' || tags.size > 0); refreshList(screenId); };
 };
-
-// massa봇 — FAQ + AI 자연어 검색
-// 칩은 화면엔 번역문을 보여주고, 눌렀을 때는 한국어 원문을 넘긴다.
-// parseSearch 가 한국어 정규식이라 번역문을 그대로 넘기면 검색이 깨진다.
-const BOT_QUICK = ['예약 방법','가격 안내','커플 마사지 가능한 곳','한국인이 많이 가는 곳','발마사지 잘하는 곳','10만원 이하'];
-// 키워드는 5개 언어를 전부 검사한다. 하노이 거주 한국인이 영어로 치는 경우도 있어 언어를 가리지 않는 편이 낫다.
-// 순서가 곧 우선순위다. 좁은 의도(취소·가격·내 예약)를 넓은 의도(예약 방법)보다 먼저 둔다.
-// 안 그러면 "cancel my booking" 의 book 이, "取消预约" 의 预约 이 예약 규칙에 먼저 걸린다.
-const BOT_FAQ = [
-  { k: ['안녕','하이','ㅎㅇ','xin chào','chào','hi','hello','你好','こんにちは'],
-    a: 'massa봇이에요 😊 "커플 마사지 가능한 곳", "발마사지 10만원 이하"처럼 자연어로 물어보셔도 돼요.' },
-  { k: ['취소','환불','노쇼','hủy','hoàn tiền','cancel','refund','no-show','取消','退款','キャンセル','返金'],
-    a: '__CANCEL__' },
-  // 쿠폰이 가격보다 먼저다. 베트남어 "giảm giá"(할인) 안의 "giá"(가격) 가 가격 규칙에 먼저 걸린다
-  { k: ['쿠폰','할인','프로모션','mã giảm giá','khuyến mãi','giảm giá','coupon','discount','promo','优惠券','折扣','クーポン','割引'],
-    a: '계정 → 쿠폰함에서 보유 쿠폰을 확인하고 받을 수 있어요. 결제 시 자동으로 적용 가능한 쿠폰이 표시됩니다.' },
-  { k: ['가격','얼마','비용','요금','giá','bao nhiêu','chi phí','price','cost','how much','价格','多少钱','費用','料金','いくら'],
-    a: '__PRICE__' },
-  { k: ['내 예약','예약 확인','예약내역','lịch của tôi','đơn của tôi','my booking','my bookings','my reservation','我的预约','予約履歴','マイ予約'],
-    a: '계정 → 활동 내역(내 예약)에서 예약 상태와 시간을 확인할 수 있어요. 완료 후 결제·리뷰도 여기서 진행합니다.' },
-  { k: ['결제','카드','현금','qr','이체','계좌','thanh toán','thẻ','tiền mặt','chuyển khoản','pay','payment','card','cash','支付','刷卡','现金','支払い','カード','現金'],
-    a: '후불 결제입니다. 서비스 완료 후 현장 카드·현금·QR(MoMo·ZaloPay·VNPay)·계좌이체 중에 고르실 수 있어요. 쿠폰은 결제 화면에서 적용됩니다.' },
-  { k: ['위생','안전','청결','소독','vệ sinh','an toàn','sạch','hygiene','safety','safe','clean','卫生','安全','衛生'],
-    a: '1회용 위생 키트와 신원·자격 검증(인증 마크), 앱 내 안전 버튼으로 안전을 지켜요.' },
-  { k: ['즐겨찾기','찜','저장','yêu thích','favorite','favourite','收藏','お気に入り'],
-    a: '마음에 드는 마사지사는 카드 우측 상단 ♡를 눌러 찜해두세요. 계정 → 즐겨찾기에서 모아볼 수 있어요.' },
-  { k: ['파트너','취업','마사지사가','일하고','đối tác','ứng tuyển','làm việc','partner','apply','join','recruit','合作','应聘','パートナー','応募'],
-    a: '계정 → 마사지사·홈뷰티 파트너 되기에서 신청할 수 있어요. 프리랜서/마사지샵을 고르고 신분증·계좌·사진을 올리면 관리자 확인 후 승인됩니다.' },
-  { k: ['언어','베트남어','영어','중국어','일본어','ngôn ngữ','language','english','语言','中文','言語','日本語'],
-    a: '홈 우상단 🌐 버튼에서 한국어·베트남어·영어·중국어·일본어로 바꿀 수 있어요.' },
-  { k: ['추천','어디가','좋은 곳','괜찮은','gợi ý','đề xuất','nên chọn','recommend','suggestion','推荐','おすすめ','推薦'],
-    a: '홈 상단의 ✨ AI 맞춤 추천을 확인해 보세요. 이용 이력·평점·지역을 분석해 어울리는 마사지사를 골라드려요. 조건을 말해주시면 바로 찾아드릴게요.' },
-  { k: ['상담','직원','전화','문의','고객센터','hỗ trợ','liên hệ','tư vấn','nhân viên','support','contact','客服','联系','咨询','問い合わせ','サポート'],
-    a: '__CONTACT__' },
-  { k: ['예약','어떻게','방법','신청','đặt lịch','đặt','cách','book','booking','reserve','预约','怎么','予約','方法'],
-    a: '예약은 홈에서 서비스 선택 → 마사지사·코스 → 시간·위치 입력 → 예약 확정 순이에요. 결제는 서비스 완료 후 현장 결제(후불)입니다.' },
-];
-// 라틴 문자 키워드는 단어 경계로 본다. 'hi' 가 베트남어 "n[hi]êu" 안에 걸리는 일을 막는다.
-// 한국어·중국어·일본어는 띄어쓰기가 없거나 조사가 붙으므로 부분 일치를 그대로 쓴다.
-function botKwHit(t, k) {
-  const kk = k.toLowerCase();
-  if (!/^[ -À-ɏ]+$/.test(kk)) return t.includes(kk);
-  const esc = kk.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return new RegExp('(^|[^\\p{L}\\p{N}])' + esc + '($|[^\\p{L}\\p{N}])', 'u').test(t);
-}
-function botAnswer(text) {
-  const t = String(text).toLowerCase();
-  const hit = BOT_FAQ.find(r => r.k.some(x => botKwHit(t, x)));
-  if (!hit) return '원하시는 조건을 말씀해 주세요. 예: "여성전용 네일", "24시간 타이 마사지", "아이랑 갈 수 있는 곳".';
-  if (hit.a === '__PRICE__') return botPriceLine();
-  if (hit.a === '__CANCEL__') return botCancelLine();
-  if (hit.a === '__CONTACT__') return botContactLine();
-  return hit.a;
-}
-// 숫자·주소가 섞이는 문장은 **문장 전체를 사전에 두고 자리표시자만 치환**한다.
-// 조각을 이어붙이면 언어마다 어순이 달라 문장이 깨진다(베트남어에서 실제로 깨졌다).
-function botFill(ko, vals) {
-  let s = T(ko);
-  for (const k in vals) s = s.split('{' + k + '}').join(vals[k]);
-  return s;
-}
-// 가격은 코드에 박지 않고 실제 카탈로그에서 최저가를 읽는다. 값이 바뀌면 봇도 같이 바뀐다.
-function botPriceLine() {
-  const prices = (CACHE.services || []).map(s => Number(s.price_vnd)).filter(v => v > 0);
-  if (!prices.length) return T('코스와 시간에 따라 달라집니다. 홈에서 서비스를 고르면 정확한 금액이 표시돼요.');
-  return botFill('가장 저렴한 코스가 {p}₫부터예요. 코스와 시간에 따라 달라집니다.',
-    { p: Math.min(...prices).toLocaleString('en-US') });
-}
-// 취소 규정은 CANCEL_RULES 한 곳에서만 만든다. 약관·사이트와 숫자가 어긋나면 안 된다.
-function botCancelLine() {
-  const c = CANCEL_RULES;
-  return botFill('예약 {h}시간 전까지는 자유롭게 취소할 수 있어요. 그 이후 취소와 노쇼는 최근 {w}일 기준 {a}회 누적 시 경고, {b}회 누적 시 {d}일간 예약이 제한됩니다.',
-    { h: c.free_hours, w: c.window, a: c.warn, b: c.block, d: c.block_days });
-}
-function botContactLine() {
-  return botFill('앱 내 채팅으로 마사지사와 직접 대화할 수 있어요. 그 외 문의는 {m} 으로 메일 주시면 순서대로 답변드립니다.',
-    { m: SUPPORT_EMAIL });
-}
-function parseSearch(text) {
-  const conds = [], f = {};
-  const priceM = text.match(/(\d+)\s*만/);
-  const vndM = text.match(/(\d[\d,\.]*)\s*(동|₫|vnd)/i);
-  if (priceM) { f.maxKRW = parseInt(priceM[1]) * 10000; conds.push(priceM[1] + '만원 이하'); }
-  else if (vndM) { f.maxVND = parseInt(vndM[1].replace(/[,\.]/g, '')); conds.push('예산 ' + vndM[1] + '₫'); }
-  if (/커플/.test(text)) { f.couple = true; conds.push('커플'); }
-  if (/아이|키즈|아기|어린이|아기/.test(text)) { f.kids = true; conds.push('아이 동반'); }
-  if (/여성\s*전용|여자만|women/i.test(text)) { f.women = true; conds.push('여성전용'); }
-  if (/24\s*시간|심야|밤|새벽/.test(text)) { f.h24 = true; conds.push('24시간'); }
-  if (/한국인|한국\s*사람|korean/i.test(text)) { f.korean = true; conds.push('한국인 인기'); }
-  if (/할인|쿠폰|저렴|싼/.test(text)) { f.discount = true; conds.push('할인'); }
-  const svc = [];
-  if (/발\s*마사지|발마사지/.test(text)) svc.push('발마사지');
-  if (/아로마/.test(text)) svc.push('아로마');
-  if (/타이|태국/.test(text)) svc.push('타이');
-  if (/스웨디시/.test(text)) svc.push('스웨디시');
-  if (/네일/.test(text)) svc.push('네일');
-  if (/왁싱/.test(text)) svc.push('왁싱');
-  if (/각질|스크럽/.test(text)) svc.push('각질');
-  if (svc.length) { f.svc = svc; conds.push(svc.join('·')); }
-  return { conds, f };
-}
-function providerMatches(p, f) {
-  if (f.couple && !p.couple_ok) return false;
-  if (f.kids && !p.kids_ok) return false;
-  if (f.women && !p.women_only) return false;
-  if (f.h24 && !p.is_24h) return false;
-  if (f.korean && !p.korean_popular) return false;
-  if (f.discount && !p.has_discount) return false;
-  if (f.svc) {
-    const specKo = (p.specialties || []).map(s => TYPE_KO[s] || s);
-    const hay = (p.tags || []).concat(specKo);
-    if (!f.svc.some(s => hay.some(hn => hn.includes(s) || s.includes(hn)))) return false;
-  }
-  const min = (CACHE.priceMap || {})[p.id];
-  if (f.maxKRW != null) { if (min == null || min * 0.054 > f.maxKRW) return false; }
-  if (f.maxVND != null) { if (min == null || min > f.maxVND) return false; }
-  return true;
-}
-function isSearch(text) { return parseSearch(text).conds.length > 0; }
 
 let CHAT_PID = null, chatChannel = null;
 // 같은 화면을 손님도 마사지사도 쓴다. 누가 보고 있는지에 따라 '내 말' 쪽이 뒤집힌다.
@@ -5665,33 +5500,6 @@ window.openChatAsProvider = async function (bookingId, customerId, providerId) {
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: 'provider_id=eq.' + providerId }, (payload) => {
       const m = payload.new; if (m.customer_id === customerId) appendChat(m);
     }).subscribe();
-};
-
-window.openBot = function () {
-  let ov = document.getElementById('botOv');
-  if (!ov) { ov = document.createElement('div'); ov.id = 'botOv'; ov.style.cssText = 'position:fixed;inset:0;z-index:220;background:rgba(20,25,28,.5);display:flex;align-items:flex-end;justify-content:center'; document.body.appendChild(ov); }
-  ov.innerHTML = '<div class="bot-wrap"><div class="bot-head"><div class="bot-ava">mㅏ</div><div><div class="bot-name">massa bot</div><div class="bot-sub">' + T('AI 자연어 검색 · 보통 몇 초 내 응답') + '</div></div><span class="bot-close">✕</span></div><div class="bot-msgs" id="botMsgs"></div><div class="bot-quick" id="botQuick"></div><div class="bot-input"><input id="botInput" placeholder="' + T('예: 커플 마사지 10만원 이하') + '"><button id="botSend">' + T('전송') + '</button></div></div>';
-  ov.style.display = 'flex';
-  const msgs = ov.querySelector('#botMsgs'), quick = ov.querySelector('#botQuick');
-  const add = (who, txt) => { const d = document.createElement('div'); d.className = 'bmsg ' + who; d.textContent = txt; msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight; };
-  const addCard = (p) => { const d = document.createElement('div'); d.className = 'bmsg bot'; d.style.cursor = 'pointer'; d.innerHTML = '<b>' + p.display_name + '</b> ★' + Number(p.rating).toFixed(1) + ' (' + p.review_count + ' <span>리뷰</span>)<br><span style="font-size:12px;color:#7A8C94">' + (p.tags || []).join(' · ') + (p.base_district ? ' · <span>' + p.base_district + '</span>' : '') + '</span><br><span style="font-size:12px;color:#2E8B8B;font-weight:bold">프로필 보기 ›</span>'; d.onclick = () => { ov.style.display = 'none'; openProfile(p.id); }; msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight; };
-  const respond = (v) => {
-    if (isSearch(v)) {
-      const { conds, f } = parseSearch(v);
-      const res = CACHE.providers.filter(p => p.is_active && providerMatches(p, f));
-      add('bot', T('AI가 이해한 조건') + ' → ' + conds.map(c => T(c)).join(', ')
-        + (res.length ? ' · ' + res.length + T('곳을 찾았어요!') : ' · ' + T('조건에 맞는 곳을 못 찾았어요 🙏')));
-      res.slice(0, 6).forEach(addCard);
-    } else { add('bot', T(botAnswer(v))); }
-  };
-  add('bot', T('안녕하세요! massa봇이에요 😊 원하는 조건을 자연어로 말해보세요. 예: "커플 마사지 10만원 이하", "여성전용 네일".'));
-  // 표시는 번역문, 넘기는 값은 한국어 원문. parseSearch 가 한국어를 기대하기 때문이다
-  BOT_QUICK.forEach(q => { const b = document.createElement('div'); b.className = 'q'; b.textContent = T(q); b.onclick = () => { add('me', T(q)); setTimeout(() => respond(q), 300); }; quick.appendChild(b); });
-  const send = () => { const inp = ov.querySelector('#botInput'); const v = inp.value.trim(); if (!v) return; inp.value = ''; add('me', v); setTimeout(() => respond(v), 350); };
-  ov.querySelector('#botSend').onclick = send;
-  ov.querySelector('#botInput').addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
-  ov.querySelector('.bot-close').onclick = () => { ov.style.display = 'none'; };
-  ov.onclick = (e) => { if (e.target === ov) ov.style.display = 'none'; };
 };
 
 // Leaflet 은 지도를 처음 열 때만 불러온다 (첫 화면 로딩을 늘리지 않으려고). 지금은 손님의 '오는 중 보기' 에만 쓴다.

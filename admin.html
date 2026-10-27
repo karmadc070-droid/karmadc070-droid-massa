@@ -160,21 +160,9 @@
   .flt-actions button { flex: 1; border: none; border-radius: 14px; padding: 15px; font-size: 15px; font-weight: bold; cursor: pointer; }
   .flt-reset { background: #EAF1EC; color: #3E7C4F; }
   .flt-apply { background: #3E7C4F; color: #fff; }
-  .bot-wrap { width: 390px; max-width: 100%; height: 82vh; max-height: 640px; background: #F4F6F7; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; overflow: hidden; }
-  .bot-head { background: var(--navy); color: #fff; padding: 14px 16px; display: flex; align-items: center; gap: 10px; }
-  .bot-ava { width: 34px; height: 34px; border-radius: 50%; background: #fff; color: var(--navy); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; }
-  .bot-name { font-weight: bold; font-size: 15px; }
-  .bot-sub { font-size: 11px; opacity: .8; }
-  .bot-close { margin-left: auto; cursor: pointer; font-size: 17px; }
-  .bot-msgs { flex: 1; overflow: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
   .bmsg { max-width: 80%; padding: 10px 13px; border-radius: 14px; font-size: 13.5px; line-height: 1.55; white-space: pre-wrap; }
   .bmsg.bot { background: #fff; align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.05); }
   .bmsg.me { background: var(--navy); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
-  .bot-quick { display: flex; gap: 7px; flex-wrap: wrap; padding: 8px 12px; background: #F4F6F7; }
-  .bot-quick .q { background: #fff; border: 1.5px solid var(--line); border-radius: 16px; padding: 7px 12px; font-size: 12px; cursor: pointer; }
-  .bot-input { display: flex; gap: 8px; padding: 10px 12px; background: #fff; border-top: 1px solid var(--line); }
-  .bot-input input { flex: 1; border: 1.5px solid var(--line); border-radius: 20px; padding: 10px 14px; font-size: 13.5px; }
-  .bot-input button { background: var(--navy); color: #fff; border: none; border-radius: 20px; padding: 0 16px; font-weight: bold; cursor: pointer; }
   .noti-row { display: flex; gap: 12px; padding: 16px 4px; border-bottom: 1px solid #EEF2F0; }
   .noti-ico { width: 42px; height: 42px; border-radius: 50%; background: #EAF1EC; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
   .noti-title { font-weight: bold; font-size: 15px; }
@@ -268,11 +256,6 @@
   .sw .sw-track:before { content: ""; position: absolute; width: 20px; height: 20px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; }
   .sw input:checked + .sw-track { background: #3E7C4F; }
   .sw input:checked + .sw-track:before { transform: translateX(20px); }
-  .massa-fab { position: absolute; z-index: 60; bottom: 66px; right: 14px; width: 62px; height: 62px; border-radius: 50%; background: linear-gradient(145deg,#2E8B8B,#1F4E5F); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; box-shadow: 0 6px 18px rgba(31,78,95,.45); cursor: pointer; animation: fabPulse 2.6s ease-in-out infinite; }
-  .massa-fab .fab-ic { font-size: 19px; line-height: 1; }
-  .massa-fab .fab-name { font-size: 8.5px; font-weight: bold; letter-spacing: .2px; line-height: 1; }
-  .massa-fab:active { transform: scale(.94); }
-  .massa-fab .fab-badge { position: absolute; top: -3px; right: -3px; background: #E8A33D; color: #fff; font-size: 9px; font-weight: bold; border-radius: 8px; padding: 1px 5px; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
   @keyframes fabPulse { 0%,100% { box-shadow: 0 6px 18px rgba(31,78,95,.4); } 50% { box-shadow: 0 6px 26px rgba(46,139,139,.62); } }
   /* .on 을 붙이지 않으면 .screen{display:none}을 덮어써 비활성 상태에서도 화면에 남는다 */
   #chat.on { display: flex; flex-direction: column; padding-bottom: 16px; }
@@ -1178,7 +1161,6 @@
     <div id="safetyList"></div>
   </div>
   </div>
-  <div class="massa-fab" onclick="openBot()" title="massa bot" aria-label="massa bot"><span class="fab-ic">💬</span><span class="fab-name">massa bot</span><span class="fab-badge">AI</span></div>
   <div class="tabbar globaltab">
     <div class="on"><span class="ti">🧭</span>탐색</div>
     <div><span class="ti">📋</span>예약 내역</div>
@@ -5259,67 +5241,6 @@ window.openFilterSheet = function (screenId) {
   ov.querySelector('.flt-apply').onclick = () => { f.gender = g; f.status = st; f.tags = [...tags]; ov.style.display = 'none'; const chip = document.getElementById('fltChip_' + screenId); if (chip) chip.classList.toggle('sel', g !== '전체' || st !== '전체' || tags.size > 0); refreshList(screenId); };
 };
 
-// massa봇 — FAQ + AI 자연어 검색
-const BOT_QUICK = ['예약 방법','가격 안내','커플 마사지 가능한 곳','한국인이 많이 가는 곳','발마사지 잘하는 곳','10만원 이하'];
-function botAnswer(text) {
-  const has = (...k) => k.some(x => text.includes(x));
-  if (has('안녕','하이','hi','hello','ㅎㅇ')) return 'massa봇이에요 😊 "커플 마사지 가능한 곳", "발마사지 10만원 이하"처럼 자연어로 물어보셔도 돼요.';
-  if (has('예약','어떻게','방법','신청')) return '예약은 홈에서 서비스 선택 → 마사지사·코스 → 시간·위치 입력 → 예약 확정 순이에요. 결제는 서비스 완료 후 현장 결제(후불)입니다.';
-  if (has('가격','얼마','비용','요금')) return '아로마 90분이 850,000₫(약 46,000원)부터예요. 코스와 시간에 따라 달라집니다.';
-  if (has('위생','안전','청결','소독')) return '1회용 위생 키트와 신원·자격 검증(인증 마크), 앱 내 안전 버튼으로 안전을 지켜요.';
-  if (has('취소','환불','노쇼')) return '예약 시간 1시간 전까지 취소할 수 있어요. 이후 취소·노쇼 시 다음 예약이 제한될 수 있습니다.';
-  if (has('내 예약','예약 확인','예약내역','언제')) return '계정 → 활동 내역(내 예약)에서 예약 상태와 시간을 확인할 수 있어요. 완료 후 결제·리뷰도 여기서 진행합니다.';
-  if (has('결제','카드','현금','qr','이체','계좌')) return '후불 결제입니다. 서비스 완료 후 현장 카드·현금·QR(MoMo·ZaloPay·VNPay)·계좌이체 중에 고르실 수 있어요. 쿠폰은 결제 화면에서 적용됩니다.';
-  if (has('쿠폰','할인','프로모션')) return '계정 → 쿠폰함에서 보유 쿠폰을 확인하고 받을 수 있어요. 결제 시 자동으로 적용 가능한 쿠폰이 표시됩니다.';
-  if (has('즐겨찾기','찜','저장')) return '마음에 드는 마사지사는 카드 우측 상단 ♡를 눌러 찜해두세요. 계정 → 즐겨찾기에서 모아볼 수 있어요.';
-  if (has('파트너','등록','지원','일하고','취업','마사지사가')) return '계정 → 마사지사·홈뷰티 파트너 되기에서 신청할 수 있어요. 프리랜서/마사지샵을 고르고 신분증·계좌·사진을 올리면 관리자 확인 후 승인됩니다.';
-  if (has('언어','베트남어','영어','중국어','일본어')) return '홈 우상단 🌐 버튼에서 한국어·베트남어·영어·중국어·일본어로 바꿀 수 있어요.';
-  if (has('추천','어디가','좋은 곳','괜찮은')) return '홈 상단의 ✨ AI 맞춤 추천을 확인해 보세요. 이용 이력·평점·지역을 분석해 어울리는 마사지사를 골라드려요. 조건을 말해주시면 바로 찾아드릴게요.';
-  if (has('상담','사람','직원','전화')) return '앱 내 채팅으로 마사지사와 직접 대화할 수 있어요. 그 외 문의는 계정 → 회사 소개의 연락처를 이용해 주세요.';
-  return '원하시는 조건을 말씀해 주세요. 예: "여성전용 네일", "24시간 타이 마사지", "아이랑 갈 수 있는 곳".';
-}
-function parseSearch(text) {
-  const conds = [], f = {};
-  const priceM = text.match(/(\d+)\s*만/);
-  const vndM = text.match(/(\d[\d,\.]*)\s*(동|₫|vnd)/i);
-  if (priceM) { f.maxKRW = parseInt(priceM[1]) * 10000; conds.push(priceM[1] + '만원 이하'); }
-  else if (vndM) { f.maxVND = parseInt(vndM[1].replace(/[,\.]/g, '')); conds.push('예산 ' + vndM[1] + '₫'); }
-  if (/커플/.test(text)) { f.couple = true; conds.push('커플'); }
-  if (/아이|키즈|아기|어린이|아기/.test(text)) { f.kids = true; conds.push('아이 동반'); }
-  if (/여성\s*전용|여자만|women/i.test(text)) { f.women = true; conds.push('여성전용'); }
-  if (/24\s*시간|심야|밤|새벽/.test(text)) { f.h24 = true; conds.push('24시간'); }
-  if (/한국인|한국\s*사람|korean/i.test(text)) { f.korean = true; conds.push('한국인 인기'); }
-  if (/할인|쿠폰|저렴|싼/.test(text)) { f.discount = true; conds.push('할인'); }
-  const svc = [];
-  if (/발\s*마사지|발마사지/.test(text)) svc.push('발마사지');
-  if (/아로마/.test(text)) svc.push('아로마');
-  if (/타이|태국/.test(text)) svc.push('타이');
-  if (/스웨디시/.test(text)) svc.push('스웨디시');
-  if (/네일/.test(text)) svc.push('네일');
-  if (/왁싱/.test(text)) svc.push('왁싱');
-  if (/각질|스크럽/.test(text)) svc.push('각질');
-  if (svc.length) { f.svc = svc; conds.push(svc.join('·')); }
-  return { conds, f };
-}
-function providerMatches(p, f) {
-  if (f.couple && !p.couple_ok) return false;
-  if (f.kids && !p.kids_ok) return false;
-  if (f.women && !p.women_only) return false;
-  if (f.h24 && !p.is_24h) return false;
-  if (f.korean && !p.korean_popular) return false;
-  if (f.discount && !p.has_discount) return false;
-  if (f.svc) {
-    const specKo = (p.specialties || []).map(s => TYPE_KO[s] || s);
-    const hay = (p.tags || []).concat(specKo);
-    if (!f.svc.some(s => hay.some(hn => hn.includes(s) || s.includes(hn)))) return false;
-  }
-  const min = (CACHE.priceMap || {})[p.id];
-  if (f.maxKRW != null) { if (min == null || min * 0.054 > f.maxKRW) return false; }
-  if (f.maxVND != null) { if (min == null || min > f.maxVND) return false; }
-  return true;
-}
-function isSearch(text) { return parseSearch(text).conds.length > 0; }
-
 let CHAT_PID = null, chatChannel = null;
 function appendChat(m) {
   const wrap = document.getElementById('chatMsgs'); if (!wrap) return;
@@ -5364,31 +5285,6 @@ window.sendChat = async function () {
   const { data } = await sb.from('messages').insert({ customer_id: SESSION.user.id, provider_id: CHAT_PID, sender_role: 'customer', body: v }).select().single();
   if (data) appendChat(data);
   // 답장은 마사지사가 파트너 채팅에서 직접 보낸다. 실시간 구독(chatChannel)이 받아 띄운다.
-};
-
-window.openBot = function () {
-  let ov = document.getElementById('botOv');
-  if (!ov) { ov = document.createElement('div'); ov.id = 'botOv'; ov.style.cssText = 'position:fixed;inset:0;z-index:220;background:rgba(20,25,28,.5);display:flex;align-items:flex-end;justify-content:center'; document.body.appendChild(ov); }
-  ov.innerHTML = '<div class="bot-wrap"><div class="bot-head"><div class="bot-ava">mㅏ</div><div><div class="bot-name">massa bot</div><div class="bot-sub">AI 자연어 검색 · 보통 몇 초 내 응답</div></div><span class="bot-close">✕</span></div><div class="bot-msgs" id="botMsgs"></div><div class="bot-quick" id="botQuick"></div><div class="bot-input"><input id="botInput" placeholder="예: 커플 마사지 10만원 이하"><button id="botSend">전송</button></div></div>';
-  ov.style.display = 'flex';
-  const msgs = ov.querySelector('#botMsgs'), quick = ov.querySelector('#botQuick');
-  const add = (who, txt) => { const d = document.createElement('div'); d.className = 'bmsg ' + who; d.textContent = txt; msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight; };
-  const addCard = (p) => { const d = document.createElement('div'); d.className = 'bmsg bot'; d.style.cursor = 'pointer'; d.innerHTML = '<b>' + p.display_name + '</b> ★' + Number(p.rating).toFixed(1) + ' (' + p.review_count + ' 리뷰)<br><span style="font-size:12px;color:#7A8C94">' + (p.tags || []).join(' · ') + (p.base_district ? ' · ' + p.base_district : '') + '</span><br><span style="font-size:12px;color:#2E8B8B;font-weight:bold">프로필 보기 ›</span>'; d.onclick = () => { ov.style.display = 'none'; openProfile(p.id); }; msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight; };
-  const respond = (v) => {
-    if (isSearch(v)) {
-      const { conds, f } = parseSearch(v);
-      const res = CACHE.providers.filter(p => p.is_active && providerMatches(p, f));
-      add('bot', 'AI가 이해한 조건 → ' + conds.join(', ') + (res.length ? ' · ' + res.length + '곳을 찾았어요!' : ' · 조건에 맞는 곳을 못 찾았어요 🙏'));
-      res.slice(0, 6).forEach(addCard);
-    } else { add('bot', botAnswer(v)); }
-  };
-  add('bot', '안녕하세요! massa봇이에요 😊 원하는 조건을 자연어로 말해보세요. 예: "커플 마사지 10만원 이하", "여성전용 네일".');
-  BOT_QUICK.forEach(q => { const b = document.createElement('div'); b.className = 'q'; b.textContent = q; b.onclick = () => { add('me', q); setTimeout(() => respond(q), 300); }; quick.appendChild(b); });
-  const send = () => { const inp = ov.querySelector('#botInput'); const v = inp.value.trim(); if (!v) return; inp.value = ''; add('me', v); setTimeout(() => respond(v), 350); };
-  ov.querySelector('#botSend').onclick = send;
-  ov.querySelector('#botInput').addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
-  ov.querySelector('.bot-close').onclick = () => { ov.style.display = 'none'; };
-  ov.onclick = (e) => { if (e.target === ov) ov.style.display = 'none'; };
 };
 
 // 지도 검색(반경·마커)

@@ -5083,3 +5083,6 @@ vi:
 • Kỹ thuật viên có thêm nút "Xuất phát" và "Đã đến".
 • Bỏ bản đồ trước khi đặt lịch để đặt lịch đơn giản hơn.
 • Ứng dụng xin quyền vị trí của kỹ thuật viên để chia sẻ vị trí khi đang di chuyển.
+
+## 2026-10-27 massa bot 제거 (사장님 결정 — 필요 없음)
+- [x] index.html·admin.html 에서 massa bot FAB·openBot·BOT_QUICK/BOT_FAQ·botAnswer 계열·parseSearch/providerMatches/isSearch(봇 전용)·.bot-*/.massa-fab CSS·봇 번역 28줄 제거. 채팅이 쓰는 .bmsg 는 남김 → verify: check_syntax 오류 0, 헤드리스 확인(FAB 0·페이지 오류 0·채팅·검색 화면 정상)
