@@ -318,10 +318,18 @@ workflows:
       - name: 위치 권한 추가
         script: |
           MF=android/app/src/main/AndroidManifest.xml
-          for perm in ACCESS_COARSE_LOCATION ACCESS_FINE_LOCATION; do
-            grep -q "android.permission.$perm" "$MF" || sed -i "s#<application#<uses-permission android:name=\"android.permission.$perm\" />\n    <application#" "$MF"
-          done
-          grep -c 'ACCESS_FINE_LOCATION\|ACCESS_COARSE_LOCATION' "$MF" | grep -q 2 || { echo "★ 위치 권한 추가 실패 - 중단"; exit 1; }
+          # macOS(BSD) sed 는 -i 문법이 달라 python 으로 넣는다
+          python3 - "$MF" <<'PY'
+          import sys
+          p = sys.argv[1]
+          s = open(p, encoding='utf-8').read()
+          for perm in ('ACCESS_COARSE_LOCATION', 'ACCESS_FINE_LOCATION'):
+              tag = 'android.permission.' + perm
+              if tag not in s:
+                  s = s.replace('<application', '<uses-permission android:name="%s" />\n    <application' % tag, 1)
+          open(p, 'w', encoding='utf-8').write(s)
+          PY
+          grep -q 'ACCESS_FINE_LOCATION' "$MF" && grep -q 'ACCESS_COARSE_LOCATION' "$MF" || { echo "★ 위치 권한 추가 실패 - 중단"; exit 1; }
           grep 'LOCATION' "$MF"
       - name: Firebase 설정 넣기
         script: |
