@@ -4163,6 +4163,7 @@ async function loadAdminBookings() {
       + '<div class="d">' + (b.providers ? b.providers.display_name : '미배정') + ' · ' + (b.services ? b.services.name : '') + '</div>'
       + '<div class="d">' + (b.amount_vnd || 0).toLocaleString() + '₫ · ' + (b.is_paid ? '결제완료' : '미결제') + ' · ' + (b.hotel_name || b.address || '위치 미입력') + '</div>'
       + '<div style="margin-top:8px;display:flex;gap:8px">'
+      + (b.status === 'on_the_way' ? '<button class="chip" onclick="adminTrack(\'' + b.id + '\')">📍 위치 보기</button>' : '')
       + (b.status !== 'completed' ? '<button class="chip sel" onclick="adminSetBooking(\'' + b.id + '\',\'completed\')">완료 처리</button>' : '')
       + (b.status !== 'cancelled' ? '<button class="chip" style="border-color:#E5484D;color:#E5484D" onclick="adminSetBooking(\'' + b.id + '\',\'cancelled\')">취소</button>' : '')
       + '</div></div>';
@@ -4170,6 +4171,79 @@ async function loadAdminBookings() {
 }
 window.loadAdminBookings = loadAdminBookings;
 window.adminSetBooking = async (id, status) => { const patch = { status }; if (status === 'completed') patch.completed_at = new Date().toISOString(); const { error } = await sb.from('bookings').update(patch).eq('id', id); if (error) { alert('실패: ' + error.message); return; } loadAdminBookings(); };
+// 이동 중 예약의 마사지사 위치 (2026-10-27). booking_locations 는 is_admin() 이 읽을 수 있다.
+// 열려 있는 동안 15초마다 다시 읽고, 닫으면 타이머와 지도를 정리한다. Leaflet 은 처음 열 때만 불러온다(index.html 과 같은 로더).
+const LEAFLET = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/';
+let leafletP = null;
+function loadLeaflet() {
+  if (!leafletP) leafletP = new Promise((ok, no) => {
+    const css = document.createElement('link');
+    css.rel = 'stylesheet'; css.href = LEAFLET + 'leaflet.css'; css.crossOrigin = '';
+    css.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+    document.head.appendChild(css);
+    const js = document.createElement('script');
+    js.src = LEAFLET + 'leaflet.js'; js.crossOrigin = '';
+    js.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
+    js.onload = ok; js.onerror = () => { leafletP = null; js.remove(); no(); };
+    document.head.appendChild(js);
+  });
+  return leafletP;
+}
+let ADM_TRACK = null;
+window.closeAdminTrack = function () {
+  const t = ADM_TRACK; ADM_TRACK = null;
+  if (t) { clearInterval(t.poll); if (t.map) t.map.remove(); }
+  const ov = document.getElementById('admTrack'); if (ov) ov.remove();
+};
+window.adminTrack = async function (id) {
+  closeAdminTrack();
+  const ov = document.createElement('div');
+  ov.id = 'admTrack';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(20,25,28,.55);display:flex;align-items:center;justify-content:center;padding:16px';
+  ov.innerHTML = '<div style="width:520px;max-width:100%;background:#fff;border-radius:18px;padding:16px">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+    + '<b style="color:#1F4E5F">📍 마사지사 위치</b><button class="chip" id="admTrackClose">닫기</button></div>'
+    + '<div id="admTrackMap" style="height:360px;border-radius:12px"></div>'
+    + '<div id="admTrackHint" style="font-size:12px;color:#7A8C94;margin-top:6px"></div></div>';
+  document.body.appendChild(ov);
+  ov.querySelector('#admTrackClose').onclick = closeAdminTrack;
+  ov.onclick = e => { if (e.target === ov) closeAdminTrack(); };
+  const t = ADM_TRACK = { map: null, poll: null };
+  const hint = s => { const el = document.getElementById('admTrackHint'); if (el && ADM_TRACK === t) el.textContent = s; };
+  hint('불러오는 중…');
+  try { await loadLeaflet(); } catch (e) { hint('지도를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.'); return; }
+  if (ADM_TRACK !== t) return;
+  const { data: bk } = await sb.from('bookings').select('lat, lng').eq('id', id).maybeSingle();
+  if (ADM_TRACK !== t) return;
+  const home = (bk && bk.lat != null && bk.lng != null) ? [bk.lat, bk.lng] : null;
+  t.map = L.map('admTrackMap').setView(home || [21.0285, 105.8342], 14);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(t.map);
+  if (home) L.marker(home, { title: '예약 장소' }).addTo(t.map);
+  const icon = L.divIcon({ className: 'adm-prov-pin', html: '<div style="font-size:30px;line-height:36px;text-align:center">🛵</div>', iconSize: [36, 36], iconAnchor: [18, 18] });
+  let pin = null;
+  const pull = async () => {
+    const { data, error } = await sb.from('booking_locations').select('lat, lng, updated_at').eq('booking_id', id).maybeSingle();
+    if (ADM_TRACK !== t) return;
+    if (error) { hint('위치를 읽지 못했습니다: ' + error.message); return; }
+    if (!data) {
+      if (pin) { pin.remove(); pin = null; }
+      hint('아직 위치가 없습니다. 마사지사 앱이 켜져 있어야 보냅니다. 15초마다 다시 확인합니다.');
+      return;
+    }
+    const ll = [data.lat, data.lng];
+    if (!pin) {
+      pin = L.marker(ll, { icon, title: '마사지사' }).addTo(t.map);
+      t.map.fitBounds(home ? [ll, home] : [ll], { padding: [40, 40], maxZoom: 16 });
+    } else pin.setLatLng(ll);
+    hint('마지막 갱신 ' + new Date(data.updated_at).toLocaleTimeString('ko-KR') + ' · 15초마다 다시 읽습니다');
+  };
+  t.poll = setInterval(pull, 15000);
+  setTimeout(() => { if (ADM_TRACK === t && t.map) t.map.invalidateSize(); }, 50);
+  pull();
+};
 
 // ── 관리자: 기사(마사지사) 관리 ──
 async function loadAdminProviders() {
