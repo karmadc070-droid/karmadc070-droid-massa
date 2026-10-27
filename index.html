@@ -4264,6 +4264,7 @@ const DICT = {
   '💳 결제는 서비스가 끝난 뒤 진행됩니다. 단, 예약 시간 1시간 전 이후 취소·노쇼 시 다음 예약이 제한될 수 있습니다.': ['💳 Thanh toán sau khi dịch vụ kết thúc. Tuy nhiên, hủy trong vòng 1 giờ trước giờ hẹn hoặc không đến có thể khiến lần đặt sau bị hạn chế.', '💳 Payment is taken after the service. However, cancelling within 1 hour of the appointment or not showing up may restrict future bookings.', '💳 服务结束后付款。但预约前1小时内取消或爽约，可能会限制下次预约。', '💳 お支払いはサービス終了後です。ただし予約1時間前以降のキャンセル・無断不参加は次回予約が制限される場合があります。'],
   '출발': ['Xuất phát', 'Depart', '出发', '出発'],
   '도착': ['Đã đến', 'Arrived', '已到达', '到着'],
+  '서비스를 마쳤나요? 완료로 바꾸면 되돌릴 수 없습니다.': ['Đã xong dịch vụ chưa? Sau khi chuyển sang hoàn tất sẽ không thể hoàn tác.', 'Finished the service? Once marked complete, this cannot be undone.', '服务结束了吗？标记为完成后将无法撤销。', 'サービスは終わりましたか？完了にすると元に戻せません。'],
   '출발할까요? 도착할 때까지 이 화면을 켜 두면 손님이 지도에서 오는 길을 봅니다.': ['Bắt đầu di chuyển? Hãy giữ màn hình này mở cho đến khi tới nơi để khách theo dõi bạn trên bản đồ.', 'Head out now? Keep this screen open until you arrive so the customer can follow you on the map.', '现在出发吗？到达前请保持此页面打开，顾客可以在地图上看到您的行程。', '出発しますか？到着まで この画面を開いたままにすると、お客様が地図で向かう様子を確認できます。'],
   '📡 위치 공유 중': ['📡 Đang chia sẻ vị trí', '📡 Sharing location', '📡 正在共享位置', '📡 位置を共有中'],
   '위치 공유 꺼짐': ['Chưa chia sẻ vị trí', 'Location sharing off', '未共享位置', '位置共有オフ'],
@@ -5241,6 +5242,8 @@ async function loadIncoming() {
       : b.status === 'on_the_way'
         ? '<button class="chip sel" onclick="arriveIncoming(\'' + b.id + '\')">📍 ' + rEsc(T('도착')) + '</button>'
           + '<span data-share="' + b.id + '" style="align-self:center;font-size:12.5px;font-weight:700"></span>'
+      : b.status === 'in_progress'
+        ? '<button class="chip sel" onclick="completeIncoming(\'' + b.id + '\')">✅ ' + rEsc(T('완료')) + '</button>'
       : '';
     return '<div class="tcard" style="display:block;padding:14px">'
       + '<div style="display:flex;justify-content:space-between;align-items:center">'
@@ -5579,6 +5582,15 @@ window.arriveIncoming = async function (id) {
     .eq('id', id).eq('status', 'on_the_way').select('id');
   if (error || !data || !data.length) { alert(T('바꾸지 못했습니다.') + (error ? ' ' + error.message : '')); loadIncoming(); return; }
   stopSharing();
+  loadIncoming();
+};
+// 완료 — 관리자 '완료 처리'와 같은 값(status·completed_at)을 보낸다. completed_at 은 가드가 서버 시각으로 덮어 찍는다.
+// 손님 알림('서비스가 완료되었습니다. 평가를 남겨주세요')은 notify_booking_event 가 보내고, 정산·수수료는 서버가 completed_at 으로 센다.
+window.completeIncoming = async function (id) {
+  if (!confirm(T('서비스를 마쳤나요? 완료로 바꾸면 되돌릴 수 없습니다.'))) return;
+  const { data, error } = await sb.from('bookings').update({ status: 'completed', completed_at: new Date().toISOString() })
+    .eq('id', id).eq('status', 'in_progress').select('id');
+  if (error || !data || !data.length) { alert(T('바꾸지 못했습니다.') + (error ? ' ' + error.message : '')); loadIncoming(); return; }
   loadIncoming();
 };
 
