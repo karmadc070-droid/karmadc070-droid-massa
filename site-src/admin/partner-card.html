@@ -8,7 +8,7 @@
 <title>massa 제휴 카드</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Noto+Sans+KR:wght@400;600;700&family=Noto+Serif+KR:wght@600&display=swap" rel="stylesheet">
-<style id="pagesize">@page { size: A6; margin: 0; }</style>
+<style id="pagesize">@page { size: 105mm 148mm; margin: 0; }</style>
 <style>
 :root { --teal:#1F4E5F; --teal-deep:#143643; --teal-pale:#E9F0F1; --paper:#FBF9F6; --ink:#1B2528; --soft:#5C6A6D; --gold:#B8863B; }
 * { box-sizing: border-box; }
@@ -65,7 +65,8 @@ document.getElementById('qr').innerHTML = '<svg viewBox="0 0 ' + n + ' ' + n + '
 document.getElementById('who').textContent = (q.get('name') ? q.get('name') + ' · ' : '') + code;
 document.title = 'massa 제휴 카드 ' + code;
 function size(s) {
-  document.getElementById('pagesize').textContent = '@page { size: ' + s + '; margin: 0; }';
+  // 크롬은 @page 의 A6 이름을 모른다(Letter 로 나온다). 치수로 적는다.
+  document.getElementById('pagesize').textContent = '@page { size: ' + (s === 'A5' ? '148mm 210mm' : '105mm 148mm') + '; margin: 0; }';
   document.body.classList.toggle('a5', s === 'A5');
   document.querySelectorAll('[data-s]').forEach(b => b.classList.toggle('on', b.dataset.s === s));
 }
