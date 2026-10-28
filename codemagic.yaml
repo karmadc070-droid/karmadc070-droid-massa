@@ -164,6 +164,14 @@ workflows:
           else:
               print("CODE_SIGN_ENTITLEMENTS 이미 있음")
           PY
+      # iOS 알림 사진 (2026-10-28). 저녁 '오늘의 테라피스트' 푸시의 image_url 을 받아 알림에 붙이는 앱 확장.
+      # cap add ios 가 매 빌드마다 프로젝트를 새로 만들므로 이 단계도 매번 돌아야 한다.
+      - name: 알림 사진 확장(NotificationService) 추가
+        script: |
+          mkdir -p ios/App/NotificationService
+          cp ios-nse/NotificationService.swift ios-nse/Info.plist ios/App/NotificationService/
+          gem list -i xcodeproj >/dev/null 2>&1 || sudo gem install xcodeproj --no-document
+          ruby ios-nse/add_nse.rb
       # 서명 파일이 Apple 계정에 없으면 --create 가 인증서와 프로파일을 새로 만든다 (개인키는 Codemagic secure 변수 재사용)
       - name: 서명 인증서·프로파일 확보
         script: |
@@ -175,6 +183,13 @@ workflows:
           fi
           keychain initialize
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --platform IOS \
+            --strict-match-identifier \
+            --certificate-key "@env:CERTIFICATE_PRIVATE_KEY" \
+            --create
+          # 알림 사진 확장은 번들 ID 가 따로라 프로파일도 따로 받는다 (없으면 만든다)
+          app-store-connect fetch-signing-files "$BUNDLE_ID.NotificationService" \
             --type IOS_APP_STORE \
             --platform IOS \
             --strict-match-identifier \
@@ -194,6 +209,10 @@ workflows:
           echo "PROJECT_BUILD_NUMBER=$PROJECT_BUILD_NUMBER / 마케팅 버전=$MARKETING"
           agvtool new-version -all "$PROJECT_BUILD_NUMBER"
           agvtool new-marketing-version "$MARKETING"
+          # 앱 확장의 버전은 앱과 같아야 업로드가 통과한다
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $MARKETING" NotificationService/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $PROJECT_BUILD_NUMBER" NotificationService/Info.plist
+          echo "확장 버전: $(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' NotificationService/Info.plist) ($(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' NotificationService/Info.plist))"
       # 계정 화면에 설치된 빌드 번호를 표시해 구버전 테스트로 인한 혼선을 막는다
       - name: 빌드 번호를 index.html에 주입
         script: |
