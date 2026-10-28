@@ -2507,7 +2507,7 @@ function openPushTap() {
   // ★ booking_new 가 빠져 있었다 (2026-10-19). 마사지사가 알림을 눌러도
   //    알림 목록까지만 가고 거기서 끝났다. 수락할 화면으로 보낸다.
   if (SESSION && d.kind === 'booking_new') { openIncoming(); }
-  else if (d.kind === 'promo_provider' && d.provider_id) { openProfile(d.provider_id); }   // 저녁 '오늘의 테라피스트' (2026-10-28)
+  else if ((d.kind === 'promo_provider' || d.kind === 'rebook') && d.provider_id) { openProfile(d.provider_id); }   // 저녁 '오늘의 테라피스트' (2026-10-28)
   else if (SESSION && d.kind === 'booking_completed' && d.booking_id) { window.go('myBookings'); loadMyBookings(); openReviewFor(d.booking_id); }
   else if (SESSION && /^booking_(confirmed|on_the_way|completed|cancelled)$/.test(d.kind)) { window.go('myBookings'); loadMyBookings(); }
   else if (SESSION && /^chat/.test(d.kind)) { openChatTap(); }
@@ -5870,7 +5870,7 @@ async function renderNotifications() {
   if (SESSION) { try { const { data } = await sb.from('notifications').select('*').eq('user_id', SESSION.user.id).order('created_at', { ascending: false }).limit(30); real = data || []; } catch (e) {} }
   // ★ 항목을 누르면 해당 화면으로 간다 (2026-10-19). 전에는 클릭 동작이 아예 없어서
   //    푸시를 눌러 들어온 마사지사가 여기서 막혔다.
-  const realHtml = real.map(n => '<div class="noti-row" style="cursor:pointer" onclick="tapNoti(\'' + n.kind + '\',\'' + (n.provider_id || '') + '\')"><div class="noti-ico">' + (n.image_url ? '<img src="' + rEsc(n.image_url) + '" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover">' : (n.kind === 'warning' ? '⚠️' : '📢')) + '</div><div class="noti-body"><div class="noti-title">' + (n.title || '알림') + '</div><div class="noti-desc">' + (n.body || '') + '</div><div class="noti-time">' + notiAgo(n.created_at) + '</div></div></div>').join('');
+  const realHtml = real.map(n => '<div class="noti-row" style="cursor:pointer" onclick="tapNoti(\'' + n.kind + '\',\'' + (n.provider_id || '') + '\')"><div class="noti-ico">' + (n.image_url ? '<img src="' + rEsc(n.image_url) + '" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover">' : (n.kind === 'warning' ? '⚠️' : '📢')) + '</div><div class="noti-body"><div class="noti-title">' + rEsc(n.title || '알림') + '</div><div class="noti-desc">' + rEsc(n.body || '') + '</div><div class="noti-time">' + notiAgo(n.created_at) + '</div></div></div>').join('');
   // ★ 여기 있던 데모 3줄을 지웠다 (2026-10-19) — 'Linh N.는 기다리고 있습니다',
   //   '서비스가 완료되었습니다', '테라피스트와 연결되었습니다'. 코드에 박힌 가짜였고
   //   실제 사용자에게 자기 일인 것처럼 보이고 있었다. 다시 넣지 말 것.
@@ -5885,7 +5885,7 @@ async function openChatTap() {
   if (mine.length) openIncoming(); else { window.go('myBookings'); loadMyBookings(); }
 }
 window.tapNoti = function (kind, pid) {
-  if (kind === 'promo_provider' && pid) { openProfile(pid); return; }
+  if ((kind === 'promo_provider' || kind === 'rebook') && pid) { openProfile(pid); return; }   // rebook: 완료 14일 뒤 재예약 (2026-10-29)
   if (kind === 'booking_new') { openIncoming(); return; }
   if (/^chat/.test(kind)) { openChatTap(); return; }
   if (kind === 'referral_reward') { openCouponsFresh(); return; }
