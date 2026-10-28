@@ -5107,3 +5107,10 @@ vi:
 - [x] verify: sql/test_booking_superseded.sql BEGIN…ROLLBACK PASS 11/11, check_syntax 오류 0, 헤드리스(지워진 사본 수락 → "Kỹ thuật viên khác đã nhận trước." 후 목록 비움, 관리자 목록 정상·abFan 없음, 페이지 오류 0)
 - [x] 앱: 「먼저 수락」 알림(booking_taken)이 오면 받은 신청 목록을 다시 읽는다
 - [ ] 커밋·push·앱/콘솔 배포
+
+## 데일리 푸시 도입 12:45 (2026-10-28)
+- [x] 새 일정: VPS crontab '45 14 * * *'(KST) = 하노이 12:45, massa-db 에는 pg_cron 이 없어 다른 massa 작업처럼 crontab
+- [x] 요일별 문구 7개 작성 (ko/vi/en/zh/ja, 사용자 최근 기기 push_tokens.lang 으로 골라 notice 행에 그 언어 문장을 넣음(send-push 가 notice 는 title/body 를 그대로 씀)), dow 는 extract(dow) 0=일
+- [x] 하루 한 번만 나가게 막음 (daily_push_runs(run_date=하노이 날짜))
+- [x] BEGIN…ROLLBACK 테스트: 오늘(수, dow 3) 문구로 생성 확인, 두 번째 호출 0건
+- [x] VPS 적용 (sql/daily_push.sql, 새로 만든 데일리 푸시)
