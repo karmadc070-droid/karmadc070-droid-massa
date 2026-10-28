@@ -2030,3 +2030,13 @@ exception when others then
 - 시험: sql/test_rebook_push.sql (실행법 첫 줄, 전부 롤백) PASS 1~8. 헤드리스: emoi-tmp/shot-massa-rebook.js <provider_id> <이름> — 라이브에서 tapNoti('rebook', id) 가 프로필을 연다.
 - 백업: /root/backups/rebook_before_20261029/ (public 스키마·crontab·적용한 SQL).
 - 커밋할 때 다른 에이전트의 작업 중 index.html 변경(딥링크 onNativeLink 등)이 같은 파일에 있었다. HEAD 본에 내 네 줄만 적용해 스테이징했다(git update-index --cacheinfo). 그 변경은 작업 트리에 그대로 남아 있다.
+
+## 2026-10-29 공유 링크를 앱이 바로 열기 (App Links · Universal Links)
+- 받는 주소는 `https://app.massaviet.com/` 경로 "/" 하나뿐이다. 친구 초대(?ref=)·호텔 QR(?p=)이 모두 "/" 에 붙어 있고, 이미 인쇄된 QR 카드도 그 주소라 경로를 바꿀 수 없다.
+  reset.html·pay-return.html·privacy.html 은 브라우저에 남아야 하므로 "/*" 로 넓히지 않았다.
+- 앱 안 처리 — native.js 가 https 주소를 받으면 쿼리만 `onNativeLink` 로 넘기고, index.html 이 웹과 똑같이 localStorage 에 보관한다. 로그인돼 있으면 바로 claim_referral·claim_partner 를 부른다. 보관은 여러 번 와도 결과가 같아 appUrlOpen·getLaunchUrl 이 둘 다 와도 괜찮다.
+- 설치 후 첫 실행(지연 딥링크)은 하지 않았다. 링크를 누른 뒤 스토어에서 설치한 친구는 초대 화면의 「친구에게 받은 초대 코드」 칸에 직접 넣는다(가입 24시간 안). 호텔 QR 은 앱 설치 전 웹에서 열리면 웹 저장소에만 남아 앱으로 넘어가지 않는다.
+- 한계 — 안드로이드는 쿼리로 거를 수 없어서, 웹에서 소셜 로그인 후 `/?code=` 로 돌아오는 주소도 앱이 가로챌 수 있다. 그때 앱에는 PKCE 열쇠가 없어 로그인이 이어지지 않으니 앱에서 다시 로그인하면 된다.
+- Caddy 는 확장자 없는 파일에 형식을 붙이지 않아 `@aasa path /.well-known/apple-app-site-association` → `Content-Type application/json` 을 넣었다. 운영 Caddyfile 에는 이미 들어 있고 배포 스크립트 템플릿에도 같은 줄이 있다.
+- iOS 서명 — Associated Domains 는 App ID 기능이라 Codemagic 서명 단계에서 `app-store-connect bundle-ids enable-capabilities <id> --capability "Associated Domains"` 로 켠다. 켜면 옛 프로파일은 무효가 되고 `--create` 가 새로 만든다. 받은 프로파일에 associated-domains 가 없으면 빌드를 멈추게 했다.
+- 검증 — 공개 주소 200·JSON, Google Digital Asset Links API 지문 2개, Apple CDN 200 (2026-10-29).

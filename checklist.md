@@ -5156,3 +5156,13 @@ vi:
 - [ ] 스토어 앱은 다음 빌드(1.0.24~)부터 rebook 누르기가 프로필로 간다
 - [ ] 11/8·11/10·11/11 11:00 하노이 이후 /var/log/massa_daily_push.log 와 rebook_push_log 로 첫 발송 확인
 - [ ] 사장님 — 마케팅 동의(marketing_agreed_at) 손님에게만 보낼지 결정 (지금은 데일리 푸시처럼 전원)
+
+## 2026-10-29 공유 링크를 앱이 바로 열기 (Android App Links · iOS Universal Links)
+- [x] AL-1. `.well-known/apple-app-site-association` — GRF3HK77HU.app.massa.hanoi, 경로 "/" 만 (7089834) → verify: 200 · application/json · 리다이렉트 0 · JSON 파싱, Apple CDN(app-site-association.cdn-apple.com/a/v1/app.massaviet.com) 200
+- [x] AL-2. assetlinks.json 은 그대로(Play 서명키 7B:AC… + 업로드 키 05:7B…) → verify: Google Digital Asset Links API 가 두 지문 모두 돌려줌
+- [x] AL-3. VPS Caddyfile app.massaviet.com 블록에 `@aasa` Content-Type 줄 추가(백업 /root/Caddyfile.bak.applinks-*), vps-deploy-app.sh 에 같은 줄과 확인 단계 7-1 추가 → 배포 200·비밀 404 확인
+- [x] AL-4. native.js — https 주소로 깨어나면 쿼리를 onNativeLink 로, 꺼진 앱은 getLaunchUrl. index.html — saveRefCode·savePartnerCode·window.onNativeLink (e11ea40) → verify: 모듈 스크립트·native.js 문법 통과
+- [x] AL-5. codemagic — Android autoVerify 인텐트 필터(app.massaviet.com, 경로 "/"), iOS applinks:app.massaviet.com, 서명 단계에서 Associated Domains 기능 켜기 + 프로파일 확인 (16d3979, cb21608)
+- [ ] 다음 스토어 빌드(iOS 1.0.24~, Android 1.1.112~)에 들어간다. 지금 심사 중인 1.0.23·1.1.111 에는 없다
+- [ ] 첫 iOS 빌드 로그에서 「Associated Domains 켜기」와 프로파일 확인 줄이 통과했는지 본다. 실패하면 Apple Developer > Identifiers > app.massa.hanoi 에서 직접 켠다
+- [ ] 실기기 확인 — 카톡에 https://app.massaviet.com/?ref=코드 를 보내 누르면 앱이 열리고 로그인 상태면 「친구 초대 코드가 등록되었습니다」가 뜨는지. 안드로이드는 `adb shell pm get-app-links app.massa.hanoi` 가 verified 인지
