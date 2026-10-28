@@ -1,0 +1,13 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "GRF3HK77HU.app.massa.hanoi",
+        "appIDs": ["GRF3HK77HU.app.massa.hanoi"],
+        "paths": ["/"],
+        "components": [{ "/": "/", "comment": "공유 링크 ?ref= 친구 초대, ?p= 호텔 제휴 QR" }]
+      }
+    ]
+  }
+}

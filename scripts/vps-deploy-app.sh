@@ -80,6 +80,9 @@ app.massaviet.com {
     # 서비스워커와 assetlinks 는 캐시되면 갱신이 늦는다. 짧게 잡는다.
     @nocache path /sw.js /manifest.webmanifest /.well-known/*
     header @nocache Cache-Control "no-cache"
+    # 유니버설 링크 파일은 확장자가 없어 형식을 직접 정한다
+    @aasa path /.well-known/apple-app-site-association
+    header @aasa Content-Type "application/json"
 }
 EOF
   echo '  Caddyfile 에 app.massaviet.com 추가'
@@ -107,6 +110,11 @@ echo ''
 echo '=== 7. ★ assetlinks 지문이 그대로인가 (TWA 가 여기 걸린다) ==='
 curl -s https://app.massaviet.com/.well-known/assetlinks.json | tr -d ' \n' | head -c 400
 echo ''
+echo ''
+echo '=== 7-1. 유니버설 링크 파일 (200 · application/json · 리다이렉트 없음) ==='
+# Content-Type 은 Caddyfile 의 app.massaviet.com 블록 @aasa 줄이 정한다 (2026-10-29)
+curl -s -o /dev/null -w '%{http_code} %{content_type} redirects=%{num_redirects}\n' \
+  https://app.massaviet.com/.well-known/apple-app-site-association
 echo ''
 echo '=== 8. ★ 비밀이 웹으로 나가지 않는가 (전부 404 여야 한다) ==='
 for p in .env config.example.js android-package/signing.keystore scripts/vps-r2-setup.sh; do
