@@ -5146,3 +5146,13 @@ vi:
   ko: • 친구 초대 보상 — 친구가 내 링크로 가입해 첫 예약을 마치면 100,000₫ 쿠폰 • 계정 탭 '친구 초대'에서 링크 공유 • 마사지사 동료 초대 적립금
   vi: • Thưởng mời bạn — bạn bè đăng ký bằng link của bạn và hoàn thành lần đặt đầu tiên, bạn nhận phiếu 100.000₫ • Chia sẻ link mời ở mục "Mời bạn bè" • Kỹ thuật viên được tích lũy thưởng khi mời đồng nghiệp
   en: • Invite rewards — get a 100,000₫ coupon when a friend signs up with your link and completes their first booking • Share your link from "Invite friends" in Account • Therapists earn rewards for inviting colleagues
+
+## 2026-10-29 재예약 푸시 (완료 14일 뒤)
+- [x] RB-1. sql/rebook_push.sql — rebook_push_log, send_rebook_push() → verify: sql/test_rebook_push.sql PASS 1~8 (롤백)
+- [x] RB-2. index.html — rebook 누르기 → openProfile(provider_id), 알림 목록 title·body 이스케이프 → verify: 인라인 스크립트 문법 오류 0, 라이브 헤드리스 프로필 열림·페이지 오류 0
+- [x] RB-3. 백업 /root/backups/rebook_before_20261029/, 운영 DB 적용, 롤백 시험 실행 0건(오늘 대상 없음)
+- [x] RB-4. crontab `0 13 * * *`(KST) = 하노이 11:00, 로그 /var/log/massa_daily_push.log
+- [x] RB-5. 커밋 88cbe38 · a947489, push, 웹 배포(vps-deploy-app.sh) 200·비밀 404 확인
+- [ ] 스토어 앱은 다음 빌드(1.0.24~)부터 rebook 누르기가 프로필로 간다
+- [ ] 11/8·11/10·11/11 11:00 하노이 이후 /var/log/massa_daily_push.log 와 rebook_push_log 로 첫 발송 확인
+- [ ] 사장님 — 마케팅 동의(marketing_agreed_at) 손님에게만 보낼지 결정 (지금은 데일리 푸시처럼 전원)

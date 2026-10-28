@@ -2010,3 +2010,23 @@ exception when others then
 
 ## 2026-10-29 스토어 빌드 1.0.23
 - 1.0.22 는 이미 READY_FOR_SALE(공개)이어서 1.0.23 으로 올렸다. 이번 빌드에 친구 초대 화면과 ?p= 보관이 실린다.
+
+## 2026-10-29 재예약 푸시 (완료 14일 뒤 '지난번 테라피스트 다시 부르기')
+- 규칙: 손님의 가장 최근 완료 예약이 14~21일 전이고, 완료 뒤 새로 만든 예약(상태 무관)이 없고, requested·confirmed·on_the_way·in_progress 예약도 없을 때 한 번 보낸다.
+  21일 상한은 크론을 며칠 놓쳐도 따라잡되, 오래된 손님에게 뒤늦게 보내지 않으려는 것이다.
+- 손님 조건: 알림 기기가 있다(언어는 가장 최근 기기, 데일리 푸시와 같음). 승인된 마사지사 계정이 아니다. 최근 14일 안에 이 푸시를 받은 적이 없다.
+- 테라피스트가 승인·정지 아님·[TEST] 아님이면 제목에 이름, 사진(저장소 변환 주소 ?width=540&quality=60), provider_id 를 싣는다(사진이 없으면 이름·프로필만).
+  아니면 사진 없는 일반 문구('다시 예약해 보세요'). kind 는 둘 다 rebook.
+- 예약당 한 번: rebook_push_log(booking_id 기본키, RLS 켜고 정책 없음, anon·authenticated 권한 회수). 알림 행의 booking_id 로 판단하지 않은 이유는 FK 가 SET NULL 이라 지워지면 다시 나가기 때문이다.
+- 시각: VPS crontab `0 13 * * *`(KST) = 하노이 11:00. 밤에는 보내지 않는다. 같은 날 점심(12:45)·저녁(18:00) 데일리 푸시와 겹칠 수 있으나 '14일에 한 번' 으로 단순하게 두었다(지시).
+- 수신 동의: 스키마에 수신 거부 칸은 없다. profiles.marketing_agreed_at 은 동의 시각이고 125명 중 2명만 있다. 데일리 푸시도 이 칸을 보지 않는다(10-28 사용자 결정 '가입 때 정보 동의').
+  그래서 재예약 푸시도 보지 않는다. 동의자에게만 보내려면 send_rebook_push 의 u CTE 에 `marketing_agreed_at is not null` 한 줄을 더하면 된다.
+- 알림 문구는 DB 가 그 사람 언어로 넣고, send-push 는 TITLE 에 없는 kind 의 title·body·image_url·provider_id 를 그대로 싣는다 → send-push 수정 없음. 메일 대체 대상도 아니다.
+- 앱: 푸시 누르기(openPushTap)와 알림 목록(tapNoti) 모두 rebook+provider_id → openProfile. 일반 문구(provider_id 없음)는 푸시는 알림 목록, 목록에서는 동작 없음(notice 와 같음).
+  제목에 테라피스트 이름이 들어가므로 알림 목록의 title·body 를 rEsc 로 감쌌다(promo_provider 본문에도 이름이 들어가고 있었다).
+- 11번 규칙: 새 표·새 함수·새 kind 는 옛 앱이 모른다. 옛 스토어 앱은 rebook 푸시를 누르면 알림 목록으로 가고, 목록에서 눌러도 아무 일이 없다. 그래서 서버 먼저 올려도 깨지는 것은 없다.
+  1.0.23 은 이미 제출돼 있으므로 스토어 앱에는 다음 빌드(1.0.24~)부터 프로필 열기가 실린다. 웹(app.massaviet.com)은 바로 적용됐다. 웹 푸시(sw.js)는 원래 앱 창만 연다.
+- 첫 대상: 운영 완료 예약 3건 — 10/24·10/26·10/27 완료. 14일이 '지나야' 하므로 실제로는 11/8·11/10·11/11 11:00 실행에 걸린다. 10/24 손님(MS-261022-1408)은 기기가 0대라 기기를 등록하지 않으면 받지 않는다.
+- 시험: sql/test_rebook_push.sql (실행법 첫 줄, 전부 롤백) PASS 1~8. 헤드리스: emoi-tmp/shot-massa-rebook.js <provider_id> <이름> — 라이브에서 tapNoti('rebook', id) 가 프로필을 연다.
+- 백업: /root/backups/rebook_before_20261029/ (public 스키마·crontab·적용한 SQL).
+- 커밋할 때 다른 에이전트의 작업 중 index.html 변경(딥링크 onNativeLink 등)이 같은 파일에 있었다. HEAD 본에 내 네 줄만 적용해 스테이징했다(git update-index --cacheinfo). 그 변경은 작업 트리에 그대로 남아 있다.
