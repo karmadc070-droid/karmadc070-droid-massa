@@ -48,8 +48,12 @@ const APNS_HOSTS = ["https://api.push.apple.com", "https://api.sandbox.push.appl
 //   이게 없으면 아이폰에 알림이 10개 쌓인다. 안드로이드 웹푸시의 tag 와 같은 역할 —
 //   같은 값으로 보내면 쌓이지 않고 그 자리에서 덮어쓰며 다시 알린다.
 //   예약은 건별로 묶고(booking_id), 그 외는 종류별로 묶는다. 최대 64바이트.
-async function sendApns(jwt: string, token: string, title: string, body: string, kind: string, bookingId: string | null, providerId: string | null = null) {
-  const payload = JSON.stringify({ aps: { alert: { title, body }, sound: "default" }, kind, booking_id: bookingId, provider_id: providerId });
+// image: 있으면 mutable-content 를 켜서 앱의 알림 사진 확장(NotificationService, 1.0.22~)이 image_url 을 받아 붙이게 한다.
+// 확장이 없는 옛 버전은 이 값을 무시하고 글자로만 보여 준다.
+async function sendApns(jwt: string, token: string, title: string, body: string, kind: string, bookingId: string | null, providerId: string | null = null, image: string | null = null) {
+  const aps: Record<string, unknown> = { alert: { title, body }, sound: "default" };
+  if (image) aps["mutable-content"] = 1;
+  const payload = JSON.stringify({ aps, kind, booking_id: bookingId, provider_id: providerId, image_url: image });
   const collapseId = (bookingId ? `b-${bookingId}` : `k-${kind}`).slice(0, 64);
   let lastError = "";
   for (const host of APNS_HOSTS) {
@@ -319,7 +323,7 @@ Deno.serve(async (req) => {
         : t.platform === "android"
         ? await sendFcm(t.token, title, n.body ?? "", n.kind, n.booking_id, n.image_url, n.provider_id)
         : jwt
-        ? await sendApns(jwt, t.token, title, n.body ?? "", n.kind, n.booking_id, n.provider_id)
+        ? await sendApns(jwt, t.token, title, n.body ?? "", n.kind, n.booking_id, n.provider_id, n.image_url)
         : { ok: false, gone: false, error: "APNs 키 없음" };
       if (r.ok) { sent++; okAny = true; }
       else if (r.gone) { removed++; await db.from("push_tokens").delete().eq("token", t.token); }
