@@ -840,6 +840,7 @@
       <div class="fchip sel" id="bkTabIn" onclick="switchBkTab('in')">받은 신청 <span id="bkTabInN"></span></div>
       <div class="fchip" id="bkTabMine" onclick="switchBkTab('mine')">내 예약</div>
       <div class="fchip" id="bkTabPay" onclick="switchBkTab('pay')">정산</div>
+      <div class="fchip" id="bkTabInv" onclick="openInvite()">친구 초대</div>
     </div>
     <div id="incomingList" style="display:none"></div>
     <div id="payList" style="display:none"></div>
@@ -939,7 +940,7 @@
     </div>
     <div class="mp-cards">
       <div class="mp-card c-partner" onclick="window.go('applyForm');loadApplyStatus()"><div class="mp-card-t">마사지사·홈뷰티<br>파트너 되기</div><div class="mp-card-arrow">→</div></div>
-      <div class="mp-card c-invite" onclick="alert('친구 초대 링크가 복사되었습니다 (데모)')"><div class="mp-card-t">친구 초대</div><div class="mp-card-arrow">→</div></div>
+      <div class="mp-card c-invite" onclick="openInvite()"><div class="mp-card-t">친구 초대</div><div class="mp-card-arrow">→</div></div>
     </div>
     <div class="mp-list">
       <div class="mp-row" onclick="window.go('myDash');loadMyDash()"><span class="mp-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#2E8B8B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M7 15l4-5 3 3 5-7"/></svg></span><span class="mp-name">내 이용 현황</span><span class="mp-chev">›</span></div>
@@ -2120,6 +2121,7 @@ async function refreshSession() {
   setupPush();
   setTimeout(checkProviderDevice, 12000);   // 등록이 끝날 시간을 준 뒤 서버에 기기가 있는지 본다
   maybeAskBasics();   // 가입 직후 한 번만 성별·국적을 묻는다
+  claimStoredRef();   // 초대 링크로 들어와 가입했으면 초대 코드를 등록한다
   setTimeout(maybeAskReview, 3000);   // 완료됐는데 리뷰가 없는 예약이 있으면 리뷰 창을 한 번 띄운다
 }
 // 완료 후 7일 안, 리뷰가 없는 가장 최근 예약 1건에 대해 예약마다 딱 한 번만 묻는다 (2026-10-28)
@@ -2146,6 +2148,94 @@ async function openReviewFor(bookingId) {
   try { localStorage.setItem('massa.revAsked.' + b.id, '1'); } catch (e) {}
   openReview(b.id, b.provider_id);
 }
+// ── 친구 초대 (2026-10-29) ──
+// 링크(?ref=코드)로 들어오면 가입 전이라도 기기에 코드를 보관했다가, 로그인되면 서버에 한 번 등록한다.
+// 자기 초대·기존 계정·두 번째 초대자 같은 판단은 전부 서버(claim_referral)가 한다.
+// 스토어 앱으로 설치한 친구는 링크를 못 타므로 초대 화면에서 코드를 직접 넣는다.
+const REF_KEY = 'massa.ref';
+const INVITE_URL = 'https://app.massaviet.com/';
+try {
+  const _ref = new URLSearchParams(location.search).get('ref');
+  if (_ref && /^[A-Za-z0-9]{4,12}$/.test(_ref)) localStorage.setItem(REF_KEY, _ref.toUpperCase());
+} catch (e) {}
+async function claimStoredRef() {
+  if (!SESSION) return;
+  let code = null;
+  try { code = localStorage.getItem(REF_KEY); } catch (e) {}
+  if (!code) return;
+  const { error } = await sb.rpc('claim_referral', { p_code: code });
+  // 서버가 판단해서 거절한 것(hint 있음)이면 다시 시도하지 않는다. 기존 회원이 링크를 눌렀을 때 오류 창을 띄우지 않는다.
+  // 통신 오류면 남겨 두고 다음 로그인 때 다시 시도한다.
+  if (!error || error.hint) { try { localStorage.removeItem(REF_KEY); } catch (e) {} }
+  if (!error) showToast('🎁 ' + T('친구 초대 코드가 등록되었습니다.'), '');
+}
+async function shareInvite(link, text) {
+  try { if (navigator.share) { await navigator.share({ title: 'massa', text: text, url: link }); return; } }
+  catch (e) { if (e && e.name === 'AbortError') return; }
+  try { await navigator.clipboard.writeText(text + '\n' + link); alert(T('초대 링크가 복사되었습니다.')); return; } catch (e) {}
+  // 안드로이드 앱 웹뷰는 공유·클립보드가 막힐 수 있다. 링크 칸을 선택해 두고 직접 복사하게 한다.
+  const inp = document.getElementById('invLink'); if (inp) { inp.focus(); inp.select(); }
+  alert(T('링크를 길게 눌러 복사해 주세요.'));
+}
+window.openInvite = async function () {
+  if (!SESSION) { openAuth(); return; }
+  const { data: r, error } = await sb.rpc('my_referral');
+  if (error || !r) { alert(T('초대 정보를 불러오지 못했습니다.') + (error ? '\n' + error.message : '')); return; }
+  const prov = r.kind === 'provider';
+  const link = INVITE_URL + '?ref=' + encodeURIComponent(r.code);
+  const num = v => Number(v || 0).toLocaleString();
+  let ov = document.getElementById('invOv');
+  if (!ov) {
+    ov = document.createElement('div'); ov.id = 'invOv';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:230;background:rgba(20,25,28,.5);display:flex;align-items:flex-end;justify-content:center';
+    ov.onclick = e => { if (e.target === ov) ov.style.display = 'none'; };
+    document.body.appendChild(ov);
+  }
+  // 마사지사: '3/10명 · 300,000₫ 적립' (사람당 100,000₫, 10명·1,000,000₫ 까지) / 손님: 받은 쿠폰 수와 금액
+  const reward = prov
+    ? '<b>' + r.rewarded + '/' + r.cap_count + '</b>' + rEsc(T('명')) + ' · <b>' + num(r.earned_vnd) + '₫</b> ' + rEsc(T('적립'))
+      + (r.pending_vnd ? ' (' + rEsc(T('지급 대기')) + ' ' + num(r.pending_vnd) + '₫)' : '')
+    : rEsc(T('받은 쿠폰')) + ' <b>' + r.rewarded + '</b> · <b>' + num(r.earned_vnd) + '₫</b>';
+  ov.innerHTML = '<div class="pay-sheet"><div class="svc-grip"></div>'
+    + '<div class="svc-title">' + rEsc(T(prov ? '마사지사 친구 초대' : '친구 초대')) + '</div>'
+    + '<div class="hint" style="margin-bottom:12px">' + rEsc(T(prov
+        ? '동료 마사지사가 내 링크로 가입해 승인받고 첫 서비스를 마치면 1명당 100,000₫을 적립해 드려요. 최대 10명(1,000,000₫)까지이며, 적립금은 정산 때 함께 지급됩니다.'
+        : '친구가 내 링크로 가입하고 첫 예약을 마치면 100,000₫ 할인 쿠폰을 쿠폰함에 넣어 드려요.')) + '</div>'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;background:#EEF6F6;border-radius:12px;padding:12px 14px">'
+    + '<span>' + rEsc(T('내 초대 코드')) + '</span><b style="font-size:20px;letter-spacing:2px;color:#1F4E5F">' + rEsc(r.code) + '</b></div>'
+    + '<input class="tx" id="invLink" readonly value="' + rEsc(link) + '" style="width:100%;margin:10px 0;box-sizing:border-box">'
+    + '<button class="cta" id="invShare" style="position:static">' + rEsc(T('초대 링크 공유하기')) + '</button>'
+    + '<div class="pf-sec">' + rEsc(T('초대 현황')) + '</div>'
+    + '<div class="hint">' + rEsc(T('초대한 친구')) + ' <b>' + r.invited + '</b>' + rEsc(T('명')) + ' · ' + reward + '</div>'
+    + (r.can_enter
+        ? '<div class="pf-sec">' + rEsc(T('친구에게 받은 초대 코드')) + '</div>'
+          + '<div style="display:flex;gap:8px"><input class="tx" id="invCode" maxlength="12" autocapitalize="characters" style="flex:1;text-transform:uppercase">'
+          + '<button class="chip sel" id="invClaim">' + rEsc(T('등록')) + '</button></div>'
+        : '')
+    + '<button class="chip" id="invClose" style="margin-top:14px;width:100%">' + rEsc(T('닫기')) + '</button></div>';
+  ov.style.display = 'flex';
+  ov.querySelector('#invClose').onclick = () => { ov.style.display = 'none'; };
+  ov.querySelector('#invShare').onclick = () => shareInvite(link, T(prov
+    ? 'massa 에서 함께 일해요. 내 초대 링크로 가입하고 마사지사 신청을 해 주세요.'
+    : 'massa 에서 집·호텔로 오는 마사지를 받아 보세요. 내 초대 링크로 가입하면 됩니다.'));
+  const claim = ov.querySelector('#invClaim');
+  if (claim) claim.onclick = async () => {
+    const code = (ov.querySelector('#invCode').value || '').trim();
+    if (!code) return;
+    claim.disabled = true;
+    const { error: ce } = await sb.rpc('claim_referral', { p_code: code });
+    if (ce) { claim.disabled = false; alert(T(ce.message)); return; }
+    alert(T('친구 초대 코드가 등록되었습니다.'));
+    openInvite();
+  };
+};
+// 초대 보상 쿠폰 알림을 누르면 쿠폰함을 새로 읽어 연다 (부팅 때 읽어 둔 목록에는 아직 없다)
+async function openCouponsFresh() {
+  const { data: mine } = await sb.from('user_coupons').select('*, coupons(*)').eq('customer_id', SESSION.user.id);
+  CACHE.myCoupons = mine || [];
+  window.go('coupons'); renderCoupons();
+}
+
 // 제공자 연락처는 앱을 거치지 않는 직거래를 막기 위해 관리자에게만 보인다
 function isAdminUser() { return !!(CUR_PROFILE && CUR_PROFILE.role === 'admin'); }
 // 알림 실시간 구독 — 새 알림이 오면 배지·목록 즉시 갱신
@@ -2402,6 +2492,8 @@ function openPushTap() {
   else if (SESSION && d.kind === 'booking_completed' && d.booking_id) { window.go('myBookings'); loadMyBookings(); openReviewFor(d.booking_id); }
   else if (SESSION && /^booking_(confirmed|on_the_way|completed|cancelled)$/.test(d.kind)) { window.go('myBookings'); loadMyBookings(); }
   else if (SESSION && /^chat/.test(d.kind)) { openChatTap(); }
+  else if (SESSION && d.kind === 'referral_reward') { openCouponsFresh(); }                          // 친구 초대 쿠폰 (2026-10-29)
+  else if (SESSION && (d.kind === 'referral_bonus' || d.kind === 'invite_promo')) { openInvite(); }  // 마사지사 초대 적립·홍보
   else openNotifications();
 }
 
@@ -4759,6 +4851,49 @@ const DICT = {
   '로그인 창을 열지 못했습니다. 다시 시도해 주세요.': ['Không mở được cửa sổ đăng nhập. Vui lòng thử lại.', 'Could not open the sign-in window. Please try again.', '无法打开登录窗口，请重试。', 'ログイン画面を開けませんでした。もう一度お試しください。'],
   '로그인 창이 열리지 않았습니다. 다시 시도해 주세요.': ['Cửa sổ đăng nhập không mở. Vui lòng thử lại.', 'The sign-in window did not open. Please try again.', '登录窗口没有打开，请重试。', 'ログイン画面が開きませんでした。もう一度お試しください。'],
   '로그인에 실패했습니다: ': ['Đăng nhập thất bại: ', 'Sign-in failed: ', '登录失败：', 'ログインに失敗しました: '],
+  // ── 친구 초대 (2026-10-29) ──
+  '마사지사 친구 초대': ['Mời bạn kỹ thuật viên', 'Invite therapist friends', '邀请技师朋友', 'セラピスト仲間を招待'],
+  '동료 마사지사가 내 링크로 가입해 승인받고 첫 서비스를 마치면 1명당 100,000₫을 적립해 드려요. 최대 10명(1,000,000₫)까지이며, 적립금은 정산 때 함께 지급됩니다.': [
+    'Khi đồng nghiệp đăng ký bằng link của bạn, được duyệt và hoàn thành đơn đầu tiên, bạn được tích lũy 100.000₫ mỗi người. Tối đa 10 người (1.000.000₫), tiền thưởng được trả cùng kỳ quyết toán.',
+    'When a fellow therapist signs up with your link, gets approved and finishes their first job, you earn 100,000₫ per person. Up to 10 people (1,000,000₫); paid out with your regular settlement.',
+    '同行技师通过您的链接注册、通过审核并完成首单后，每人为您累积100,000₫。最多10人（1,000,000₫），奖励随结算一起发放。',
+    '仲間のセラピストがあなたのリンクで登録し、承認されて初回の施術を終えると1人につき100,000₫を積み立てます。最大10人(1,000,000₫)まで、精算時にまとめてお支払いします。'],
+  '친구가 내 링크로 가입하고 첫 예약을 마치면 100,000₫ 할인 쿠폰을 쿠폰함에 넣어 드려요.': [
+    'Khi bạn bè đăng ký bằng link của bạn và hoàn thành lần đặt đầu tiên, bạn nhận phiếu giảm 100.000₫ trong Ví coupon.',
+    'When a friend signs up with your link and completes their first booking, you get a 100,000₫ coupon in your Coupons.',
+    '朋友通过您的链接注册并完成首次预约后，您的优惠券中会收到100,000₫优惠券。',
+    '友達があなたのリンクで登録し初めての予約を終えると、クーポンに100,000₫割引クーポンが届きます。'],
+  '내 초대 코드': ['Mã mời của tôi', 'My invite code', '我的邀请码', '私の招待コード'],
+  '초대 링크 공유하기': ['Chia sẻ link mời', 'Share invite link', '分享邀请链接', '招待リンクを共有'],
+  '초대 현황': ['Tình hình mời', 'Invite status', '邀请情况', '招待状況'],
+  '초대한 친구': ['Bạn đã mời', 'Friends invited', '已邀请好友', '招待した友達'],
+  '명': [' người', '', '人', '人'],
+  '적립': ['đã tích lũy', 'earned', '已累积', '積立'],
+  '지급 대기': ['chờ thanh toán', 'awaiting payout', '待发放', '支払い待ち'],
+  '받은 쿠폰': ['Coupon đã nhận', 'Coupons received', '已获优惠券', '受け取ったクーポン'],
+  '친구에게 받은 초대 코드': ['Mã mời bạn bè gửi cho bạn', 'Invite code from a friend', '好友给您的邀请码', '友達からの招待コード'],
+  '등록': ['Đăng ký', 'Register', '登记', '登録'],
+  'massa 에서 함께 일해요. 내 초대 링크로 가입하고 마사지사 신청을 해 주세요.': [
+    'Cùng làm việc với massa nhé. Đăng ký bằng link mời của mình rồi nộp đơn làm kỹ thuật viên.',
+    'Work with me on massa. Sign up with my invite link and apply as a therapist.',
+    '来massa一起工作吧。用我的邀请链接注册并申请成为技师。',
+    'massaで一緒に働きましょう。私の招待リンクで登録してセラピストに申し込んでください。'],
+  'massa 에서 집·호텔로 오는 마사지를 받아 보세요. 내 초대 링크로 가입하면 됩니다.': [
+    'Thử massage tận nhà, tận khách sạn với massa. Đăng ký bằng link mời của mình nhé.',
+    'Try home and hotel massage with massa. Sign up with my invite link.',
+    '试试massa的上门和酒店按摩吧。用我的邀请链接注册即可。',
+    'massaで自宅・ホテルへの出張マッサージを試してみて。私の招待リンクで登録できます。'],
+  '초대 링크가 복사되었습니다.': ['Đã sao chép link mời.', 'Invite link copied.', '邀请链接已复制。', '招待リンクをコピーしました。'],
+  '링크를 길게 눌러 복사해 주세요.': ['Nhấn giữ link để sao chép.', 'Press and hold the link to copy it.', '请长按链接复制。', 'リンクを長押ししてコピーしてください。'],
+  '초대 정보를 불러오지 못했습니다.': ['Không tải được thông tin mời.', 'Could not load your invite info.', '无法加载邀请信息。', '招待情報を読み込めませんでした。'],
+  '친구 초대 코드가 등록되었습니다.': ['Đã đăng ký mã mời.', 'Invite code registered.', '邀请码已登记。', '招待コードを登録しました。'],
+  '초대 코드를 찾을 수 없습니다.': ['Không tìm thấy mã mời.', 'Invite code not found.', '找不到该邀请码。', '招待コードが見つかりません。'],
+  '본인이나 내가 초대한 사람의 코드는 쓸 수 없습니다.': ['Không dùng được mã của chính bạn hoặc người bạn đã mời.', 'You cannot use your own code or the code of someone you invited.', '不能使用自己或您邀请的人的邀请码。', '自分や自分が招待した人のコードは使えません。'],
+  '이미 초대 코드를 등록했습니다.': ['Bạn đã đăng ký mã mời rồi.', 'You have already registered an invite code.', '您已登记过邀请码。', '招待コードはすでに登録済みです。'],
+  '새로 가입한 계정만 초대 코드를 등록할 수 있습니다.': ['Chỉ tài khoản mới đăng ký mới nhập được mã mời.', 'Only newly created accounts can enter an invite code.', '只有新注册的账户才能登记邀请码。', '招待コードを登録できるのは新規アカウントだけです。'],
+  '친구 초대 보상 100,000동 쿠폰이 도착했어요': ['Bạn nhận được phiếu giảm 100.000đ nhờ mời bạn bè', 'Your 100,000₫ invite reward coupon has arrived', '邀请奖励100,000越南盾优惠券已到账', '友達招待の100,000ドンクーポンが届きました'],
+  '친구 초대 보상 100,000동이 적립됐어요': ['Đã tích lũy 100.000đ thưởng mời bạn', '100,000₫ invite reward earned', '已累积邀请奖励100,000越南盾', '友達招待の報酬100,000ドンを積み立てました'],
+  '친구 초대 보상 100,000₫': ['Thưởng mời bạn 100.000₫', 'Invite reward 100,000₫', '邀请奖励 100,000₫', '友達招待特典 100,000₫'],
 };
 function trOne(ko, lang) {
   if (lang === 'ko') return ko;
@@ -5734,6 +5869,8 @@ window.tapNoti = function (kind, pid) {
   if (kind === 'promo_provider' && pid) { openProfile(pid); return; }
   if (kind === 'booking_new') { openIncoming(); return; }
   if (/^chat/.test(kind)) { openChatTap(); return; }
+  if (kind === 'referral_reward') { openCouponsFresh(); return; }
+  if (kind === 'referral_bonus' || kind === 'invite_promo') { openInvite(); return; }
   if (/^booking_/.test(kind)) { window.go('myBookings'); loadMyBookings(); }
 };
 window.openNotifications = function () {
