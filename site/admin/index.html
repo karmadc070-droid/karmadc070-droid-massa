@@ -835,6 +835,18 @@ async function loadRoster() {
   drawRoster();           // 서류를 기다리지 않고 먼저 그린다 — 표가 늦게 뜨면 안 된다
   loadKyc();              // 서류 주소는 받아지는 대로 채운다
   loadPhotos();           // 사진 여러 장도 마찬가지로 뒤따라 채운다
+  loadRefPay();           // 친구 초대 적립금(지급 대기)도 뒤따라 채운다
+}
+
+// 마사지사 친구 초대 적립금. 1명당 100,000₫, 한 사람당 1,000,000₫ 까지 쌓이고(pending_payout),
+// 정산 때 지급한 뒤 '초대 보상 지급' 을 누르면 paid 로 바뀐다 (2026-10-29).
+let REFPAY = {};
+async function loadRefPay() {
+  const { data, error } = await sb.from('referral_rewards').select('provider_id, amount_vnd').eq('status', 'pending_payout');
+  if (error) { console.warn('초대 적립금을 불러오지 못했다', error.message); return; }
+  REFPAY = {};
+  (data || []).forEach(x => { if (x.provider_id) REFPAY[x.provider_id] = (REFPAY[x.provider_id] || 0) + x.amount_vnd; });
+  drawRoster();
 }
 
 // 마사지사 사진은 photo_urls 에 여러 장 들어 있다. 명단 함수는 대표 1장만 주므로
@@ -1921,7 +1933,8 @@ function drawRoster() {
         <td>${num(r.cnt)}</td>
         <td>${vnd(r.fee)}</td>
         <td>${vnd(r.paid_fee)}</td>
-        <td class="${cred ? 'cred' : ''}">${vnd(cred)}</td>
+        <td class="${cred ? 'cred' : ''}">${vnd(cred)}${REFPAY[r.id]
+            ? `<div style="font-size:11px;color:var(--amber)">초대 보상 대기 ${esc(vnd(REFPAY[r.id]))}</div>` : ''}</td>
         <td class="owe${owe ? '' : ' zero'}">${vnd(owe)}
           ${r.due_at ? `<div style="font-size:11px;font-weight:400;color:${isLate(r) ? 'var(--bad)' : 'var(--ink-soft)'}">
             ${isLate(r) ? '기한 지남 · ' : '기한 '}${esc(new Date(r.due_at).toLocaleDateString('ko-KR', { timeZone: TZ, month:'2-digit', day:'2-digit' }))}
@@ -1930,6 +1943,7 @@ function drawRoster() {
         <td><div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end">
           <button class="mini" onclick="prepay('${esc(r.id)}')">페이백 입력</button>
           ${cred ? `<button class="mini" onclick="useCredit('${esc(r.id)}')">잔고 차감</button>` : ''}
+          ${REFPAY[r.id] ? `<button class="mini" onclick="refPaid('${esc(r.id)}')">초대 보상 지급</button>` : ''}
           ${r.pending_cnt ? `<button class="mini" style="border-color:var(--amber);color:var(--amber)" data-dep="${esc(r.id)}">입금 확인 ${num(r.pending_cnt)}</button>` : ''}
           ${isLate(r) ? `<button class="mini" style="border-color:var(--bad);color:var(--bad)" data-warn="${esc(r.id)}" data-nm="${esc(r.name || '')}" data-owe="${owe}">${r.warned_at ? '경고 다시' : '경고 보내기'}</button>` : ''}
           <button class="mini" data-pv="${esc(r.id)}">인증 · 제재</button>
@@ -2141,6 +2155,16 @@ window.useCredit = async (id) => {
   alert(`차감했습니다. 남은 잔액 ${vnd(data.balance)}`);
   loadRoster();
   loadMembers();
+};
+
+// 친구 초대 적립금을 정산 때 지급했으면 누른다. 그 마사지사의 지급 대기 전부를 paid 로 바꾼다.
+window.refPaid = async (id) => {
+  const r = findRow(id);
+  if (!confirm(`${r.name} 님의 친구 초대 보상 ${vnd(REFPAY[id] || 0)} 을 지급했습니까?\n지급 완료로 표시합니다.`)) return;
+  const { data, error } = await sb.rpc('admin_referral_paid', { p_provider: id });
+  if (error) { alert('실패: ' + error.message); return; }
+  alert(`${data}건을 지급 완료로 표시했습니다.`);
+  loadRoster();
 };
 
 let rz;
