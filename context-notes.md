@@ -1957,3 +1957,37 @@ exception when others then
 - 2026-10-28 저녁 '오늘의 테라피스트' 푸시: 하노이 18:00 저녁 슬롯에서 손님 기기(테라피스트 본인 계정 제외)에 kind=promo_provider 로, 승인·정지 아님·사진 있음·[TEST] 아님 테라피스트를 날짜로 돌아가며 1명(기준일 10/28). notifications.image_url·provider_id 추가, send-push 가 FCM notification.image·data.provider_id, APNs provider_id 를 실음(iOS 는 확장 기능 없어 글자만). 사진은 원본 2MB PNG 라 저장소 변환 주소 ?width=540&quality=60(약 500~700KB)를 씀. 알림·목록 탭 → openProfile. 동의 항목은 두지 않음(사용자 결정: 가입 때 정보 동의). 한 달(11/28) 뒤 효과 점검. 배포 백업 /root/backups/send-push.index.ts.bak-20261028.
 
 - 2026-10-28 iOS 1.0.22: 알림 사진 확장(NotificationService) — capacitor/ios-nse/(Swift·Info.plist·add_nse.rb), codemagic 이 매 빌드 cap add ios 뒤 xcodeproj 로 타겟 추가·Embed Foundation Extensions·번들 ID app.massa.hanoi.NotificationService 프로파일(--create)·확장 버전=앱 버전. send-push APNs 에 mutable-content + image_url. 로컬 검증 못 함(클라우드에서 rubygems 차단) — 첫 빌드 로그로 확인.
+
+## 2026-10-29 친구 초대 (손님 쿠폰 · 마사지사 적립금) + 마사지사 초대 홍보 푸시
+
+- 계기: 계정 탭 '친구 초대' 가 `alert('… (데모)')` 였다. 사장님 결정 — 손님은 친구의 **첫 완료 예약** 때 초대자에게 100,000₫ 쿠폰,
+  마사지사는 초대한 마사지사가 **승인되고 첫 서비스를 완료**하면 100,000₫, 1명당·최대 10명(1,000,000₫) 까지 쌓아 두었다 지급(키핑).
+- 표: `referral_codes`(사용자당 6자리, 함수로만), `referrals`(invitee_id 기본키 = 초대자는 하나, rewarded_at = 보상은 한 번),
+  `referral_rewards`(마사지사 적립, status pending_payout → paid). 셋 다 RLS, 관리자만 읽는다.
+- 막는 것: 자기 코드·서로 초대(ref_self), 두 번째 초대자(ref_already), **가입 24시간 지났거나 예약이 있는 계정**(ref_not_new).
+  '링크를 누른 뒤 가입' 을 서버가 직접 알 수 없어서 계정 나이로 판단한다. 앱이 보내는 클릭 시각은 믿을 수 없다.
+- 마사지사 초대인지는 **등록 순간 초대자가 승인된 마사지사인가** 로 정한다(kind). 상한을 넘은 11번째부터는 연결만 되고 rewarded_at 만 찍힌다(0원).
+- ★ 손님 쿠폰은 보상마다 coupons 행을 하나씩 만든다(`personal=true, is_active=false`, 코드 REF-<초대받은 사람 id>).
+  user_coupons 가 (customer_id, coupon_id) 유니크라 공용 쿠폰 하나로는 두 번째 보상을 못 넣는다.
+  is_active=false 라서 앱(옛 스토어 빌드 포함)의 '받을 수 있는 쿠폰' 목록과 직접 받기(guard_user_coupon_write)에서 빠진다.
+  예약에 붙일 때만 `guard_booking_write` 가 `(c.is_active or c.personal)` 로 통과시킨다 — 이 한 줄은 저장소 파일이 아니라
+  운영 함수 본문을 replace 해서 바꿨다(sql/referral.sql 끝의 DO 블록, 옛 본문 백업 /root/backups/referral_before_20261029/).
+  관리자 쿠폰 관리 화면에는 초대 쿠폰이 비활성 행으로 보인다.
+- ★ 마사지사 보상 가정(사장님 확인 필요): 이 프로젝트의 '정산'은 마사지사가 플랫폼에 **수수료를 내는** 방향(settlement_cycle)이라
+  지급 행을 넣을 표가 없다. 그래서 `referral_rewards` 에 pending_payout 으로 쌓고, 지표(/admin) 마사지사 명단의 선입금 칸 아래에
+  '초대 보상 대기 N₫' 와 '초대 보상 지급' 버튼(admin_referral_paid → paid)을 붙였다. 선입금 잔액(provider_credit)에 넣으면
+  미납 계산에 섞여 들어가므로 일부러 분리했다. 현금으로 줄지 수수료에서 뺄지는 사장님이 정한다.
+- 링크는 `https://app.massaviet.com/?ref=코드`. massaviet.com 은 소개 사이트라 코드를 받지 못한다.
+  ?ref= 는 가입 전에도 localStorage `massa.ref` 에 보관했다가 refreshSession 뒤 claim_referral 로 한 번 보낸다.
+  서버가 거절(hint 있음)하면 지우고 조용히 넘어간다 — 기존 회원이 친구 링크를 눌러도 오류 창이 뜨지 않게.
+  스토어 앱으로 설치한 사람은 링크가 앱으로 이어지지 않으므로(딥링크 없음) 초대 화면의 '친구에게 받은 초대 코드' 칸에 직접 넣는다(가입 24시간 안에만 보인다).
+- 공유: navigator.share → 클립보드 → 링크 칸을 선택해 두고 '길게 눌러 복사' 안내. 안드로이드 웹뷰는 Web Share 가 없다. 네이티브 플러그인은 추가하지 않았다.
+- 마사지사 화면: 예약 탭(받은 신청·내 예약·정산) 옆에 '친구 초대' 칸. 같은 초대 화면이 kind=provider 로 '3/10명 · 300,000₫ 적립 (지급 대기 …)' 을 보인다.
+- 알림: referral_reward(쿠폰 도착 → 누르면 쿠폰함), referral_bonus(적립 → 초대 화면). send-push TITLE 에 vi·ko·en.
+- 홍보 푸시: `send_provider_invite_push(slot)` — 승인된 마사지사(테스트 제외, 이미 10명 보상 받은 사람 제외)에게 kind invite_promo,
+  문구 3개를 날짜·시간대로 돌린다(5개 언어, 그 사람 최근 기기 언어). 실행 기록 daily_push_runs slot prov_noon·prov_evening.
+  크론(서버 KST): `30 14 * * *`(하노이 12:30), `0 21 * * *`(하노이 19:00). '(광고)' 표시는 넣지 않았다(파트너에게 보내는 앱 공지).
+  손님 데일리 푸시(send_daily_push)에서 승인된 마사지사를 뺐다 → 마사지사는 하루 2번 홍보 푸시만, 손님은 기존 2번만.
+- 11번 규칙: 새 표·RPC·알림 종류는 옛 앱이 모른다(옛 앱은 invite_promo 알림을 누르면 알림 목록으로 간다). 서버 먼저 올려도 안전하다.
+  앱(index.html)은 웹·스토어 앱 모두 빌드에 들어가므로 **스토어 앱에는 다음 빌드부터** 초대 화면이 보인다. 그 전까지 앱의 '친구 초대' 는 옛 데모 알림이다.
+- 시험: `sql/test_referral.sql` (실행법은 파일 첫 줄, 전부 롤백) 24개 PASS. 헤드리스: `emoi-tmp/shot-massa-invite.js`.

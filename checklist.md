@@ -5114,3 +5114,16 @@ vi:
 - [x] 하루 한 번만 나가게 막음 (daily_push_runs(run_date=하노이 날짜))
 - [x] BEGIN…ROLLBACK 테스트: 오늘(수, dow 3) 문구로 생성 확인, 두 번째 호출 0건
 - [x] VPS 적용 (sql/daily_push.sql, 새로 만든 데일리 푸시)
+
+## 2026-10-29 친구 초대 + 마사지사 초대 홍보 푸시
+- [x] R-1. sql/referral.sql — 코드·관계·적립금 표, my_referral·claim_referral·admin_referral_paid, 완료 트리거, 개인 쿠폰(personal) → verify: test_referral.sql PASS 1~20
+- [x] R-2. sql/provider_invite_push.sql — 마사지사 홍보 푸시(12:30·19:00 하노이), 손님 푸시에서 승인 마사지사 제외 → verify: PASS 21~24 (마사지사 손님 푸시 0, 홍보 7건, 같은 날 두 번째 0, 손님은 홍보 0)
+- [x] R-3. index.html — 초대 화면·?ref= 보관·자동 등록·코드 입력·공유, 마사지사 예약 탭 '친구 초대', 알림 누르기, 번역 → verify: check_syntax 오류 0, 헤드리스(emoi-tmp/shot-massa-invite.js) 페이지 오류 0
+- [x] R-4. send-push TITLE referral_reward·referral_bonus → 서버 반영, massa-edge-functions 재시작 healthy, 호출 {"ok":true}
+- [x] R-5. 지표(/admin) 명단에 '초대 보상 대기'·'초대 보상 지급'
+- [x] R-6. 운영 DB 적용(백업 /root/backups/referral_before_20261029/), PostgREST 리로드, crontab 2줄 추가, anon 은 RPC 401·표 0행
+- [x] R-7. 커밋 b0312b6 · ad2c8e4 · 9aec641 · ffeaf1e
+- [ ] push·웹 배포(vps-deploy-app.sh)·지표 배포(vps-deploy-massaviet.sh)
+- [ ] 스토어 앱(iOS·안드로이드)은 index.html 을 빌드에 넣는다 → 다음 빌드 때 함께 나간다 (이번에 빌드하지 않음)
+- [ ] 사장님 — 마사지사 적립금을 현금으로 줄지 수수료에서 뺄지 결정, 지급 후 '초대 보상 지급' 누르기
+- [ ] 사장님 — 폰에서 확인: 계정 탭 '친구 초대'·공유, 다른 기기 새 계정으로 링크 가입 → 첫 완료 후 쿠폰함, 마사지사 '친구 초대' 칸, 12:30·19:00 홍보 푸시
