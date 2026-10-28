@@ -2122,6 +2122,7 @@ async function refreshSession() {
   setTimeout(checkProviderDevice, 12000);   // 등록이 끝날 시간을 준 뒤 서버에 기기가 있는지 본다
   maybeAskBasics();   // 가입 직후 한 번만 성별·국적을 묻는다
   claimStoredRef();   // 초대 링크로 들어와 가입했으면 초대 코드를 등록한다
+  claimStoredPartner();   // 호텔·레지던스 제휴 링크(?p=)로 들어왔으면 그 파트너에 잇는다
   setTimeout(maybeAskReview, 3000);   // 완료됐는데 리뷰가 없는 예약이 있으면 리뷰 창을 한 번 띄운다
 }
 // 완료 후 7일 안, 리뷰가 없는 가장 최근 예약 1건에 대해 예약마다 딱 한 번만 묻는다 (2026-10-28)
@@ -2168,6 +2169,24 @@ async function claimStoredRef() {
   // 통신 오류면 남겨 두고 다음 로그인 때 다시 시도한다.
   if (!error || error.hint) { try { localStorage.removeItem(REF_KEY); } catch (e) {} }
   if (!error) showToast('🎁 ' + T('친구 초대 코드가 등록되었습니다.'), '');
+}
+// ── 호텔·레지던스 제휴 QR (2026-10-29) ──
+// 객실 QR(?p=코드)로 들어오면 코드와 시각을 기기에 30일 보관했다가, 로그인되면 서버에 한 번 잇는다.
+// 친구 초대(?ref=)와는 따로 저장한다. 귀속(30일·마지막 링크)과 수수료는 서버(claim_partner·트리거)가 정한다.
+const PARTNER_KEY = 'massa.partner';
+try {
+  const _p = new URLSearchParams(location.search).get('p');
+  if (_p && /^[A-Za-z0-9]{4,12}$/.test(_p)) localStorage.setItem(PARTNER_KEY, JSON.stringify({ code: _p.toUpperCase(), at: Date.now() }));
+} catch (e) {}
+async function claimStoredPartner() {
+  if (!SESSION) return;
+  let v = null;
+  try { v = JSON.parse(localStorage.getItem(PARTNER_KEY) || 'null'); } catch (e) {}
+  if (!v || !v.code) return;
+  if (!(Date.now() - v.at < 30 * 864e5)) { try { localStorage.removeItem(PARTNER_KEY); } catch (e) {} return; }
+  const { error } = await sb.rpc('claim_partner', { p_code: v.code });
+  // 연결됐거나 서버가 거절했으면(hint) 지운다. 통신 오류면 다음 로그인 때 다시 시도한다. 손님에게는 알리지 않는다.
+  if (!error || error.hint) { try { localStorage.removeItem(PARTNER_KEY); } catch (e) {} }
 }
 async function shareInvite(link, text) {
   try { if (navigator.share) { await navigator.share({ title: 'massa', text: text, url: link }); return; } }
