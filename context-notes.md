@@ -1955,3 +1955,5 @@ exception when others then
 - 2026-10-28 리뷰 유도: 완료 7일 이내·리뷰 없는 예약은 앱을 열 때 리뷰 창을 예약당 한 번 띄움(localStorage massa.revAsked.<id>), 리뷰 쓴 예약은 '리뷰 작성' 버튼 숨김(e17e23d). 당시 완료 3건·리뷰 0건. 죽은 토큰 정리는 send-push 에 이미 있음(404/UNREGISTERED → push_tokens 삭제, 10/28 실패 2건 자동 삭제 확인).
 
 - 2026-10-28 저녁 '오늘의 테라피스트' 푸시: 하노이 18:00 저녁 슬롯에서 손님 기기(테라피스트 본인 계정 제외)에 kind=promo_provider 로, 승인·정지 아님·사진 있음·[TEST] 아님 테라피스트를 날짜로 돌아가며 1명(기준일 10/28). notifications.image_url·provider_id 추가, send-push 가 FCM notification.image·data.provider_id, APNs provider_id 를 실음(iOS 는 확장 기능 없어 글자만). 사진은 원본 2MB PNG 라 저장소 변환 주소 ?width=540&quality=60(약 500~700KB)를 씀. 알림·목록 탭 → openProfile. 동의 항목은 두지 않음(사용자 결정: 가입 때 정보 동의). 한 달(11/28) 뒤 효과 점검. 배포 백업 /root/backups/send-push.index.ts.bak-20261028.
+
+- 2026-10-28 iOS 1.0.22: 알림 사진 확장(NotificationService) — capacitor/ios-nse/(Swift·Info.plist·add_nse.rb), codemagic 이 매 빌드 cap add ios 뒤 xcodeproj 로 타겟 추가·Embed Foundation Extensions·번들 ID app.massa.hanoi.NotificationService 프로파일(--create)·확장 버전=앱 버전. send-push APNs 에 mutable-content + image_url. 로컬 검증 못 함(클라우드에서 rubygems 차단) — 첫 빌드 로그로 확인.
