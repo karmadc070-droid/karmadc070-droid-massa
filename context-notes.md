@@ -1951,3 +1951,5 @@ exception when others then
 - 시각: 앱마다 12:30~12:50 사이 다른 시각(모아 12:30 KST, VIBI 12:35, KBizV 12:40, massa 12:45 하노이). 이 앱은 VPS crontab '45 14 * * *'(KST) = 하노이 12:45, massa-db 에는 pg_cron 이 없어 다른 massa 작업처럼 crontab.
 - 중복 방지: daily_push_runs(run_date=하노이 날짜). 크론이 두 번 돌거나 손으로 다시 불러도 그날은 한 번만 나간다.
 - 문구: 요일 분위기(월 시작·금 저녁·주말)에 맞춘 7개, 할인·이벤트·최고/1위 같은 표현은 넣지 않았다. 전체 문구는 채널 프로젝트 data/daily-push-copy.md.
+
+- 2026-10-28 리뷰 유도: 완료 7일 이내·리뷰 없는 예약은 앱을 열 때 리뷰 창을 예약당 한 번 띄움(localStorage massa.revAsked.<id>), 리뷰 쓴 예약은 '리뷰 작성' 버튼 숨김(e17e23d). 당시 완료 3건·리뷰 0건. 죽은 토큰 정리는 send-push 에 이미 있음(404/UNREGISTERED → push_tokens 삭제, 10/28 실패 2건 자동 삭제 확인).
