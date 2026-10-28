@@ -229,6 +229,9 @@ const TITLE: Record<string, Record<string, string>> = {
   booking_cancelled_by_customer: { vi: "Khách đã hủy đặt lịch", ko: "손님이 예약을 취소했습니다", en: "The customer cancelled the booking" },
   chat: { vi: "Tin nhắn mới", ko: "새 메시지가 왔습니다", en: "New message" },
   chat_first: { vi: "Tin nhắn mới", ko: "새 메시지가 왔습니다", en: "New message" },
+  // 친구 초대 보상 (2026-10-29). 홍보(invite_promo)는 DB 가 그 사람 언어로 문구를 넣으므로 여기 없다
+  referral_reward: { vi: "Bạn nhận được phiếu giảm 100.000đ nhờ mời bạn bè", ko: "친구 초대 보상 100,000동 쿠폰이 도착했어요", en: "Your 100,000₫ invite reward coupon has arrived" },
+  referral_bonus: { vi: "Đã tích lũy 100.000đ thưởng mời bạn", ko: "친구 초대 보상 100,000동이 적립됐어요", en: "100,000₫ invite reward earned" },
 };
 
 type Noti = { id: string; user_id: string; title: string | null; body: string | null; kind: string; booking_id: string | null; push_tries: number | null; image_url: string | null; provider_id: string | null };
