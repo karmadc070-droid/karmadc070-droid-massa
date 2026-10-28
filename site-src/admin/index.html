@@ -243,6 +243,7 @@ svg{display:block;width:100%;height:auto;overflow:visible}
     <a href="#s-price"><i class="dot"></i>가격 승인</a>
     <a href="#s-fraud"><i class="dot"></i>이상 거래</a>
     <a href="#s-cp"><i class="dot"></i>쿠폰</a>
+    <a href="#s-pt"><i class="dot"></i>호텔 · 레지던스 제휴</a>
     <a href="#s-activity"><i class="dot"></i>마사지사 활동</a>
     <a href="#s-roster"><i class="dot"></i>마사지사 명단</a>
     <a href="#s-members"><i class="dot"></i>가입자 명단</a>
@@ -408,6 +409,19 @@ svg{display:block;width:100%;height:auto;overflow:visible}
         <button class="btn-ok" id="cpnew">발행</button>
       </div>
       <div id="cp"></div>
+    </div>
+
+    <!-- 호텔·레지던스 제휴. 객실 QR(?p=코드)로 들어온 손님의 완료 예약 10% 를 지급 대기로 쌓는다 (2026-10-29) -->
+    <div class="card" id="s-pt" style="margin-bottom:20px">
+      <h3>호텔 · 레지던스 제휴</h3>
+      <p class="note" id="pt-note"></p>
+      <div class="tools" style="margin-bottom:12px">
+        <input id="ptname" class="find" placeholder="파트너 이름 (호텔·레지던스)">
+        <input id="ptcontact" class="find" placeholder="담당자 연락처">
+        <input id="ptcode" class="find" style="min-width:130px" placeholder="코드 (비우면 자동)">
+        <button class="btn-ok" id="ptnew">추가</button>
+      </div>
+      <div id="pt"></div>
     </div>
 
     <!-- 마사지사 활동. 누가 실제로 일을 받는가를 본다.
@@ -1248,6 +1262,74 @@ document.addEventListener('click', async (e) => {
     const { error } = await sb.from('coupons').update({ is_active: on }).eq('id', t.dataset.cptog);
     if (error) { alert('실패 — ' + error.message); return; }
     loadCps();
+  }
+});
+
+// ── 호텔·레지던스 제휴 (2026-10-29) ──
+// 손님이 객실 QR(app.massaviet.com/?p=코드)로 들어와 로그인하면 그 파트너에 이어지고, 30일 안 예약이 완료되면
+// 손님이 낸 금액의 10% 가 지급 대기로 쌓인다. 지급한 뒤 '지급' 을 누르면 paid 로 바뀐다.
+let PTS = null;
+const PT_URL = 'https://app.massaviet.com/?p=';
+async function loadPts() {
+  const box = $('pt'); box.innerHTML = '<div class="empty">불러오는 중…</div>';
+  const { data, error } = await sb.rpc('admin_partner_list');
+  if (error) { box.innerHTML = '<div class="empty">불러오지 못했습니다 — ' + esc(error.message) + '</div>'; return; }
+  PTS = data || [];
+  const pend = PTS.reduce((a, p) => a + Number(p.pending_vnd || 0), 0);
+  $('pt-note').innerHTML = PTS.length
+    ? `파트너 <b>${num(PTS.length)}곳</b> · 지급 대기 <b>${esc(vnd(pend))}</b> · 완료 예약 금액의 10%`
+    : '등록한 파트너가 없습니다. 아래에서 추가하면 QR 링크와 인쇄용 카드가 생깁니다.';
+  box.innerHTML = PTS.length ? '<div class="scroll"><table class="tbl"><thead><tr>'
+    + '<th class="l">이름</th><th class="l">코드</th><th class="l">연락처</th><th>손님</th><th>예약</th><th>완료</th>'
+    + '<th>지급 대기</th><th>지급 완료</th><th></th></tr></thead><tbody>'
+    + PTS.map(p => `<tr>
+        <td class="l" style="font-weight:600">${esc(p.name)}${p.is_active ? '' : ' <span style="color:var(--ink-soft)">(멈춤)</span>'}</td>
+        <td class="l" style="font-family:monospace;font-size:12px">${esc(p.code)}</td>
+        <td class="l">${esc(p.contact || '-')}</td>
+        <td>${num(p.guests)}</td><td>${num(p.bookings)}</td><td>${num(p.completed)}</td>
+        <td class="${p.pending_vnd ? 'owe' : 'owe zero'}">${esc(vnd(p.pending_vnd))}</td>
+        <td>${esc(vnd(p.paid_vnd))}</td>
+        <td><div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end">
+          ${p.pending_vnd ? `<button class="mini" data-ptpay="${esc(p.id)}">지급</button>` : ''}
+          <button class="mini" data-ptcard="${esc(p.id)}">인쇄용 카드</button>
+          <button class="mini" data-ptlink="${esc(p.code)}">링크 복사</button>
+        </div></td>
+      </tr>`).join('') + '</tbody></table></div>' : '';
+}
+document.addEventListener('click', async (e) => {
+  if (e.target.id === 'ptnew') {
+    const name = ($('ptname').value || '').trim();
+    if (!name) { alert('파트너 이름을 적어 주세요.'); return; }
+    // 코드는 QR 링크에 들어간다. 비우면 헷갈리는 글자(0·O·1·I) 없이 6자리를 만든다.
+    const code = ($('ptcode').value || '').trim().toUpperCase()
+      || Array.from({ length: 6 }, () => 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 31)]).join('');
+    const { error } = await sb.rpc('admin_partner_create', { p_name: name, p_contact: $('ptcontact').value, p_code: code });
+    if (error) { alert('실패 — ' + error.message); return; }
+    $('ptname').value = ''; $('ptcontact').value = ''; $('ptcode').value = '';
+    alert(`${name} 을 추가했습니다. 코드 ${code}`);
+    loadPts();
+    return;
+  }
+  const pay = e.target.closest('[data-ptpay]');
+  if (pay) {
+    const p = PTS.find(x => x.id === pay.dataset.ptpay);
+    if (!confirm(`${p.name} 에 제휴 수수료 ${vnd(p.pending_vnd)} 을 지급했습니까?\n지급 완료로 표시합니다.`)) return;
+    const { data, error } = await sb.rpc('admin_partner_paid', { p_partner: p.id });
+    if (error) { alert('실패 — ' + error.message); return; }
+    alert(`${data}건을 지급 완료로 표시했습니다.`);
+    loadPts();
+    return;
+  }
+  const card = e.target.closest('[data-ptcard]');
+  if (card) {
+    const p = PTS.find(x => x.id === card.dataset.ptcard);
+    open('partner-card.html?code=' + encodeURIComponent(p.code) + '&name=' + encodeURIComponent(p.name), '_blank');
+    return;
+  }
+  const link = e.target.closest('[data-ptlink]');
+  if (link) {
+    const url = PT_URL + link.dataset.ptlink;
+    try { await navigator.clipboard.writeText(url); alert('복사했습니다 — ' + url); } catch (err) { prompt('링크', url); }
   }
 });
 
@@ -2213,7 +2295,7 @@ $('repq').oninput = refilter('rep');
 $('frlv').onchange = refilter('fraud');
 $('tzero').onchange = refilter('traffic');
 $('rf').onclick = () => { loadData(); loadActivity(); loadRoster(); loadMembers(); loadApps();
-                          loadBk(); loadReps(); loadPrices(); loadFraud(); loadCps(); };
+                          loadBk(); loadReps(); loadPrices(); loadFraud(); loadCps(); loadPts(); };
 $('out').onclick = async () => { await sb.auth.signOut(); location.reload(); };
 
 $('go').onclick = async () => {
@@ -2278,6 +2360,7 @@ async function start() {
   loadPrices();
   loadFraud();
   loadCps();
+  loadPts();
 }
 start();
 </script>
