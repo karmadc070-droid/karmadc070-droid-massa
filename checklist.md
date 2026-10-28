@@ -5123,7 +5123,7 @@ vi:
 - [x] R-5. 지표(/admin) 명단에 '초대 보상 대기'·'초대 보상 지급'
 - [x] R-6. 운영 DB 적용(백업 /root/backups/referral_before_20261029/), PostgREST 리로드, crontab 2줄 추가, anon 은 RPC 401·표 0행
 - [x] R-7. 커밋 b0312b6 · ad2c8e4 · 9aec641 · ffeaf1e
-- [ ] push·웹 배포(vps-deploy-app.sh)·지표 배포(vps-deploy-massaviet.sh)
+- [x] push(64f79ba)·웹 배포(vps-deploy-app.sh)·지표 배포(vps-deploy-massaviet.sh) → 라이브 app.massaviet.com/?ref= 로 열어 코드 보관·페이지 오류 0 확인
 - [ ] 스토어 앱(iOS·안드로이드)은 index.html 을 빌드에 넣는다 → 다음 빌드 때 함께 나간다 (이번에 빌드하지 않음)
 - [ ] 사장님 — 마사지사 적립금을 현금으로 줄지 수수료에서 뺄지 결정, 지급 후 '초대 보상 지급' 누르기
 - [ ] 사장님 — 폰에서 확인: 계정 탭 '친구 초대'·공유, 다른 기기 새 계정으로 링크 가입 → 첫 완료 후 쿠폰함, 마사지사 '친구 초대' 칸, 12:30·19:00 홍보 푸시
