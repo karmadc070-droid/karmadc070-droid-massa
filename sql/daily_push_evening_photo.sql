@@ -38,7 +38,8 @@ returns integer language sql security definer set search_path = '' as $$
                 then ('{"ko":"오늘의 테라피스트 · ","vi":"Kỹ thuật viên hôm nay · ","en":"Today''s therapist · ","zh":"今日理疗师 · ","ja":"今日のセラピスト · "}'::jsonb ->> u.lang)
                      || pv.display_name || ' — ' || (m.body ->> u.lang)
                 else m.body ->> u.lang end,
-           case when not u.is_prov then pv.photo_url end,
+           -- 원본 사진은 2MB 안팎 PNG 라 Android 알림 한도(1MB)를 넘는다 → 저장소 변환 주소로 540px 축소본을 쓴다
+           case when not u.is_prov then replace(pv.photo_url, '/storage/v1/object/public/', '/storage/v1/render/image/public/') || '?width=540&quality=60' end,
            case when not u.is_prov then pv.id end
     from u cross join m left join pv on true
     returning 1
