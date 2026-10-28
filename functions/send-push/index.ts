@@ -48,8 +48,8 @@ const APNS_HOSTS = ["https://api.push.apple.com", "https://api.sandbox.push.appl
 //   이게 없으면 아이폰에 알림이 10개 쌓인다. 안드로이드 웹푸시의 tag 와 같은 역할 —
 //   같은 값으로 보내면 쌓이지 않고 그 자리에서 덮어쓰며 다시 알린다.
 //   예약은 건별로 묶고(booking_id), 그 외는 종류별로 묶는다. 최대 64바이트.
-async function sendApns(jwt: string, token: string, title: string, body: string, kind: string, bookingId: string | null) {
-  const payload = JSON.stringify({ aps: { alert: { title, body }, sound: "default" }, kind, booking_id: bookingId });
+async function sendApns(jwt: string, token: string, title: string, body: string, kind: string, bookingId: string | null, providerId: string | null = null) {
+  const payload = JSON.stringify({ aps: { alert: { title, body }, sound: "default" }, kind, booking_id: bookingId, provider_id: providerId });
   const collapseId = (bookingId ? `b-${bookingId}` : `k-${kind}`).slice(0, 64);
   let lastError = "";
   for (const host of APNS_HOSTS) {
@@ -179,7 +179,8 @@ async function getFcmAccessToken(): Promise<{ token: string; projectId: string }
   return { token: fcmTok.token, projectId: sa.project_id };
 }
 
-async function sendFcm(deviceToken: string, title: string, body: string, kind: string, bookingId: string | null) {
+// image: 저녁 홍보 푸시의 테라피스트 사진 (2026-10-28). Android 알림에 큰 그림으로 붙는다
+async function sendFcm(deviceToken: string, title: string, body: string, kind: string, bookingId: string | null, image: string | null = null, providerId: string | null = null) {
   const auth = await getFcmAccessToken();
   if (!auth) return { ok: false, gone: false, error: "FCM_SERVICE_ACCOUNT 가 없습니다" };
   const res = await fetch(`https://fcm.googleapis.com/v1/projects/${auth.projectId}/messages:send`, {
@@ -188,8 +189,8 @@ async function sendFcm(deviceToken: string, title: string, body: string, kind: s
     body: JSON.stringify({
       message: {
         token: deviceToken,
-        notification: { title, body },
-        data: { kind, booking_id: bookingId ?? "" },
+        notification: image ? { title, body, image } : { title, body },
+        data: { kind, booking_id: bookingId ?? "", provider_id: providerId ?? "" },
         android: {
           priority: "HIGH",
           notification: {
@@ -226,7 +227,7 @@ const TITLE: Record<string, Record<string, string>> = {
   chat_first: { vi: "Tin nhắn mới", ko: "새 메시지가 왔습니다", en: "New message" },
 };
 
-type Noti = { id: string; user_id: string; title: string | null; body: string | null; kind: string; booking_id: string | null; push_tries: number | null };
+type Noti = { id: string; user_id: string; title: string | null; body: string | null; kind: string; booking_id: string | null; push_tries: number | null; image_url: string | null; provider_id: string | null };
 type Tok = { token: string; user_id: string; lang: string; platform: string | null };
 
 
@@ -316,9 +317,9 @@ Deno.serve(async (req) => {
       const r = t.platform === "web"
         ? await sendWebPush(t.token)
         : t.platform === "android"
-        ? await sendFcm(t.token, title, n.body ?? "", n.kind, n.booking_id)
+        ? await sendFcm(t.token, title, n.body ?? "", n.kind, n.booking_id, n.image_url, n.provider_id)
         : jwt
-        ? await sendApns(jwt, t.token, title, n.body ?? "", n.kind, n.booking_id)
+        ? await sendApns(jwt, t.token, title, n.body ?? "", n.kind, n.booking_id, n.provider_id)
         : { ok: false, gone: false, error: "APNs 키 없음" };
       if (r.ok) { sent++; okAny = true; }
       else if (r.gone) { removed++; await db.from("push_tokens").delete().eq("token", t.token); }
