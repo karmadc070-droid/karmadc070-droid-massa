@@ -2120,6 +2120,22 @@ async function refreshSession() {
   setupPush();
   setTimeout(checkProviderDevice, 12000);   // 등록이 끝날 시간을 준 뒤 서버에 기기가 있는지 본다
   maybeAskBasics();   // 가입 직후 한 번만 성별·국적을 묻는다
+  setTimeout(maybeAskReview, 3000);   // 완료됐는데 리뷰가 없는 예약이 있으면 리뷰 창을 한 번 띄운다
+}
+// 완료 후 7일 안, 리뷰가 없는 가장 최근 예약 1건에 대해 예약마다 딱 한 번만 묻는다 (2026-10-28)
+async function maybeAskReview() {
+  if (!SESSION || document.getElementById('revOv')?.style.display === 'flex') return;
+  const since = new Date(Date.now() - 7 * 86400000).toISOString();
+  const { data: bs } = await sb.from('bookings').select('id, provider_id').eq('customer_id', SESSION.user.id)
+    .eq('status', 'completed').gte('completed_at', since).order('completed_at', { ascending: false }).limit(5);
+  if (!bs || !bs.length) return;
+  const { data: rv } = await sb.from('reviews').select('booking_id').in('booking_id', bs.map(b => b.id));
+  const done = new Set((rv || []).map(r => r.booking_id));
+  const asked = (id) => { try { return !!localStorage.getItem('massa.revAsked.' + id); } catch (e) { return true; } };
+  const b = bs.find(x => x.provider_id && !done.has(x.id) && !asked(x.id));
+  if (!b) return;
+  try { localStorage.setItem('massa.revAsked.' + b.id, '1'); } catch (e) {}
+  openReview(b.id, b.provider_id);
 }
 // 제공자 연락처는 앱을 거치지 않는 직거래를 막기 위해 관리자에게만 보인다
 function isAdminUser() { return !!(CUR_PROFILE && CUR_PROFILE.role === 'admin'); }
@@ -2821,6 +2837,13 @@ async function loadMyBookings() {
     const { data: oc } = await sb.rpc('chats_opened');
     (oc || []).forEach(v => opened.add(typeof v === 'string' ? v : v.chats_opened));
   } catch (e) { console.warn('채팅 가능 목록', e); }
+  // 이미 리뷰를 쓴 예약은 '리뷰 작성' 버튼을 숨긴다
+  let reviewed = new Set();
+  const doneIds = data.filter(x => x.status === 'completed').map(x => x.id);
+  if (doneIds.length) {
+    const { data: rv } = await sb.from('reviews').select('booking_id').in('booking_id', doneIds);
+    reviewed = new Set((rv || []).map(r => r.booking_id));
+  }
 
   // 같은 묶음에서 이미 취소된(밀린) 건은 목록에서 숨긴다.
   // 손님 눈에는 요청 한 건이지 네 건이 아니다.
@@ -2828,7 +2851,7 @@ async function loadMyBookings() {
   const shown = data.filter(b => !(b.status === 'cancelled' && b.cancelled_by === 'system' && liveGroups.has(b.group_id)));
   wrap.innerHTML = shown.map(b => {
     const canCancel = ['requested', 'confirmed'].includes(b.status);
-    const canReview = b.status === 'completed';
+    const canReview = b.status === 'completed' && !reviewed.has(b.id);
     const canPay = b.status === 'completed' && !b.is_paid;
     // 테라피스트가 먼저 말을 건 뒤에만 채팅을 연다
     const canChat = b.provider_id && b.status !== 'cancelled' && opened.has(b.provider_id);
