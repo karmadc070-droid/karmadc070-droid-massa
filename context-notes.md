@@ -1991,3 +1991,22 @@ exception when others then
 - 11번 규칙: 새 표·RPC·알림 종류는 옛 앱이 모른다(옛 앱은 invite_promo 알림을 누르면 알림 목록으로 간다). 서버 먼저 올려도 안전하다.
   앱(index.html)은 웹·스토어 앱 모두 빌드에 들어가므로 **스토어 앱에는 다음 빌드부터** 초대 화면이 보인다. 그 전까지 앱의 '친구 초대' 는 옛 데모 알림이다.
 - 시험: `sql/test_referral.sql` (실행법은 파일 첫 줄, 전부 롤백) 24개 PASS. 헤드리스: `emoi-tmp/shot-massa-invite.js`.
+
+## 2026-10-29 호텔·서비스드 아파트 제휴 QR (파트너 수수료 10%)
+- 귀속 규칙(최소·견고) — 객실 QR 링크 `https://app.massaviet.com/?p=<코드>` 로 들어오면 앱이 코드와 시각을 기기에 보관(`massa.partner`, 30일)하고,
+  로그인돼 있거나 로그인되는 순간 `claim_partner` 로 계정을 그 파트너에 잇는다(`partner_guests`, 서버 시각 linked_at).
+  다른 파트너 링크로 다시 들어오면 마지막 것이 이긴다. 이어진 뒤 30일 안에 만든 예약은 들어오는 순간 `partner_bookings` 에 굳힌다(나중에 바뀌지 않음).
+  완료되면 손님이 낸 금액(amount_vnd - discount_vnd)의 10%(partners.commission_rate)를 pending_payout 으로 적는다(한 번만).
+  ★ 30일 창은 '서버가 연결한 시각'부터다. 가입 전 스캔은 기기 쪽 30일 안에 로그인해야 이어지고, 이어진 순간부터 다시 30일이다. 앱이 보내는 시각은 믿지 않는다.
+- ?ref=(친구 초대)와 표·함수·저장 키가 모두 따로다. 한 예약이 둘 다 해당돼도 서로 영향이 없다.
+- bookings 에 칸을 더하지 않았다. booking_superseded 가 bookings 열을 그대로 베끼므로 칸을 더하면 넘겨주기(accept_booking)가 깨질 수 있다.
+  넘겨준 사본이 지워지면 partner_bookings 행도 CASCADE 로 같이 지워진다.
+- 관리자: 지표(/admin) '호텔 · 레지던스 제휴' 카드 — 추가(이름·연락처·코드, 비우면 6자리 자동), 지급 대기·완료, '지급'(admin_partner_paid), '인쇄용 카드', '링크 복사'.
+  표 3개는 RLS 켜고 정책 없음(anon·손님 0행), 함수만 is_admin() 검사.
+- 인쇄용 카드: `/admin/partner-card.html?code=&name=&size=A5` — QR 은 qrcode-generator@1.4.4(jsdelivr)로 그리고 데이터는 읽지 않는다.
+  크롬은 `@page { size: A6 }` 이름을 몰라 Letter 로 찍는다 → 치수(105mm 148mm / 148mm 210mm)로 적었다.
+  샘플 PDF 는 `partners/massa-partner-card-DEMO01-A6.pdf`·`-A5.pdf` (DEMO01 은 DB 에 없는 데모 코드, 실제 호텔 이름 없음). 다시 만들 때는 emoi-tmp/shot-massa-partner.js.
+- 시험: sql/test_partner.sql (BEGIN…ROLLBACK) PASS 1~16. 운영 적용 전 스키마 백업 /root/backups/partner_before_20261029/public_schema.sql.
+
+## 2026-10-29 스토어 빌드 1.0.23
+- 1.0.22 는 이미 READY_FOR_SALE(공개)이어서 1.0.23 으로 올렸다. 이번 빌드에 친구 초대 화면과 ?p= 보관이 실린다.

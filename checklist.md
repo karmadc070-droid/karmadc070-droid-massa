@@ -5127,3 +5127,22 @@ vi:
 - [ ] 스토어 앱(iOS·안드로이드)은 index.html 을 빌드에 넣는다 → 다음 빌드 때 함께 나간다 (이번에 빌드하지 않음)
 - [ ] 사장님 — 마사지사 적립금을 현금으로 줄지 수수료에서 뺄지 결정, 지급 후 '초대 보상 지급' 누르기
 - [ ] 사장님 — 폰에서 확인: 계정 탭 '친구 초대'·공유, 다른 기기 새 계정으로 링크 가입 → 첫 완료 후 쿠폰함, 마사지사 '친구 초대' 칸, 12:30·19:00 홍보 푸시
+
+## 2026-10-29 호텔·레지던스 제휴 QR
+- [x] PT-1. sql/partner.sql — partners·partner_guests·partner_bookings, claim_partner·admin_partner_list/create/paid, 예약 귀속·완료 수수료 트리거 → verify: sql/test_partner.sql PASS 1~16 (롤백)
+- [x] PT-2. index.html — ?p= 30일 보관, 로그인 후 claim_partner 1회 → verify: check_syntax 오류 0, 헤드리스(비로그인 보관·호출 0 / 로그인 호출 1·저장값 삭제·?ref 영향 없음·페이지 오류 0)
+- [x] PT-3. 지표(/admin) 제휴 카드 + partner-card.html(A6/A5) → verify: 헤드리스 표·버튼 렌더, 샘플 PDF 2장(1쪽, A6 298×420pt / A5 420×595pt)
+- [x] PT-4. 운영 DB 적용(백업 /root/backups/partner_before_20261029/), PostgREST 리로드, anon claim 401·표 0행
+- [x] PT-5. push·웹 배포(vps-deploy-app.sh)·지표 배포(vps-deploy-massaviet.sh) → 라이브 app.massaviet.com/?p=DEMO01 보관·페이지 오류 0
+- [ ] 사장님 — 실제 파트너를 /admin 에서 추가하고 '인쇄용 카드' 로 인쇄. 지급 방식(현금·이체)과 주기 결정 후 지급하면 '지급' 누르기
+
+## 2026-10-29 스토어 빌드 1.0.23 (친구 초대·제휴 QR)
+- [x] capacitor/package.json 1.0.22 → 1.0.23 (1.0.22 는 READY_FOR_SALE 확인)
+- [x] Codemagic iOS 6ae27a2024e3b718b8480b98 · Android 6ae27a20db69974dcea0f964 시작
+- [x] iOS 빌드 #43 성공 → ASC 빌드 61(1.0.23) VALID, NotificationService 확장 포함 확인(빌드 로그: 'Embed Foundation Extensions' 단계, NotificationService.appex 링크·dSYM)
+- [x] ASC 1.0.23 버전 생성·빌드 61 첨부·ko/vi 업데이트 사항(친구 초대 보상·초대 링크 공유) → reviewSubmission f1b9e0c1-2b41-4c90-bc3d-8b6f7d01173d 제출, 상태 WAITING_FOR_REVIEW
+- [x] 안드로이드 빌드 #19 성공 1.1.111 → Codemagic 이 Play 프로덕션에 초안(draft)으로 올림. 사용자가 AAB 를 올릴 필요 없음
+- [ ] 사장님 — Play Console massa 프로덕션 초안 1.1.111 에 출시 노트(아래) 넣고 '검토를 위해 전송'
+  ko: • 친구 초대 보상 — 친구가 내 링크로 가입해 첫 예약을 마치면 100,000₫ 쿠폰 • 계정 탭 '친구 초대'에서 링크 공유 • 마사지사 동료 초대 적립금
+  vi: • Thưởng mời bạn — bạn bè đăng ký bằng link của bạn và hoàn thành lần đặt đầu tiên, bạn nhận phiếu 100.000₫ • Chia sẻ link mời ở mục "Mời bạn bè" • Kỹ thuật viên được tích lũy thưởng khi mời đồng nghiệp
+  en: • Invite rewards — get a 100,000₫ coupon when a friend signs up with your link and completes their first booking • Share your link from "Invite friends" in Account • Therapists earn rewards for inviting colleagues
