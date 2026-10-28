@@ -150,6 +150,10 @@ workflows:
           fi
           /usr/libexec/PlistBuddy -c "Delete :aps-environment" "$ENT" 2>/dev/null || true
           /usr/libexec/PlistBuddy -c "Add :aps-environment string production" "$ENT"
+          # 유니버설 링크 (2026-10-29) — 공유 링크 https://app.massaviet.com/?ref=…·?p=… 를 앱이 연다
+          /usr/libexec/PlistBuddy -c "Delete :com.apple.developer.associated-domains" "$ENT" 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add :com.apple.developer.associated-domains array" "$ENT"
+          /usr/libexec/PlistBuddy -c "Add :com.apple.developer.associated-domains:0 string applinks:app.massaviet.com" "$ENT"
           echo "----- entitlements 확인 -----"
           /usr/libexec/PlistBuddy -c "Print" "$ENT"
           python3 - <<'PY'
@@ -182,12 +186,20 @@ workflows:
             exit 1
           fi
           keychain initialize
+          # 유니버설 링크는 App ID 에 Associated Domains 기능이 켜져 있어야 프로파일에 들어간다.
+          # 켜면 예전 프로파일은 무효가 되고 아래 --create 가 기능이 들어간 새 프로파일을 만든다. 이미 켜져 있으면 그대로 지나간다.
+          BID=$(app-store-connect bundle-ids list --bundle-id-identifier "$BUNDLE_ID" --strict-match-identifier --platform IOS --json \
+                | python3 -c 'import sys,json; print(json.load(sys.stdin)[0]["id"])')
+          app-store-connect bundle-ids enable-capabilities "$BID" --capability "Associated Domains" \
+            || echo "  Associated Domains 켜기 실패(이미 켜져 있으면 정상) — 아래 프로파일 확인에서 다시 본다"
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
             --platform IOS \
             --strict-match-identifier \
             --certificate-key "@env:CERTIFICATE_PRIVATE_KEY" \
             --create
+          grep -rlaq 'com.apple.developer.associated-domains' "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles" "$HOME/Library/MobileDevice/Provisioning Profiles" 2>/dev/null \
+            || { echo "★ 받은 프로파일에 Associated Domains 가 없다 — Apple Developer > Identifiers > $BUNDLE_ID 에서 기능을 켜고 다시 빌드"; exit 1; }
           # 알림 사진 확장은 번들 ID 가 따로라 프로파일도 따로 받는다 (없으면 만든다)
           app-store-connect fetch-signing-files "$BUNDLE_ID.NotificationService" \
             --type IOS_APP_STORE \
@@ -332,6 +344,34 @@ workflows:
           grep -q 'android:scheme="massa"' "$MF" || { echo "★ 스킴 등록 실패 - 중단"; exit 1; }
           echo "----- URL 스킴 확인 -----"
           grep -A1 -B3 'android:scheme="massa"' "$MF"
+      # 앱 링크 (2026-10-29). 친구 초대(?ref=)·호텔 QR(?p=) 링크를 설치된 앱이 바로 연다.
+      # 경로는 "/" 하나만 받는다 — reset.html·pay-return.html 같은 다른 페이지는 브라우저에 남아야 한다.
+      # 확인 파일은 https://app.massaviet.com/.well-known/assetlinks.json (Play 서명키·업로드키 지문 2개).
+      - name: 앱 링크 등록 (https://app.massaviet.com/)
+        script: |
+          MF=android/app/src/main/AndroidManifest.xml
+          python3 - "$MF" <<'PY'
+          import sys
+          p = sys.argv[1]
+          s = open(p, encoding='utf-8').read()
+          if 'android:host="app.massaviet.com"' in s:
+              print('  이미 있음'); raise SystemExit
+          block = (
+            '\n            <intent-filter android:autoVerify="true">\n'
+            '                <action android:name="android.intent.action.VIEW" />\n'
+            '                <category android:name="android.intent.category.DEFAULT" />\n'
+            '                <category android:name="android.intent.category.BROWSABLE" />\n'
+            '                <data android:scheme="https" android:host="app.massaviet.com" android:path="/" />\n'
+            '            </intent-filter>\n        ')
+          i = s.find('</activity>')
+          if i < 0:
+              print('★ </activity> 를 못 찾았다'); raise SystemExit(1)
+          s = s[:i] + block + s[i:]
+          open(p, 'w', encoding='utf-8').write(s)
+          print('  앱 링크 인텐트 필터 추가')
+          PY
+          grep -q 'android:host="app.massaviet.com"' "$MF" || { echo "★ 앱 링크 등록 실패 - 중단"; exit 1; }
+          grep -B6 -A1 'android:host="app.massaviet.com"' "$MF"
       # 위치 권한 (2026-10-27). 마사지사가 「출발」 뒤 앱이 켜진 동안 위치를 보내는 데 필요하다.
       # @capacitor/geolocation 은 권한을 스스로 넣지 않는다. 백그라운드 위치는 쓰지 않는다.
       - name: 위치 권한 추가
