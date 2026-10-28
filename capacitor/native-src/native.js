@@ -105,6 +105,8 @@ function handleAppUrl(url) {
   try {
     Browser.close().catch(() => {});
     const u = new URL(url);
+    // 공유 링크(https://app.massaviet.com/?ref=…·?p=…)가 앱 링크로 열린 경우 — 웹과 같이 코드만 보관한다
+    if (u.protocol === "https:") { deliver("onNativeLink", u.search); return; }
     const target = u.host || u.pathname.replace(/^\/+/, "");
     if (target === "pay") { deliver("onNativePayReturn", u.search); return; }
     // 로그인 — 토큰은 # 뒤에, PKCE 코드는 ? 뒤에 붙는다. 그대로 넘기면 supabase-js 가 세션을 세운다.
@@ -119,6 +121,8 @@ if (Capacitor.isNativePlatform()) {
   geoShimmed = shimGeolocation();
   if (!geoShimmed) console.error("navigator.geolocation 대체 실패 — 위치 기능이 동작하지 않을 수 있음");
   App.addListener("appUrlOpen", (e) => handleAppUrl(e.url));
+  // 앱이 꺼진 상태에서 공유 링크로 켜졌을 때도 놓치지 않는다. 코드 보관은 여러 번 와도 결과가 같다.
+  App.getLaunchUrl().then((r) => { if (r && r.url && r.url.startsWith("https:")) handleAppUrl(r.url); }).catch(() => {});
 }
 
 // 네이티브 앱의 알림 권한을 묻는다. 웹의 Notification API 는 iOS WebView 에 아예 없어서,

@@ -2155,10 +2155,13 @@ async function openReviewFor(bookingId) {
 // 스토어 앱으로 설치한 친구는 링크를 못 타므로 초대 화면에서 코드를 직접 넣는다.
 const REF_KEY = 'massa.ref';
 const INVITE_URL = 'https://app.massaviet.com/';
-try {
-  const _ref = new URLSearchParams(location.search).get('ref');
-  if (_ref && /^[A-Za-z0-9]{4,12}$/.test(_ref)) localStorage.setItem(REF_KEY, _ref.toUpperCase());
-} catch (e) {}
+function saveRefCode(search) {
+  try {
+    const _ref = new URLSearchParams(search).get('ref');
+    if (_ref && /^[A-Za-z0-9]{4,12}$/.test(_ref)) localStorage.setItem(REF_KEY, _ref.toUpperCase());
+  } catch (e) {}
+}
+saveRefCode(location.search);
 async function claimStoredRef() {
   if (!SESSION) return;
   let code = null;
@@ -2174,10 +2177,13 @@ async function claimStoredRef() {
 // 객실 QR(?p=코드)로 들어오면 코드와 시각을 기기에 30일 보관했다가, 로그인되면 서버에 한 번 잇는다.
 // 친구 초대(?ref=)와는 따로 저장한다. 귀속(30일·마지막 링크)과 수수료는 서버(claim_partner·트리거)가 정한다.
 const PARTNER_KEY = 'massa.partner';
-try {
-  const _p = new URLSearchParams(location.search).get('p');
-  if (_p && /^[A-Za-z0-9]{4,12}$/.test(_p)) localStorage.setItem(PARTNER_KEY, JSON.stringify({ code: _p.toUpperCase(), at: Date.now() }));
-} catch (e) {}
+function savePartnerCode(search) {
+  try {
+    const _p = new URLSearchParams(search).get('p');
+    if (_p && /^[A-Za-z0-9]{4,12}$/.test(_p)) localStorage.setItem(PARTNER_KEY, JSON.stringify({ code: _p.toUpperCase(), at: Date.now() }));
+  } catch (e) {}
+}
+savePartnerCode(location.search);
 async function claimStoredPartner() {
   if (!SESSION) return;
   let v = null;
@@ -2188,6 +2194,12 @@ async function claimStoredPartner() {
   // 연결됐거나 서버가 거절했으면(hint) 지운다. 통신 오류면 다음 로그인 때 다시 시도한다. 손님에게는 알리지 않는다.
   if (!error || error.hint) { try { localStorage.removeItem(PARTNER_KEY); } catch (e) {} }
 }
+// 설치된 앱이 공유 링크(앱 링크·유니버설 링크)로 열리면 native.js 가 쿼리(?ref=·?p=)를 넘겨준다.
+// 웹과 똑같이 보관하고, 이미 로그인돼 있으면 바로 서버에 잇는다.
+window.onNativeLink = function (search) {
+  saveRefCode(search); savePartnerCode(search);
+  if (SESSION) { claimStoredRef(); claimStoredPartner(); }
+};
 async function shareInvite(link, text) {
   try { if (navigator.share) { await navigator.share({ title: 'massa', text: text, url: link }); return; } }
   catch (e) { if (e && e.name === 'AbortError') return; }
