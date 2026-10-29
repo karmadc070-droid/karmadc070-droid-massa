@@ -1701,6 +1701,12 @@ window.askMyPos = askMyPos;
 // 아직 안 물어본 사람에게는 여기서 권한창을 띄우지 않는다 (이유도 모른 채 거절당한다).
 async function initMyPos() {
   try { const s = localStorage.getItem('massa.pos'); if (s) { MYPOS = JSON.parse(s); refreshDistances(); } } catch (e) {}
+  // 안드로이드 앱(TWA)은 위치를 앱 권한으로 넘겨받아서(locationDelegation) permissions.query 가
+  // 허용 뒤에도 'granted' 로 나오지 않는다. 그래서 iOS 와 달리 거리가 한 번도 안 떴다 (2026-10-30).
+  // 앱 안에서는 바로 위치를 묻는다 — 이미 허용했으면 조용히 받고, 거절했으면 아무것도 안 한다.
+  try { if (document.referrer.startsWith('android-app://')) localStorage.setItem('massa.twa', '1'); } catch (e) {}
+  let twa = false; try { twa = localStorage.getItem('massa.twa') === '1'; } catch (e) {}
+  if (twa) { askMyPos(false); return; }
   try {
     if (navigator.permissions && navigator.permissions.query) {
       const st = await navigator.permissions.query({ name: 'geolocation' });
