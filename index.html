@@ -146,7 +146,6 @@
   .mp-card-t { font-size: 16.5px; font-weight: bold; line-height: 1.32; color: #3a3a3a; position: relative; z-index: 2; }
   .mp-card-arrow { position: absolute; left: 14px; bottom: 12px; width: 27px; height: 27px; border-radius: 50%; background: #E3922B; color: #fff; display: flex; align-items: center; justify-content: center; z-index: 2; }
   .mp-card.c-invite .mp-card-arrow { background: #3E7C4F; }
-  .mp-card-s { font-size: 12px; line-height: 1.35; color: #3E7C4F; font-weight: bold; margin-top: 6px; position: relative; z-index: 2; }
   .mp-list { background: #fff; border: 1px solid #EDF1EF; border-radius: 18px; padding: 2px 14px; box-shadow: 0 5px 16px rgba(0,0,0,.05); }
   .mp-row { display: flex; align-items: center; gap: 13px; padding: 15px 2px; border-bottom: 1px solid #F2F5F3; cursor: pointer; }
   .mp-row:last-child { border-bottom: none; }
@@ -941,9 +940,9 @@
     </div>
     <div class="mp-cards">
       <div class="mp-card c-partner" onclick="window.go('applyForm');loadApplyStatus()"><div class="mp-card-t">마사지사·홈뷰티<br>파트너 되기</div><div class="mp-card-arrow">→</div></div>
-      <!-- 마사지사 초대 페이백 안내는 홈 배너가 아니라 이 카드에 둔다(2026-10-30 사용자 지시). 승인된 마사지사·관리자에게만 보인다(paintInviteCard).
+      <!-- 초대 보상 안내는 홈 배너가 아니라 이 카드 제목에 둔다(2026-10-30 사용자 지시).
            보상은 sql/referral.sql — 초대한 마사지사가 승인되고 첫 서비스를 마치면 100,000₫ 지급 대기(pending_payout) -->
-      <div class="mp-card c-invite" onclick="openInvite()"><div class="mp-card-t">친구 초대</div><div class="mp-card-s" id="inviteCardSub" style="display:none">마사지사 초대하고 100,000₫ 페이백</div><div class="mp-card-arrow">→</div></div>
+      <div class="mp-card c-invite" onclick="openInvite()"><div class="mp-card-t">친구 초대 100,000₫ 페이백</div><div class="mp-card-arrow">→</div></div>
     </div>
     <div class="mp-list">
       <div class="mp-row" onclick="window.go('myDash');loadMyDash()"><span class="mp-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#2E8B8B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M7 15l4-5 3 3 5-7"/></svg></span><span class="mp-name">내 이용 현황</span><span class="mp-chev">›</span></div>
@@ -2122,7 +2121,6 @@ async function refreshSession() {
   subscribeNotifications();
   loadBlocks();
   setupPush();
-  paintInviteCard();
   setTimeout(checkProviderDevice, 12000);   // 등록이 끝날 시간을 준 뒤 서버에 기기가 있는지 본다
   maybeAskBasics();   // 가입 직후 한 번만 성별·국적을 묻는다
   claimStoredRef();   // 초대 링크로 들어와 가입했으면 초대 코드를 등록한다
@@ -2393,11 +2391,6 @@ async function setupWebPush() {
   }
   if (await isApprovedProvider()) return showPushGate();
   showPushBanner();
-}
-// 계정 탭 '친구 초대' 카드의 페이백 안내는 승인된 마사지사와 관리자에게만 보인다. 손님이 초대하면 페이백이 아니라 쿠폰이다.
-async function paintInviteCard() {
-  const s = document.getElementById('inviteCardSub');
-  if (s) s.style.display = SESSION && (isAdminUser() || await isApprovedProvider()) ? '' : 'none';
 }
 // 승인된 마사지사인가. 신청자 본인(profile_id)과 업체 소유자(owner_id) 둘 다 본다 — 목록 화면과 같은 조건.
 let _isProv = null, _provId = null;
@@ -4425,7 +4418,7 @@ const DICT = {
   '추가 정보': ['Thông tin thêm', 'More info', '补充信息', '追加情報'],
   '한국인': ['Tiếng Việt', 'English', '中文', '日本語'],
   '친구 초대': ['Mời bạn bè', 'Invite friends', '邀请好友', '友達を招待'],
-  '마사지사 초대하고 100,000₫ 페이백': ['Mời KTV, nhận hoàn 100.000₫', 'Invite a therapist, get 100,000₫ back', '邀请技师 返现100,000₫', 'セラピスト招待で100,000₫還元'],
+  '친구 초대 100,000₫ 페이백': ['Mời bạn, hoàn 100.000₫', 'Invite friends, 100,000₫ back', '邀请好友 返现100,000₫', '友達招待で100,000₫還元'],
   '파트너 되기': ['Trở thành đối tác', 'Become a partner', '成为合作伙伴', 'パートナーになる'],
   '마사지사·홈뷰티': ['Massage · Làm đẹp tại nhà', 'Massage · Home beauty', '按摩·上门美容', 'マッサージ・ホームビューティー'],
   '내 요청 기록': ['Lịch sử yêu cầu của tôi', 'My requests', '我的请求记录', '自分のリクエスト履歴'],
