@@ -146,6 +146,7 @@
   .mp-card-t { font-size: 16.5px; font-weight: bold; line-height: 1.32; color: #3a3a3a; position: relative; z-index: 2; }
   .mp-card-arrow { position: absolute; left: 14px; bottom: 12px; width: 27px; height: 27px; border-radius: 50%; background: #E3922B; color: #fff; display: flex; align-items: center; justify-content: center; z-index: 2; }
   .mp-card.c-invite .mp-card-arrow { background: #3E7C4F; }
+  .mp-card-s { font-size: 12px; line-height: 1.35; color: #3E7C4F; font-weight: bold; margin-top: 6px; position: relative; z-index: 2; }
   .mp-list { background: #fff; border: 1px solid #EDF1EF; border-radius: 18px; padding: 2px 14px; box-shadow: 0 5px 16px rgba(0,0,0,.05); }
   .mp-row { display: flex; align-items: center; gap: 13px; padding: 15px 2px; border-bottom: 1px solid #F2F5F3; cursor: pointer; }
   .mp-row:last-child { border-bottom: none; }
@@ -314,7 +315,6 @@
   .banner.b1 { background: linear-gradient(115deg, #3B2A18 0%, #6E4F2A 55%, #A87B45 100%); }
   .banner.b2 { background: linear-gradient(115deg, #2E2417 0%, #5C462B 55%, #8C6B3E 100%); }
   .banner.b3 { background: linear-gradient(115deg, #26201A 0%, #4E3D28 55%, #7E6446 100%); }
-  .banner.b4 { background: linear-gradient(115deg, #1F4A30 0%, #3E7C4F 55%, #6FA77A 100%); }
   .banner::before { content: ""; position: absolute; right: -30px; top: -40px; width: 200px; height: 200px; border-radius: 50%; background: radial-gradient(circle, rgba(255,225,170,.28), transparent 65%); }
   .banner::after { content: ""; position: absolute; left: -50px; bottom: -70px; width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.08), transparent 70%); }
   .banner .bt { font-size: 23px; font-weight: bold; letter-spacing: .5px; text-shadow: 0 1px 8px rgba(0,0,0,.45); position: relative; z-index: 3; }
@@ -594,13 +594,6 @@
         <circle cx="36" cy="28" r="2" fill="#FFE9BC" opacity=".7"/>
         <circle cx="60" cy="16" r="1.5" fill="#FFE9BC" opacity=".5"/>
       </svg></div>
-    </div>
-    <!-- 마사지사 초대 페이백. 승인된 마사지사·관리자에게만 보인다(paintInviteBanner). 문구는 BANNER_I18N[3].
-         보상은 sql/referral.sql — 초대한 마사지사가 승인되고 첫 서비스를 마치면 100,000₫ 지급 대기(pending_payout) -->
-    <div class="banner b4" onclick="openInvite()" style="display:none">
-      <div class="bt">마사지사 초대하고 100,000₫ 페이백</div>
-      <div class="bd">초대한 마사지사가 승인 후 첫 서비스를 마치면 100,000₫ 적립</div>
-      <div class="go">→</div>
     </div>
   </div>
 
@@ -948,7 +941,9 @@
     </div>
     <div class="mp-cards">
       <div class="mp-card c-partner" onclick="window.go('applyForm');loadApplyStatus()"><div class="mp-card-t">마사지사·홈뷰티<br>파트너 되기</div><div class="mp-card-arrow">→</div></div>
-      <div class="mp-card c-invite" onclick="openInvite()"><div class="mp-card-t">친구 초대</div><div class="mp-card-arrow">→</div></div>
+      <!-- 마사지사 초대 페이백 안내는 홈 배너가 아니라 이 카드에 둔다(2026-10-30 사용자 지시). 승인된 마사지사·관리자에게만 보인다(paintInviteCard).
+           보상은 sql/referral.sql — 초대한 마사지사가 승인되고 첫 서비스를 마치면 100,000₫ 지급 대기(pending_payout) -->
+      <div class="mp-card c-invite" onclick="openInvite()"><div class="mp-card-t">친구 초대</div><div class="mp-card-s" id="inviteCardSub" style="display:none">마사지사 초대하고 100,000₫ 페이백</div><div class="mp-card-arrow">→</div></div>
     </div>
     <div class="mp-list">
       <div class="mp-row" onclick="window.go('myDash');loadMyDash()"><span class="mp-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#2E8B8B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M7 15l4-5 3 3 5-7"/></svg></span><span class="mp-name">내 이용 현황</span><span class="mp-chev">›</span></div>
@@ -2127,7 +2122,7 @@ async function refreshSession() {
   subscribeNotifications();
   loadBlocks();
   setupPush();
-  paintInviteBanner();
+  paintInviteCard();
   setTimeout(checkProviderDevice, 12000);   // 등록이 끝날 시간을 준 뒤 서버에 기기가 있는지 본다
   maybeAskBasics();   // 가입 직후 한 번만 성별·국적을 묻는다
   claimStoredRef();   // 초대 링크로 들어와 가입했으면 초대 코드를 등록한다
@@ -2399,10 +2394,10 @@ async function setupWebPush() {
   if (await isApprovedProvider()) return showPushGate();
   showPushBanner();
 }
-// 마사지사 초대 페이백 배너는 승인된 마사지사와 관리자에게만 보인다. 손님이 초대하면 페이백이 아니라 쿠폰이다.
-async function paintInviteBanner() {
-  const b = document.querySelector('#home .banner.b4');
-  if (b) b.style.display = SESSION && (isAdminUser() || await isApprovedProvider()) ? '' : 'none';
+// 계정 탭 '친구 초대' 카드의 페이백 안내는 승인된 마사지사와 관리자에게만 보인다. 손님이 초대하면 페이백이 아니라 쿠폰이다.
+async function paintInviteCard() {
+  const s = document.getElementById('inviteCardSub');
+  if (s) s.style.display = SESSION && (isAdminUser() || await isApprovedProvider()) ? '' : 'none';
 }
 // 승인된 마사지사인가. 신청자 본인(profile_id)과 업체 소유자(owner_id) 둘 다 본다 — 목록 화면과 같은 조건.
 let _isProv = null, _provId = null;
@@ -4208,7 +4203,6 @@ const BANNER_I18N = [
   { ko: ['마사지 홈서비스','테라피스트 선택하기'], vi: ['Massage tại nhà','Chọn kỹ thuật viên'], en: ['Home Massage','Choose a therapist'], zh: ['上门按摩','选择技师'], ja: ['出張マッサージ','セラピストを選ぶ'] },
   { ko: ['홈 뷰티','네일·왁싱·각질 케어 방문 서비스'], vi: ['Làm đẹp tại nhà','Nail · Wax · Tẩy da chết'], en: ['Home Beauty','Nail · Wax · Exfoliation'], zh: ['上门美容','美甲·脱毛·去角质'], ja: ['ホームビューティー','ネイル·脱毛·角質ケア'] },
   { ko: ['스파 안내','해피아워 할인'], vi: ['Spa','Ưu đãi giờ vàng'], en: ['Spa Guide','Happy Hour deals'], zh: ['水疗指南','欢乐时光优惠'], ja: ['スパ案内','ハッピーアワー割引'] },
-  { ko: ['마사지사 초대하고 100,000₫ 페이백','초대한 마사지사가 승인 후 첫 서비스를 마치면 100,000₫ 적립'], vi: ['Mời KTV, nhận hoàn 100.000₫','KTV bạn mời được duyệt và hoàn thành dịch vụ đầu tiên, bạn được tích 100.000₫'], en: ['Invite a therapist, get 100,000₫ back','Earn 100,000₫ when the therapist you invite is approved and completes their first service'], zh: ['邀请技师 返现100,000₫','您邀请的技师通过审核并完成首次服务后，为您累计100,000₫'], ja: ['セラピスト招待で100,000₫還元','招待したセラピストが承認され初回サービスを完了すると100,000₫を積み立て'] },
 ];
 const TITLE_I18N = {
   '마사지 홈서비스': ['Massage tại nhà','Home Massage','上门按摩','出張マッサージ'], '홈 뷰티': ['Làm đẹp tại nhà','Home Beauty','上门美容','ホームビューティー'],
@@ -4431,6 +4425,7 @@ const DICT = {
   '추가 정보': ['Thông tin thêm', 'More info', '补充信息', '追加情報'],
   '한국인': ['Tiếng Việt', 'English', '中文', '日本語'],
   '친구 초대': ['Mời bạn bè', 'Invite friends', '邀请好友', '友達を招待'],
+  '마사지사 초대하고 100,000₫ 페이백': ['Mời KTV, nhận hoàn 100.000₫', 'Invite a therapist, get 100,000₫ back', '邀请技师 返现100,000₫', 'セラピスト招待で100,000₫還元'],
   '파트너 되기': ['Trở thành đối tác', 'Become a partner', '成为合作伙伴', 'パートナーになる'],
   '마사지사·홈뷰티': ['Massage · Làm đẹp tại nhà', 'Massage · Home beauty', '按摩·上门美容', 'マッサージ・ホームビューティー'],
   '내 요청 기록': ['Lịch sử yêu cầu của tôi', 'My requests', '我的请求记录', '自分のリクエスト履歴'],
