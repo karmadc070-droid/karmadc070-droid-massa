@@ -55,7 +55,7 @@ begin
   end if;
 
   if new.city_code is not null and pp.city is not null and new.city_code <> pp.city then
-    raise exception '예약 지역과 테라피스트의 활동 지역이 다릅니다.'
+    raise exception '해당 지역에 마사지사가 없습니다.'
       using errcode = '42501', hint = 'other_province';
   end if;
 
