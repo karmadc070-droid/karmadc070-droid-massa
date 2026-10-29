@@ -1497,7 +1497,8 @@ const isOutOfArea = (b) => !!(b.city_code && b.providers && b.providers.city_cod
 async function loadBk() {
   const box = $('bk'); box.innerHTML = '<div class="empty">불러오는 중…</div>';
   const { data, error } = await sb.from('bookings')
-    .select('*, providers(display_name, city_code), services(name),'
+    .select('*, providers(display_name, city_code, phone, provider_kyc(contact),'
+          + ' self:profiles!providers_profile_id_fkey(phone)), services(name),'
           + ' profiles!bookings_customer_id_fkey(full_name, phone),'
           + ' city:regions!bookings_city_code_fkey(name_ko),'
           + ' ward:regions!bookings_ward_code_fkey(name_vi)')
@@ -1521,6 +1522,13 @@ async function loadBk() {
 function fanCopies(list) {
   const live = new Set(list.filter(x => x.group_id && x.status !== 'cancelled').map(x => x.group_id));
   return new Set(list.filter(b => b.status === 'cancelled' && b.cancelled_by === 'system' && live.has(b.group_id)).map(b => b.id));
+}
+
+// 마사지사 연락처 — 명단 표(admin_provider_list)와 같은 순서: 신청서 연락처 → 본인 프로필 → providers.phone
+function provPhone(p) {
+  if (!p) return '';
+  const k = (p.provider_kyc || []).find(x => x.contact);
+  return ((k && k.contact) || (p.self && p.self.phone) || p.phone || '').trim();
 }
 
 function drawBk() {
@@ -1575,7 +1583,10 @@ function drawBk() {
           ${b.ward ? `<div style="font-size:11px;color:var(--ink-soft)">${esc(b.ward.name_vi)}</div>` : ''}
           ${isOutOfArea(b) ? '<div style="font-size:11px;color:var(--bad)">★ 범위 밖</div>' : ''}</td>
         <td class="l">${b.providers ? esc(b.providers.display_name)
-          : '<span style="color:var(--bad)">미배정</span>'}</td>
+          : '<span style="color:var(--bad)">미배정</span>'}
+          ${b.providers ? (provPhone(b.providers)
+            ? `<div style="font-size:11px"><a href="tel:${esc(provPhone(b.providers))}" style="color:var(--cool)">${esc(provPhone(b.providers))}</a></div>`
+            : '<div style="font-size:11px;color:var(--bad)">연락처 없음</div>') : ''}</td>
         <td class="l" style="font-size:12px">${esc(b.services ? b.services.name : '-')}</td>
         <td class="l"><b style="color:${st[1]};font-size:12px">${esc(st[0])}</b>
           <div style="font-size:11px;color:${b.is_paid ? 'var(--good)' : 'var(--bad)'}">
