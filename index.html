@@ -314,6 +314,7 @@
   .banner.b1 { background: linear-gradient(115deg, #3B2A18 0%, #6E4F2A 55%, #A87B45 100%); }
   .banner.b2 { background: linear-gradient(115deg, #2E2417 0%, #5C462B 55%, #8C6B3E 100%); }
   .banner.b3 { background: linear-gradient(115deg, #26201A 0%, #4E3D28 55%, #7E6446 100%); }
+  .banner.b4 { background: linear-gradient(115deg, #1F4A30 0%, #3E7C4F 55%, #6FA77A 100%); }
   .banner::before { content: ""; position: absolute; right: -30px; top: -40px; width: 200px; height: 200px; border-radius: 50%; background: radial-gradient(circle, rgba(255,225,170,.28), transparent 65%); }
   .banner::after { content: ""; position: absolute; left: -50px; bottom: -70px; width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.08), transparent 70%); }
   .banner .bt { font-size: 23px; font-weight: bold; letter-spacing: .5px; text-shadow: 0 1px 8px rgba(0,0,0,.45); position: relative; z-index: 3; }
@@ -593,6 +594,12 @@
         <circle cx="36" cy="28" r="2" fill="#FFE9BC" opacity=".7"/>
         <circle cx="60" cy="16" r="1.5" fill="#FFE9BC" opacity=".5"/>
       </svg></div>
+    </div>
+    <!-- 친구 초대 홍보. 문구는 BANNER_I18N[3]. 보상은 sql/referral.sql (친구 첫 예약 완료 → 초대한 사람에게 100,000₫ 쿠폰) -->
+    <div class="banner b4" onclick="openInvite()">
+      <div class="bt">친구 초대하고 100,000₫ 받기</div>
+      <div class="bd">친구가 첫 예약을 마치면 100,000₫ 쿠폰을 드려요</div>
+      <div class="go">→</div>
     </div>
   </div>
 
@@ -4183,6 +4190,7 @@ const BANNER_I18N = [
   { ko: ['마사지 홈서비스','테라피스트 선택하기'], vi: ['Massage tại nhà','Chọn kỹ thuật viên'], en: ['Home Massage','Choose a therapist'], zh: ['上门按摩','选择技师'], ja: ['出張マッサージ','セラピストを選ぶ'] },
   { ko: ['홈 뷰티','네일·왁싱·각질 케어 방문 서비스'], vi: ['Làm đẹp tại nhà','Nail · Wax · Tẩy da chết'], en: ['Home Beauty','Nail · Wax · Exfoliation'], zh: ['上门美容','美甲·脱毛·去角质'], ja: ['ホームビューティー','ネイル·脱毛·角質ケア'] },
   { ko: ['스파 안내','해피아워 할인'], vi: ['Spa','Ưu đãi giờ vàng'], en: ['Spa Guide','Happy Hour deals'], zh: ['水疗指南','欢乐时光优惠'], ja: ['スパ案内','ハッピーアワー割引'] },
+  { ko: ['친구 초대하고 100,000₫ 받기','친구가 첫 예약을 마치면 100,000₫ 쿠폰을 드려요'], vi: ['Mời bạn, nhận 100.000₫','Bạn bè hoàn tất lần đặt đầu tiên, bạn nhận coupon 100.000₫'], en: ['Invite a friend, get 100,000₫','Get a 100,000₫ coupon when your friend completes their first booking'], zh: ['邀请好友 得100,000₫','好友完成首次预约，即送您100,000₫优惠券'], ja: ['友達招待で100,000₫','友達が初回予約を完了すると100,000₫クーポンを進呈'] },
 ];
 const TITLE_I18N = {
   '마사지 홈서비스': ['Massage tại nhà','Home Massage','上门按摩','出張マッサージ'], '홈 뷰티': ['Làm đẹp tại nhà','Home Beauty','上门美容','ホームビューティー'],
