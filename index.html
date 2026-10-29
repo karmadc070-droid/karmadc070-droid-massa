@@ -2846,12 +2846,23 @@ async function submitBooking() {
     amount_vnd: priceOf(svc)
   };
   const { data, error } = await sb.from('bookings').insert(row).select().single();
+  // 마사지사가 24시간 안에 이 손님의 요청을 거절했으면 서버가 막는다 (guard_rejected_rebook)
+  if (error && error.message === '마사지사가 요청을 거절하였습니다.') {
+    alert(T(error.message));
+    window.go('home');
+    return;
+  }
 
   // '지금 받기' 면 한 사람만 기다리지 않는다. 가까운 사람들에게 같은 요청을 한꺼번에 보낸다.
   // group_id 가 같아서 먼저 수락한 한 명만 남고 나머지는 DB 가 지운다.
   let fanout = 0;
   if (!error && SEL.instant && data) {
+    // 24시간 안에 이 손님을 거절한 마사지사는 뺀다. 한 명이라도 섞이면 묶음 저장 전체가 서버에서 막힌다
+    const { data: rj } = await sb.from('bookings').select('provider_id')
+      .eq('customer_id', SESSION.user.id).gte('rejected_at', new Date(Date.now() - 864e5).toISOString());
+    const rejectedBy = new Set((rj || []).map(r => r.provider_id));
     const extra = nearbyAlts({ ...data, group_id: row.group_id })
+      .filter(p => !rejectedBy.has(p.id))
       .slice(0, Math.max(0, INSTANT_FANOUT - 1));
     if (extra.length) {
       const { error: e2 } = await sb.from('bookings').insert(
@@ -4528,6 +4539,7 @@ const DICT = {
   '전화번호를 다시 확인해 주세요.': ['Vui lòng kiểm tra lại số điện thoại.', 'Please check your phone number.', '请再次确认电话号码。', '電話番号をご確認ください。'],
   '이 테라피스트의 활동 지역에서 너무 멉니다 (약 {km}km). 가까운 테라피스트를 골라 주세요.': ['Quá xa khu vực hoạt động của chuyên viên này (khoảng {km}km). Hãy chọn chuyên viên ở gần.', 'This is too far from the therapist’s service area (about {km}km). Please pick someone closer.', '距离该理疗师的服务区域太远（约{km}公里）。请选择更近的理疗师。', 'このセラピストの対応地域から離れすぎています（約{km}km）。近い方をお選びください。'],
   '이 테라피스트까지 약 {km}km 떨어져 있습니다. 방문이 어려울 수 있습니다. 그래도 요청할까요?': ['Cách chuyên viên khoảng {km}km, có thể khó tới nơi. Vẫn gửi yêu cầu chứ?', 'This therapist is about {km}km away and may not be able to come. Send the request anyway?', '距离该理疗师约{km}公里，可能无法上门。仍要发送请求吗？', 'このセラピストまで約{km}kmあり、訪問が難しい場合があります。それでも依頼しますか。'],
+  '마사지사가 요청을 거절하였습니다.': ['Chuyên viên đã từ chối yêu cầu của bạn.', 'The therapist declined your request.', '理疗师已拒绝您的请求。', 'セラピストがリクエストをお断りしました。'],
   '예약 저장 실패': ['Không lưu được lượt đặt', 'Could not save the booking', '预约保存失败', '予約を保存できませんでした'],
   '예약 지역과 테라피스트의 활동 지역이 다릅니다.': ['Địa điểm đặt không thuộc khu vực hoạt động của chuyên viên này. Hãy chọn chuyên viên trong cùng tỉnh/thành.', 'This address is outside the therapist’s service area. Please pick a therapist in the same city/province.', '预约地点不在该理疗师的服务地区内。请选择同一省市的理疗师。', '予約場所がこのセラピストの対応地域外です。同じ省・市のセラピストをお選びください。'],
   '더 잘 맞는 테라피스트를 추천해 드리는 데 씁니다.': ['Dùng để gợi ý chuyên viên phù hợp hơn với bạn.', 'Used to recommend therapists that suit you better.', '用于为您推荐更合适的理疗师。', 'より合うセラピストをおすすめするために使います。'],
