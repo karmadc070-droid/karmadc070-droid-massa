@@ -2040,3 +2040,12 @@ exception when others then
 - Caddy 는 확장자 없는 파일에 형식을 붙이지 않아 `@aasa path /.well-known/apple-app-site-association` → `Content-Type application/json` 을 넣었다. 운영 Caddyfile 에는 이미 들어 있고 배포 스크립트 템플릿에도 같은 줄이 있다.
 - iOS 서명 — Associated Domains 는 App ID 기능이라 Codemagic 서명 단계에서 `app-store-connect bundle-ids enable-capabilities <id> --capability "Associated Domains"` 로 켠다. 켜면 옛 프로파일은 무효가 되고 `--create` 가 새로 만든다. 받은 프로파일에 associated-domains 가 없으면 빌드를 멈추게 했다.
 - 검증 — 공개 주소 200·JSON, Google Digital Asset Links API 지문 2개, Apple CDN 200 (2026-10-29).
+
+## 2026-10-29 마사지사 초대 페이백 배너와 지급 방향
+
+- 홈 네 번째 배너 "마사지사 초대하고 100,000₫ 페이백"(0c24dbf). 승인된 마사지사·관리자에게만 보인다(paintInviteBanner).
+  손님이 초대하면 보상이 쿠폰이라, 손님에게 보이면 지킬 수 없는 약속이 된다. 그래서 '쿠폰' 표현도 쓰지 않는다.
+- 보상 규칙은 sql/referral.sql 그대로 — 초대한 마사지사가 승인되고 첫 서비스를 완료하면 referral_rewards 에 100,000₫ pending_payout(1인 10명·1,000,000₫ 상한).
+- 지급 방향(사용자 결정): 지금은 '적립'만 한다. 마사지사가 많아지면 선금 방식을 연다 — 마사지사가 선금을 입금하고, 예약·승인 때마다 수수료가 선금에서 차감된다. 쌓인 페이백은 그 선금 잔액에 더해 준다.
+- 차감 시작 시점: 창립 혜택 '첫 20건 수수료 0%'(fee_rate_of, checklist 92)가 끝난 뒤부터. 20건 동안은 차감할 수수료가 없으므로 페이백도 그때부터 쓰인다.
+- 아직 만들지 않은 것: 선금 입금·잔액·차감 장부, pending_payout → 선금 잔액 반영. 열 때는 이 메모와 sql/referral.sql·fee_rate_of 를 함께 본다.
