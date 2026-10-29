@@ -20,6 +20,50 @@ const JWT_SECRET = Deno.env.get("JWT_SECRET") ?? "";
 // 하노이 시내. 이 원 안을 우선해서 보여 준다 (다른 도시 결과가 섞이는 걸 막는다)
 const HANOI = { lat: 21.0278, lng: 105.8342, radius: 30000 };
 
+// ── 고른 장소가 어느 성인지 place_city 에 적는다 (2026-10-29) ─────────────
+// 예약이 들어올 때 guard_booking_distance 가 이걸 보고 '다른 성' 예약을 막는다.
+// 예약의 성은 원래 나중에 채워져서, 예약 순간의 성 검사가 한 번도 걸리지 않았다.
+const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SUPABASE_SERVICE_KEY") || "";
+
+// 성 이름 대조용 — vps-booking-region.py 의 norm 과 같다. 'TP. Hồ Chí Minh' 과 'Thành phố Hồ Chí Minh' 을 같게 만든다
+const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d")
+  .replace(/\b(thanh pho|tp\.?|tinh|province|city)\b/g, " ").replace(/[^a-z0-9]+/g, " ").trim();
+
+const provinceOf = (j: Record<string, any>) =>
+  (j?.addressComponents ?? []).find((c: Record<string, any>) =>
+    (c.types ?? []).includes("administrative_area_level_1"))?.longText ?? "";
+
+let CITIES: Map<string, string> | null = null;
+async function cityCodeOf(name: string): Promise<string | null> {
+  if (!name || !SB_URL || !SB_KEY) return null;
+  if (!CITIES) {
+    const r = await fetch(`${SB_URL}/rest/v1/regions?level=eq.1&select=code,name_vi`,
+      { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } });
+    if (!r.ok) return null;
+    CITIES = new Map((await r.json()).map((x: { code: string; name_vi: string }) => [norm(x.name_vi), x.code]));
+  }
+  return CITIES.get(norm(name)) ?? null;
+}
+
+// 성 이름은 regions.name_vi 와 맞추므로 베트남어로 읽는다. 다른 언어로 받았으면 성 칸만 한 번 더 묻는다.
+async function rememberCity(id: string, detail: Record<string, any>, lang: string) {
+  let prov = lang === "vi" ? provinceOf(detail) : "";
+  if (!prov) {
+    const r = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(id)}?languageCode=vi`,
+      { headers: { "X-Goog-Api-Key": KEY, "X-Goog-FieldMask": "addressComponents" } });
+    if (r.ok) prov = provinceOf(await r.json());
+  }
+  const code = await cityCodeOf(prov);
+  if (!code) return;
+  await fetch(`${SB_URL}/rest/v1/place_city`, {
+    method: "POST",
+    headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, "Content-Type": "application/json",
+               Prefer: "resolution=merge-duplicates,return=minimal" },
+    body: JSON.stringify({ place_id: id, city_code: code }),
+  });
+}
+
 // 이 함수는 부를 때마다 구글에 요금이 붙는다. 아무나 부르면 사장님이 그 돈을 낸다.
 // 우리 앱이 보내는 토큰(익명 키 또는 로그인 토큰)만 받는다.
 const b64url = (s: string) =>
@@ -64,11 +108,14 @@ Deno.serve(async (req) => {
         headers: {
           "X-Goog-Api-Key": KEY,
           // 필요한 칸만 받는다. 칸을 늘리면 요금 등급이 올라간다.
-          "X-Goog-FieldMask": "id,displayName,formattedAddress,location",
+          // addressComponents 는 성을 알아내려고 받는다 — Essentials 칸이라 요금 등급은 그대로다
+          "X-Goog-FieldMask": "id,displayName,formattedAddress,location,addressComponents",
         },
       });
       const j = await r.json();
       if (!r.ok) return json({ error: j?.error?.message ?? "장소를 불러오지 못했습니다." }, 502);
+      // 성을 못 적어도 장소는 돌려준다. 예약은 거리 검사로만 가린다(종전대로)
+      try { await rememberCity(j.id ?? id, j, lang!); } catch (e) { console.warn("place_city 실패", e); }
       return json({
         place_id: j.id,
         name: j.displayName?.text ?? "",

@@ -2863,7 +2863,7 @@ async function submitBooking() {
 
   const done = document.querySelector('#done .summary');
   if (error) {
-    if (done) done.innerHTML = `예약 저장 실패: ${error.message}`;
+    if (done) done.innerHTML = `${T('예약 저장 실패')}: ${T(error.message)}`;
   } else if (done) {
     const won = Math.round(data.amount_vnd * 0.054).toLocaleString();
     // 장소가 없을 때 '롯데호텔 하노이' 를 끼워 넣고 있었다. 집으로 부른 손님에게
@@ -4528,6 +4528,8 @@ const DICT = {
   '전화번호를 다시 확인해 주세요.': ['Vui lòng kiểm tra lại số điện thoại.', 'Please check your phone number.', '请再次确认电话号码。', '電話番号をご確認ください。'],
   '이 테라피스트의 활동 지역에서 너무 멉니다 (약 {km}km). 가까운 테라피스트를 골라 주세요.': ['Quá xa khu vực hoạt động của chuyên viên này (khoảng {km}km). Hãy chọn chuyên viên ở gần.', 'This is too far from the therapist’s service area (about {km}km). Please pick someone closer.', '距离该理疗师的服务区域太远（约{km}公里）。请选择更近的理疗师。', 'このセラピストの対応地域から離れすぎています（約{km}km）。近い方をお選びください。'],
   '이 테라피스트까지 약 {km}km 떨어져 있습니다. 방문이 어려울 수 있습니다. 그래도 요청할까요?': ['Cách chuyên viên khoảng {km}km, có thể khó tới nơi. Vẫn gửi yêu cầu chứ?', 'This therapist is about {km}km away and may not be able to come. Send the request anyway?', '距离该理疗师约{km}公里，可能无法上门。仍要发送请求吗？', 'このセラピストまで約{km}kmあり、訪問が難しい場合があります。それでも依頼しますか。'],
+  '예약 저장 실패': ['Không lưu được lượt đặt', 'Could not save the booking', '预约保存失败', '予約を保存できませんでした'],
+  '예약 지역과 테라피스트의 활동 지역이 다릅니다.': ['Địa điểm đặt không thuộc khu vực hoạt động của chuyên viên này. Hãy chọn chuyên viên trong cùng tỉnh/thành.', 'This address is outside the therapist’s service area. Please pick a therapist in the same city/province.', '预约地点不在该理疗师的服务地区内。请选择同一省市的理疗师。', '予約場所がこのセラピストの対応地域外です。同じ省・市のセラピストをお選びください。'],
   '더 잘 맞는 테라피스트를 추천해 드리는 데 씁니다.': ['Dùng để gợi ý chuyên viên phù hợp hơn với bạn.', 'Used to recommend therapists that suit you better.', '用于为您推荐更合适的理疗师。', 'より合うセラピストをおすすめするために使います。'],
   '남성': ['Nam', 'Male', '男性', '男性'],
   '여성': ['Nữ', 'Female', '女性', '女性'],
