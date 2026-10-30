@@ -2069,3 +2069,11 @@ exception when others then
 - 결정: 같은 손님 → 같은 마사지사만, 마지막 거절(bookings.rejected_at)로부터 24시간 막는다(사용자 선택). 다른 마사지사 예약은 그대로 된다.
 - 구현: trigger guard_rejected_rebook(BEFORE INSERT). 화면은 이 오류면 alert 후 홈으로 보낸다. '지금 받기' 동시 요청 묶음에서는 거절한 마사지사를 미리 뺀다(한 명 때문에 묶음 전체가 막히지 않게). 서버 자동 전달은 건별 예외 처리라 영향 없다.
 - Huỳnh như: providers.lat 은 provider_private 로 옮겨질 뿐 거리 계산(provider_point)에 안 쓰인다. 그래서 regions 에 hcmc.tan-my(Tân Mỹ, 푸미흥)를 추가하고 ward_codes 로 지정했다. 이제 거리는 푸미흥 중심에서 잰다.
+
+## 2026-10-30 안드로이드 웹푸시 문구 언어
+
+- 결정: 웹푸시 문구 언어는 프로필 국적으로 정한다. 국적이 없거나 로그아웃 상태면 베트남어(기본).
+- 매핑: 한국 → ko, 베트남 → vi, 일본 → ja, 중국·대만·홍콩·마카오 → zh, 그 밖의 나라 → en(앱이 지원하는 언어가 vi·ko·en·zh·ja 다섯뿐이라).
+- 방식: 웹푸시는 본문을 비워 보내므로 서비스 워커가 수신자를 모른다. 앱이 로그인·국적 저장 때 `savePushLang()` 로 `massa-pref` 캐시의 `push-lang` 에 언어를 적고, sw.js 가 푸시를 받을 때 읽는다. 새 워커 활성화 때 `massa-pref` 는 지우지 않는다.
+- 처음에는 휴대폰 언어(navigator.language)로 했다가(3f7c66d) 사용자 요청으로 국적 기준으로 바꿨다(30c2878).
+- 한계: 앱을 한 번 열어야 언어가 저장된다. 그 전에는 베트남어로 뜬다. iOS(APNs)는 본문이 실려 오므로 해당 없음.
