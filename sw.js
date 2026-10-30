@@ -1,5 +1,5 @@
 // 앱 셸과 정적 이미지를 캐시해 오프라인·재방문 속도를 높이는 서비스 워커
-const CACHE = 'massa-v3';   // v3: 푸시 문구를 종류 중립으로 (2026-10-18). 이름을 바꿔야 새 워커가 적용된다
+const CACHE = 'massa-v4';   // v4: 푸시 문구를 휴대폰 언어로 (2026-10-30). 이름을 바꿔야 새 워커가 적용된다
 const SHELL = [
   './',
   './manifest.webmanifest',
@@ -33,9 +33,18 @@ self.addEventListener('activate', e => {
 //   예전 문구는 '새 신청이 들어왔습니다' 였는데, 환영 공지를 보내도 그렇게 떠서
 //   마사지사가 앱을 열면 예약이 없는 상황이 된다 — 거짓말이 된다 (2026-10-18 수정).
 //   정확한 문구는 네이티브(FCM·APNs)에서 나온다. 거기서는 본문이 실려 온다.
+// 본문이 없어서 수신자 언어를 서버에서 알 수 없다 — 휴대폰 언어(navigator.language)로 고른다 (2026-10-30)
+const PUSH_BODY = {
+  vi: 'Bạn có thông báo mới — hãy mở ứng dụng để xem.',
+  ko: '새 알림이 있습니다 — 앱에서 확인하세요.',
+  en: 'You have a new notification — open the app to see it.',
+  zh: '您有新通知，请打开应用查看。',
+  ja: '新しいお知らせがあります。アプリを開いて確認してください。'
+};
 self.addEventListener('push', e => {
+  const lang = (self.navigator.language || 'vi').slice(0, 2).toLowerCase();
   e.waitUntil(self.registration.showNotification('massa', {
-    body: 'Bạn có thông báo mới — hãy mở ứng dụng để xem.',   // 새 알림이 있습니다 — 앱에서 확인하세요
+    body: PUSH_BODY[lang] || PUSH_BODY.vi,
     icon: './icon-192.png',
     badge: './icon-192.png',
     tag: 'massa-booking',     // 여러 건이 와도 알림이 쌓이지 않게 한 줄로 덮어쓴다
