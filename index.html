@@ -2111,6 +2111,15 @@ function fillConfirm() {
 window.fillConfirm = fillConfirm;
 
 // ── Auth ──
+// 안드로이드 웹푸시는 본문이 없어 서비스 워커가 문구 언어를 모른다 — 국적으로 정해 캐시에 둔다.
+// 국적이 없거나 로그아웃이면 베트남어, 한국·베트남·일본·중국어권 밖의 나라는 영어 (2026-10-30)
+const NAT_LANG = { '한국': 'ko', 'Korea': 'ko', '베트남': 'vi', 'Vietnam': 'vi', '일본': 'ja', 'Japan': 'ja',
+  '중국': 'zh', 'China': 'zh', '대만': 'zh', 'Taiwan': 'zh', '홍콩(중국 특별행정구)': 'zh', '마카오(중국 특별행정구)': 'zh' };
+function savePushLang() {
+  const n = (CUR_PROFILE && CUR_PROFILE.nationality) || '';
+  const lang = n ? (NAT_LANG[n] || 'en') : 'vi';
+  try { caches.open('massa-pref').then(c => c.put('./push-lang', new Response(lang))).catch(() => {}); } catch (e) {}
+}
 let SESSION = null;
 async function refreshSession() {
   const { data } = await sb.auth.getSession();
@@ -2120,6 +2129,7 @@ async function refreshSession() {
     const { data: prof } = await sb.from('profiles').select('*').eq('id', SESSION.user.id).single();
     CUR_PROFILE = prof || {};
   } else CUR_PROFILE = null;
+  savePushLang();
   MY_PROV = null; _isProv = null;   // 계정이 바뀌면 다시 읽는다
   if (SESSION && window.paintBkTabs) paintBkTabs();   // 아래 탭 빨간 점을 바로 찍는다
   applyProviderLang();   // 마사지사는 베트남어로 — 직접 고른 사람은 건드리지 않는다
@@ -2771,6 +2781,7 @@ function askContactIfMissing() {
       const { error } = await sb.from('profiles').update(patch).eq('id', SESSION.user.id);
       if (error) { msg.textContent = T('저장 실패: ') + error.message; return; }
       if (CUR_PROFILE) Object.assign(CUR_PROFILE, patch);
+      savePushLang();
       ov.remove(); resolve(true);
     };
   });
@@ -3507,7 +3518,7 @@ window.renderCtry = function () {
 };
 window.pickCountry = async function (name) {
   const ov = document.getElementById('ctryOv'); if (ov) ov.style.display = 'none';
-  if (SESSION) { await sb.from('profiles').update({ nationality: name }).eq('id', SESSION.user.id); if (typeof CUR_PROFILE !== 'undefined' && CUR_PROFILE) CUR_PROFILE.nationality = name; }
+  if (SESSION) { await sb.from('profiles').update({ nationality: name }).eq('id', SESSION.user.id); if (typeof CUR_PROFILE !== 'undefined' && CUR_PROFILE) CUR_PROFILE.nationality = name; savePushLang(); }
   const cv = document.getElementById('mpCountryVal'); if (cv) cv.textContent = countryLabel(name);
 };
 
@@ -3692,6 +3703,7 @@ function openBasicsSheet() {
     const { error } = await sb.from('profiles').update(patch).eq('id', SESSION.user.id);
     if (error) { alert(T('저장 실패: ') + error.message); return; }
     Object.assign(CUR_PROFILE, patch);
+    savePushLang();
     close();
   };
 }

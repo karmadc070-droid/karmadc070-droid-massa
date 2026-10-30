@@ -1,5 +1,5 @@
 // 앱 셸과 정적 이미지를 캐시해 오프라인·재방문 속도를 높이는 서비스 워커
-const CACHE = 'massa-v4';   // v4: 푸시 문구를 휴대폰 언어로 (2026-10-30). 이름을 바꿔야 새 워커가 적용된다
+const CACHE = 'massa-v5';   // v5: 푸시 문구를 국적 언어로 (2026-10-30). 이름을 바꿔야 새 워커가 적용된다
 const SHELL = [
   './',
   './manifest.webmanifest',
@@ -18,7 +18,7 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
-      .then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(ks => Promise.all(ks.filter(k => k !== CACHE && k !== PREF).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -33,7 +33,9 @@ self.addEventListener('activate', e => {
 //   예전 문구는 '새 신청이 들어왔습니다' 였는데, 환영 공지를 보내도 그렇게 떠서
 //   마사지사가 앱을 열면 예약이 없는 상황이 된다 — 거짓말이 된다 (2026-10-18 수정).
 //   정확한 문구는 네이티브(FCM·APNs)에서 나온다. 거기서는 본문이 실려 온다.
-// 본문이 없어서 수신자 언어를 서버에서 알 수 없다 — 휴대폰 언어(navigator.language)로 고른다 (2026-10-30)
+// 본문이 없어서 수신자 언어를 서버에서 알 수 없다 — 앱이 국적으로 정해 massa-pref 캐시에 둔 언어를 읽는다.
+// 국적이 없거나 아직 저장 전이면 베트남어다 (2026-10-30)
+const PREF = 'massa-pref';
 const PUSH_BODY = {
   vi: 'Bạn có thông báo mới — hãy mở ứng dụng để xem.',
   ko: '새 알림이 있습니다 — 앱에서 확인하세요.',
@@ -42,8 +44,11 @@ const PUSH_BODY = {
   ja: '新しいお知らせがあります。アプリを開いて確認してください。'
 };
 self.addEventListener('push', e => {
-  const lang = (self.navigator.language || 'vi').slice(0, 2).toLowerCase();
-  e.waitUntil(self.registration.showNotification('massa', {
+  e.waitUntil(caches.open(PREF)
+    .then(c => c.match(new URL('push-lang', self.registration.scope)))
+    .then(r => r ? r.text() : 'vi')
+    .catch(() => 'vi')
+    .then(lang => self.registration.showNotification('massa', {
     body: PUSH_BODY[lang] || PUSH_BODY.vi,
     icon: './icon-192.png',
     badge: './icon-192.png',
@@ -54,7 +59,7 @@ self.addEventListener('push', e => {
     //   크롬은 사이트마다 채널을 하나 만드는데 웹페이지가 그 중요도를 바꿀 수 없다.
     //   웹에서 할 수 있는 건 진동뿐이다. 소리까지 내려면 네이티브 앱이어야 한다.
     vibrate: [300, 150, 300, 150, 300]
-  }));
+  })));
 });
 
 // 알림을 누르면 이미 열린 창으로 보내고, 없으면 새로 연다.
