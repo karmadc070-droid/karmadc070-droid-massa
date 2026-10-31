@@ -2142,3 +2142,11 @@ dry-run(10/31 12:40 KST 운영 SELECT): 오늘 밤 00시(하노이) 자동 취�
 4. 실제 적용: `psql -v ON_ERROR_STOP=1 -1 -f review_push_delay.sql` (크론·send-push 변경 없음).
 5. 확인: 다음 완료 건의 notifications.next_push_at 이 예약 시각+3h 인지, 08:00 이후 pushed_at 이 찍히는지(/var/log/massa_push.log).
 - 적용 직후 바로 나갈 후기 요청: 0건(미발송 booking_completed 0). 오늘 밤 00:00 자동 완료 예정 1건(10/30 13:40 예약)은 적용하면 11/1 08:00 이후에, 적용 안 하면 00:00 직후에 나간다.
+
+### 후기 요청 푸시 지연 운영 적용 (2026-10-31 13:29~13:40 KST, 사용자 승인 "응 적용해")
+- 백업 `/root/backups/massa-pre-reviewpush-202610311329.dump` (1.0MB).
+- 적용 직전 비교: 운영 notify_booking_event·claim_unpushed_notifications 와 sql/review_push_delay.sql 의 차이는 키워드 대소문자와 의도한 변경(완료 알림 next_push_at, claim (a) 조건·(d) 갈래)뿐이었다.
+- 트랜잭션 시험 후 rollback → 함수가 원래대로인 것 확인 → `psql -1 -f` 로 적용.
+- 확인: review_push_window_open 생성, claim 에 (d) 반영, notify 에 next_push_at 반영. 베트남 시간 11:31 window=true, 23:30 false, 08:00 true. 미발송 후기 요청 0건. claim 을 트랜잭션 안에서 불러 오류 없음(0행, rollback). massa_push.log 는 claimed 0 이면 남기지 않으므로 적용 뒤 새 줄이 없는 것이 정상이며 오류 줄도 없다.
+- 오늘 밤 베트남 시간 00:00 자동 완료 예정 1건(10/30 13:40 예약)의 후기 요청은 11/1 베트남 시간 08:00 이후 첫 1분 실행 때 나간다.
+- VPS 에 남긴 작업 파일: /root/massa-rp/, /root/massa_rp_*.sh, /root/massa_review_push_delay.sql (정리는 사용자 결정).
