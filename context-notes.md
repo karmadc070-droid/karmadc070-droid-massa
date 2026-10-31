@@ -2116,3 +2116,29 @@ dry-run(10/31 12:40 KST 운영 SELECT): 오늘 밤 00시(하노이) 자동 취�
 - 테스트 15/15 PASS(로컬 재현 DB, 자동 완료 5개 추가: 건수·completed_at·끝나지 않은 예약 제외·완료 트리거 알림·재실행 0·앱 사용자 호출 거부).
 - 운영: 백업 /root/backups/massa-pre-expire-202610311254.dump → 트랜잭션 시험(취소 22행·완료 1건·완료 알림 1건) 후 rollback 확인 → 실제 적용(함수 2개 생성, refresh_customer_penalty·notify_booking_event 수정) → /root/massa_expire.sh 설치, crontab '0 2 * * * /bin/sh /root/massa_expire.sh'(백업 /root/backups/crontab.bak-*) → /root/signup_report.sh 교체(백업 /root/backups/signup_report.sh.bak-*), --dry 로 'massa 예약' 단락 확인(메일 발송 안 함).
 - 06시 메일의 자동 완료 건수는 /var/log/massa_expire.log 오늘 줄의 completed=N 을 읽는다. 첫 실행은 11/1 하노이 00:00(서버 02:00).
+
+## 2026-10-31 후기 요청 푸시를 예약 시각 + 3시간 뒤로 (사용자 요청, 운영 미적용)
+사용자: "손님에게 후기 요청은 본인이 예약한 시간 이후 + 3시간 뒤에 푸시가 오도록." 추가 지시: 베트남 시간 08:00~22:00 사이에만 보내고, 밖이면 다음 08:00 이후 첫 실행 때 보낸다. massa 는 베트남 전역 서비스라 문서·문구에 '하노이 시각' 대신 '베트남 시간'을 쓴다.
+
+**발송 경로(조사)**
+- 후기 요청은 따로 있는 게 아니라 완료 알림이다. notify_booking_event() 가 status→completed 때 notifications 에 kind='booking_completed', 제목 '서비스가 완료되었습니다. 평가를 남겨주세요' 를 넣는다.
+- notifications insert → trg_kick_send_push 가 send-push 함수를 깨우고, 1분 크론 /root/massa_push.sh 도 send-push 를 부른다. send-push 는 claim_unpushed_notifications() 가 돌려준 행만 보낸다(functions/send-push/index.ts 293행).
+- claim 의 next_push_at 은 booking_new 30초 반복·공지 기기 대기용으로 이미 있는 컬럼이다. 그래서 새 크론·새 컬럼 없이 이 컬럼으로 미룰 수 있다(앞 작업 메모의 '미룰 수단 없음'은 이 컬럼을 완료 알림에 못 쓴다는 뜻이었고, claim 에 조건을 하나 더하면 쓸 수 있다).
+
+**결정 (sql/review_push_delay.sql)**
+- 완료 알림 행은 완료 때 그대로 만든다(앱 알림함에는 바로 보인다). next_push_at = greatest(now(), 예약 시각 + 3h).
+- claim (a) '처음 보내는 것'에서 next_push_at 이 정해진 행은 뺀다. 지금 운영에서 next_push_at 을 넣고 insert 하는 곳은 없다(덤프 grep).
+- claim (d) 새 갈래: booking_completed · 아직 안 보냄 · next_push_at 도래 · review_push_window_open(now()) · 만든 지 3일 이내 · 그 예약에 후기가 없을 때.
+- review_push_window_open(ts): 베트남 시간 08:00 이상 22:00 미만이면 true. 테스트에서 밤·낮을 바꿔 보려고 함수로 뺐다. 앱 사용자 실행 권한 없음.
+- 백필 없음: 운영의 booking_completed 7건은 전부 pushed_at 이 있어 다시 나가지 않는다(10/31 13:30 SELECT).
+- 결과: 자동 완료(베트남 시간 00:00)된 예약은 예약 시각+3h 가 이미 지나 있어 next_push_at=00:00 이 되고, 발송 시간 밖이라 그날 08:00 이후 첫 실행(1분 이내)에 나간다. 마사지사가 앱에서 직접 완료하면 예약 시각+3h(그때가 밤이면 다음 08:00)에 나간다.
+
+**테스트** sql/test_review_push_delay.sql, 운영 public·auth 스키마 덤프(10/31 13:25)로 만든 로컬 PostgreSQL 16 재현 DB. 8/8 PASS — 시간 경계(23:30·03:00·07:59·22:00 닫힘, 08:00·12:00·21:59 열림), 완료 즉시 미발송·+3h 시각 설정, 밤 보류(공지는 그대로 나감), 낮에 도래한 1건만 발송·+3h 전 대기·후기 쓴 건 제외, 재실행 중복 없음, +3h 도래 후 발송, 앱 사용자 claim·시간 함수 호출 거부. 두 함수 본문을 운영 정의와 diff 해 의도한 줄만 바뀐 것을 확인.
+
+**운영 적용 순서 (사용자 승인 후)**
+1. 백업: `docker exec massa-db pg_dump -U postgres -Fc postgres > /root/backups/massa-pre-reviewpush-$(date +%Y%m%d%H%M).dump`
+2. 적용 직전 diff: 운영 `pg_get_functiondef('public.notify_booking_event')`·`('public.claim_unpushed_notifications')` 를 이 파일과 비교해 이번 변경 외 차이가 없는지 확인(그사이 다른 변경이 있으면 이 파일을 맞춘 뒤 적용).
+3. 트랜잭션 시험: `begin; \i review_push_delay.sql; select pg_get_functiondef(...); rollback;`
+4. 실제 적용: `psql -v ON_ERROR_STOP=1 -1 -f review_push_delay.sql` (크론·send-push 변경 없음).
+5. 확인: 다음 완료 건의 notifications.next_push_at 이 예약 시각+3h 인지, 08:00 이후 pushed_at 이 찍히는지(/var/log/massa_push.log).
+- 적용 직후 바로 나갈 후기 요청: 0건(미발송 booking_completed 0). 오늘 밤 00:00 자동 완료 예정 1건(10/30 13:40 예약)은 적용하면 11/1 08:00 이후에, 적용 안 하면 00:00 직후에 나간다.
