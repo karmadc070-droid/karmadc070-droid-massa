@@ -12,7 +12,7 @@ LABELS = {
     "cta": "Get the app",
     "footer_tag": "Massage and home beauty, booked to your door in Vietnam.",
     "f_service": "Service", "f_company": "massa", "f_support": "Support",
-    "legal": ("© 2026 massa. Home massage and beauty booking in Vietnam. Currently operating in Hanoi.<br>"
+    "legal": ("© 2026 massa. Home massage and beauty booking in Vietnam. Operating across Vietnam.<br>"
               "massa is a platform connecting customers with verified providers. The care offered is not a medical treatment."),
     "slot_pre": "Founding places left",
     "slot_closed": "Founding member intake is closed",
@@ -35,11 +35,11 @@ _LD_HOME = """{
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
   "name": "massa",
-  "description": "Home massage and beauty booking platform in Vietnam (currently operating in Hanoi)",
+  "description": "Home massage and beauty booking platform in Vietnam (operating across Vietnam)",
   "url": "https://massaviet.com/en/",
   "image": "https://massaviet.com/img/hero.webp",
   "email": "support@massaviet.com",
-  "areaServed": { "@type": "City", "name": "Hanoi" },
+  "areaServed": { "@type": "Country", "name": "Vietnam" },
   "availableLanguage": ["ko", "vi", "en", "zh", "ja"],
   "sameAs": ["https://apps.apple.com/kr/app/id6804698319",
              "https://play.google.com/store/apps/details?id=app.massa.hanoi"]
@@ -73,7 +73,7 @@ PAGES = {
 
 "index": {
  "title": "massa — Home massage & beauty in Vietnam, booked to your door",
- "desc": "Therapists come to your home or hotel. Choose your time, and pay on the spot once the service is done. Currently operating in Hanoi.",
+ "desc": "Therapists come to your home or hotel. Choose your time, and pay on the spot once the service is done. Operating across Vietnam.",
  "jsonld": _LD_HOME,
  "blocks": [
   {"type": "hero",
@@ -147,8 +147,8 @@ PAGES = {
    "h2": "Starting in Vietnam",
    "blocks": [
     {"type": "table", "rows": [
-      ("Live now", "Hanoi — Ba Đình, Hoàn Kiếm, Mỹ Đình, Tây Hồ and more"),
-      ("Next", "Đà Nẵng, Nha Trang, Hồ Chí Minh City"),
+      ("Coverage", "All of Vietnam"),
+      ("Major cities", "Hanoi, Hồ Chí Minh City, Đà Nẵng, Nha Trang and more"),
       ("Languages", "Korean, Vietnamese, English, Japanese, Chinese"),
     ]}]},
 
@@ -167,7 +167,7 @@ PAGES = {
 
 "services": {
  "title": "Services — massa home massage & beauty in Vietnam",
- "desc": "Home massage (aromatherapy, Swedish, Thai, deep tissue), home beauty (nails, waxing, exfoliation) and a partner spa directory. Currently operating in Hanoi.",
+ "desc": "Home massage (aromatherapy, Swedish, Thai, deep tissue), home beauty (nails, waxing, exfoliation) and a partner spa directory. Operating across Vietnam.",
  "blocks": [
   {"type": "section",
    "kicker": "Services",
@@ -457,7 +457,7 @@ PAGES = {
 
 "about": {
  "title": "About — massa",
- "desc": "massa connects customers in Vietnam with massage and home beauty providers. We are the platform, not the provider. Currently operating in Hanoi.",
+ "desc": "massa connects customers in Vietnam with massage and home beauty providers. We are the platform, not the provider. Operating across Vietnam.",
  "blocks": [
   {"type": "section",
    "kicker": "About",
@@ -479,14 +479,14 @@ PAGES = {
    "blocks": [
     {"type": "table", "rows": [
       ("Email", f'<a href="mailto:{SUPPORT}">{SUPPORT}</a>'),
-      ("Coverage", "Vietnam — currently Hanoi (Đà Nẵng, Nha Trang and Hồ Chí Minh City to follow)"),
+      ("Coverage", "All of Vietnam (Hanoi, Hồ Chí Minh City, Đà Nẵng, Nha Trang and more)"),
       ("App", '<a href="/en/download.html">Download the app</a>'),
     ]}]},
  ]},
 
 "download": {
  "title": "Get the app — massa",
- "desc": "Download the massa app and book home massage and beauty in Vietnam straight from your phone. Currently operating in Hanoi.",
+ "desc": "Download the massa app and book home massage and beauty in Vietnam straight from your phone. Operating across Vietnam.",
  "blocks": [
   {"type": "section",
    "kicker": "Get the app",
@@ -510,7 +510,7 @@ PAGES = {
     {"type": "table", "rows": [
       ("Cost", "The app and signing up are free. You only pay for the service, on the spot."),
       ("Languages", "Korean, Vietnamese, English, Japanese, Chinese"),
-      ("Coverage", "Hanoi — Ba Đình, Hoàn Kiếm, Mỹ Đình, Tây Hồ and more"),
+      ("Coverage", "All of Vietnam (Hanoi, Hồ Chí Minh City, Đà Nẵng, Nha Trang and more)"),
       ("For partners", 'Therapists register in the same app. <a href="/en/partner.html">See partner information</a>'),
     ]}]},
  ]},

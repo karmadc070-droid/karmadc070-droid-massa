@@ -14,7 +14,7 @@ LABELS = {
     "cta": "Tải ứng dụng",
     "footer_tag": "Massage và làm đẹp tại nhà, đặt lịch tận nơi ở Việt Nam.",
     "f_service": "Dịch vụ", "f_company": "massa", "f_support": "Hỗ trợ",
-    "legal": ("© 2026 massa. Nền tảng đặt lịch massage và làm đẹp tại nhà ở Việt Nam. Hiện đang hoạt động tại Hà Nội.<br>"
+    "legal": ("© 2026 massa. Nền tảng đặt lịch massage và làm đẹp tại nhà ở Việt Nam. Đang hoạt động trên toàn Việt Nam.<br>"
               "massa là nền tảng kết nối khách hàng với nhà cung cấp đã được xác minh; dịch vụ cung cấp không phải là điều trị y tế."),
     "slot_pre": "Suất Thành viên sáng lập còn lại",
     "slot_closed": "Đã đủ 100 Thành viên sáng lập",
@@ -37,11 +37,11 @@ _LD_HOME = """{
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
   "name": "massa",
-  "description": "Nền tảng đặt lịch massage và làm đẹp tại nhà ở Việt Nam (hiện hoạt động tại Hà Nội)",
+  "description": "Nền tảng đặt lịch massage và làm đẹp tại nhà ở Việt Nam (hoạt động trên toàn Việt Nam)",
   "url": "https://massaviet.com/vi/",
   "image": "https://massaviet.com/img/hero.webp",
   "email": "support@massaviet.com",
-  "areaServed": { "@type": "City", "name": "Hanoi" },
+  "areaServed": { "@type": "Country", "name": "Vietnam" },
   "availableLanguage": ["ko", "vi", "en", "zh", "ja"],
   "sameAs": ["https://apps.apple.com/kr/app/id6804698319",
              "https://play.google.com/store/apps/details?id=app.massa.hanoi"]
@@ -75,7 +75,7 @@ PAGES = {
 
 "index": {
  "title": "massa — Massage & làm đẹp tại nhà ở Việt Nam",
- "desc": "Chuyên viên đến tận nhà hoặc khách sạn của bạn. Chọn giờ bạn muốn, thanh toán tại chỗ sau khi xong. Hiện đang hoạt động tại Hà Nội.",
+ "desc": "Chuyên viên đến tận nhà hoặc khách sạn của bạn. Chọn giờ bạn muốn, thanh toán tại chỗ sau khi xong. Đang hoạt động trên toàn Việt Nam.",
  "jsonld": _LD_HOME,
  "blocks": [
   {"type": "hero",
@@ -149,8 +149,8 @@ PAGES = {
    "h2": "Bắt đầu từ Việt Nam",
    "blocks": [
     {"type": "table", "rows": [
-      ("Đang hoạt động", "Hà Nội — Ba Đình, Hoàn Kiếm, Mỹ Đình, Tây Hồ và hơn thế"),
-      ("Sắp tới", "Đà Nẵng, Nha Trang, Thành phố Hồ Chí Minh"),
+      ("Khu vực hoạt động", "Toàn Việt Nam"),
+      ("Thành phố chính", "Hà Nội, TP. Hồ Chí Minh, Đà Nẵng, Nha Trang và nhiều nơi khác"),
       ("Ngôn ngữ", "Tiếng Hàn, tiếng Việt, tiếng Anh, tiếng Nhật, tiếng Trung"),
     ]}]},
 
@@ -169,7 +169,7 @@ PAGES = {
 
 "services": {
  "title": "Dịch vụ — massage & làm đẹp tại nhà ở Việt Nam | massa",
- "desc": "Massage tại nhà (aromatherapy, Thụy Điển, Thái, mô sâu), làm đẹp tại nhà (móng, wax, tẩy da chết) và danh bạ spa đối tác. Hiện đang hoạt động tại Hà Nội.",
+ "desc": "Massage tại nhà (aromatherapy, Thụy Điển, Thái, mô sâu), làm đẹp tại nhà (móng, wax, tẩy da chết) và danh bạ spa đối tác. Đang hoạt động trên toàn Việt Nam.",
  "blocks": [
   {"type": "section",
    "kicker": "Dịch vụ",
@@ -459,7 +459,7 @@ PAGES = {
 
 "about": {
  "title": "Giới thiệu — massa",
- "desc": "massa kết nối khách hàng ở Việt Nam với các nhà cung cấp massage và làm đẹp. Chúng tôi là nền tảng, không phải người trực tiếp làm dịch vụ. Hiện đang hoạt động tại Hà Nội.",
+ "desc": "massa kết nối khách hàng ở Việt Nam với các nhà cung cấp massage và làm đẹp. Chúng tôi là nền tảng, không phải người trực tiếp làm dịch vụ. Đang hoạt động trên toàn Việt Nam.",
  "blocks": [
   {"type": "section",
    "kicker": "Giới thiệu",
@@ -481,14 +481,14 @@ PAGES = {
    "blocks": [
     {"type": "table", "rows": [
       ("Email", f'<a href="mailto:{SUPPORT}">{SUPPORT}</a>'),
-      ("Khu vực", "Việt Nam — hiện tại Hà Nội (Đà Nẵng, Nha Trang và TP. Hồ Chí Minh sắp tới)"),
+      ("Khu vực", "Toàn Việt Nam (Hà Nội, TP. Hồ Chí Minh, Đà Nẵng, Nha Trang và nhiều nơi khác)"),
       ("Ứng dụng", '<a href="/vi/download.html">Tải ứng dụng</a>'),
     ]}]},
  ]},
 
 "download": {
  "title": "Tải ứng dụng — massa",
- "desc": "Tải ứng dụng massa và đặt lịch massage, làm đẹp tại nhà ở Việt Nam ngay trên điện thoại. Hiện đang hoạt động tại Hà Nội.",
+ "desc": "Tải ứng dụng massa và đặt lịch massage, làm đẹp tại nhà ở Việt Nam ngay trên điện thoại. Đang hoạt động trên toàn Việt Nam.",
  "blocks": [
   {"type": "section",
    "kicker": "Tải ứng dụng",
@@ -512,7 +512,7 @@ PAGES = {
     {"type": "table", "rows": [
       ("Chi phí", "Ứng dụng và đăng ký miễn phí. Bạn chỉ trả tiền dịch vụ, tại chỗ."),
       ("Ngôn ngữ", "Tiếng Hàn, tiếng Việt, tiếng Anh, tiếng Nhật, tiếng Trung"),
-      ("Khu vực", "Hà Nội — Ba Đình, Hoàn Kiếm, Mỹ Đình, Tây Hồ và hơn thế"),
+      ("Khu vực", "Toàn Việt Nam (Hà Nội, TP. Hồ Chí Minh, Đà Nẵng, Nha Trang và nhiều nơi khác)"),
       ("Dành cho đối tác", 'Chuyên viên cũng đăng ký trong cùng ứng dụng. <a href="/vi/partner.html">Xem thông tin đối tác</a>'),
     ]}]},
  ]},
