@@ -2077,3 +2077,35 @@ exception when others then
 - 방식: 웹푸시는 본문을 비워 보내므로 서비스 워커가 수신자를 모른다. 앱이 로그인·국적 저장 때 `savePushLang()` 로 `massa-pref` 캐시의 `push-lang` 에 언어를 적고, sw.js 가 푸시를 받을 때 읽는다. 새 워커 활성화 때 `massa-pref` 는 지우지 않는다.
 - 처음에는 휴대폰 언어(navigator.language)로 했다가(3f7c66d) 사용자 요청으로 국적 기준으로 바꿨다(30c2878).
 - 한계: 앱을 한 번 열어야 언어가 저장된다. 그 전에는 베트남어로 뜬다. iOS(APNs)는 본문이 실려 오므로 해당 없음.
+
+
+## 2026-10-31 지난 예약 자동 정리 + 06시 메일 집계
+사용자 요청: 매일 하노이 00시에 마사지사가 수락하지 않은 요청은 취소, 수락한 건 완료 처리해 건수를 제대로 세고, 요청·수락·취소 건수를 06시 메일에 넣는다. 지금은 마사지사 제재보다 인력 확보가 우선이다.
+
+현황 (운영 DB 읽기 전용 조회)
+- bookings.status enum: requested, confirmed, on_the_way, in_progress, completed, cancelled, no_show. '수락' = confirmed(accepted_at 기록).
+- 손님 1건 신청이 팬아웃으로 여러 행(group_id)이 된다. 10/31 기준 지난 requested 22행 = 신청 7건(손님 2명), 지난 confirmed 1건.
+- 06시 메일은 VPS /root/signup_report.sh(크론 0 6 * * * KST, Resend)다. 저장소 사본은 채널/ops/signup_report.sh 인데 서버본(스코어카드 추가, 10-29)이 더 새것이다. 서버본으로 맞춘 뒤 고친다.
+- VPS 시각대는 Asia/Seoul. 하노이 00:00 = 크론 0 2 * * *.
+
+결정과 근거
+- 기준 시각: 하노이 '오늘 00:00' 이전에 잡힌 예약(scheduled_at). 요청일이 아니라 약속 시각이다 — 내일 예약을 오늘 밤에 취소하면 안 되므로.
+- requested → cancelled, cancelled_by = 'expired', cancel_reason = '시간 경과 자동 취소'. 'system' 은 팬아웃 '다른 마사지사가 먼저 수락' 알림에 쓰이므로 피했다.
+- 마사지사 제재 없음: 마사지사 제재(apply_provider_penalty)는 rejected_at 만 센다. 자동 취소는 rejected_at 을 찍지 않으므로 영향 없다.
+- 손님 제재 제외: refresh_customer_penalty 는 '예약 1시간 이내·이후 취소'를 cancelled_by 와 무관하게 센다. 약속 시각이 지난 뒤 자동 취소하면 손님이 임박 취소로 잡혀 5회면 7일 예약 제한이 걸린다. 그래서 cancelled_by = 'expired' 는 세지 않도록 그 함수의 조건 한 줄만 고친다.
+- 알림 없음: 기존 흐름대로면 손님에게 '신청이 취소되었습니다.' 가 하노이 자정에 행(팬아웃)마다 여러 번 간다. 이미 지난 약속이라 알릴 실익이 없어 'expired' 는 알림을 만들지 않는다(notify_booking_event 에 분기 하나).
+- 함수 수정은 운영의 현재 정의를 읽어 그 안의 한 줄을 replace 해서 다시 만든다. 저장소에 함수 전체 사본이 없고, 사본을 옮겨 적다 다른 줄이 바뀌는 위험을 없애려는 것. 바꿀 줄을 못 찾으면 예외로 멈춘다.
+- confirmed → completed 는 이번에 하지 않는다(보류). 완료 트리거가 친구 초대 보상 쿠폰 100,000₫ 발급, 마사지사 초대 적립, 파트너 수수료 pending_payout, admin_provider_fees 의 완료 건수(수수료 대상), 손님 '평가를 남겨주세요' 푸시를 일으킨다. 실제로 서비스를 했는지 모르는 건까지 돈이 움직이므로 사용자 결정이 필요하다. 대신 06시 메일에 '지난 확정 미완료' 건수를 보여 준다.
+- 06시 메일 집계(하노이 어제 하루, 메일은 하노이 04:00 에 나감): 요청(신청 단위, group 기준) · 수락 · 완료 · 손님 취소 · 자동 취소(만료) · 지난 확정 미완료(현재).
+
+테스트: 운영 public·auth 스키마를 pg_dump --schema-only 로 받아 로컬 PostgreSQL 16 에 재현하고 sql/test_auto_expire_bookings.sql 9개 PASS(자동 취소 2건·대상 외 유지·알림 0·마사지사 거절 기록 없음·두 번째 실행 0건·손님 제재 미반영·손님 임박 취소는 그대로 셈·다른 취소 알림 유지·앱 사용자 호출 불가). 마이그레이션 두 번 적용도 안전.
+dry-run(10/31 12:40 KST 운영 SELECT): 오늘 밤 00시(하노이) 자동 취소 대상 requested 22행 = 신청 7건(손님 2명), 결제된 건 0. 지난 confirmed 1건(자동 완료 보류라 그대로 남음).
+06시 메일 미리 보기(같은 시각, 하노이 어제 10/30): 요청 6 · 수락 1 · 완료 0 · 손님 취소 2 · 자동 취소 0 · 지난 확정 미완료 1.
+
+### 운영 적용 순서 (사용자 승인 후)
+1. 백업: `docker exec massa-db pg_dump -U postgres -Fc postgres > /root/backups/massa-pre-expire-$(date +%Y%m%d%H%M).dump`
+2. 시험: sql/auto_expire_bookings.sql 을 /root 에 올려 `begin; \i ...; select count(*) from bookings where status='requested' and scheduled_at < date_trunc('day', now() at time zone 'Asia/Ho_Chi_Minh') at time zone 'Asia/Ho_Chi_Minh'; rollback;` 로 오류 없는지 확인.
+3. 적용: `docker exec -i massa-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 -1 < auto_expire_bookings.sql` (함수 2개 수정 + expire_stale_bookings 생성). PostgREST 재시작은 필요 없다(앱이 부르는 함수 시그니처 변화 없음).
+4. 크론: scripts/massa_expire.sh 를 /root/massa_expire.sh 로 올리고 chmod +x, crontab 에 `0 2 * * * /bin/sh /root/massa_expire.sh` 추가(서버 KST 02:00 = 하노이 00:00). 로그 /var/log/massa_expire.log.
+5. 메일: 채널/ops/signup_report.sh 를 /root/signup_report.sh 로 올린다(서버 사본은 /root/backups/signup_report.sh.bak-<날짜> 로 먼저 복사). 확인은 `bash /root/signup_report.sh --dry` 에 'massa 예약' 단락이 나오는지.
+6. 첫 실행 다음 날 06시 메일과 /var/log/massa_expire.log 의 expired 건수를 대조.

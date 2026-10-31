@@ -5166,3 +5166,11 @@ vi:
 - [ ] 다음 스토어 빌드(iOS 1.0.24~, Android 1.1.112~)에 들어간다. 지금 심사 중인 1.0.23·1.1.111 에는 없다
 - [ ] 첫 iOS 빌드 로그에서 「Associated Domains 켜기」와 프로파일 확인 줄이 통과했는지 본다. 실패하면 Apple Developer > Identifiers > app.massa.hanoi 에서 직접 켠다
 - [ ] 실기기 확인 — 카톡에 https://app.massaviet.com/?ref=코드 를 보내 누르면 앱이 열리고 로그인 상태면 「친구 초대 코드가 등록되었습니다」가 뜨는지. 안드로이드는 `adb shell pm get-app-links app.massa.hanoi` 가 verified 인지
+
+## 2026-10-31 지난 예약 자동 정리 + 06시 메일 집계 (사용자 요청)
+- [ ] EX-1. sql/auto_expire_bookings.sql — expire_stale_bookings(): 하노이 오늘 00:00 이전 예약 중 requested → cancelled(cancelled_by 'expired', 사유 '시간 경과 자동 취소') → verify: 로컬 재현 DB 테스트
+- [ ] EX-2. 같은 파일 — 자동 취소는 손님 제재(refresh_customer_penalty)에 세지 않고, 알림(notify_booking_event)도 보내지 않는다 → verify: 테스트에서 cancel_count·notifications 변화 없음
+- [ ] EX-3. scripts/massa_expire.sh — VPS 크론 0 2 * * * (서버 KST 02:00 = 하노이 00:00) → verify: sh -n
+- [ ] EX-4. 채널/ops/signup_report.sh — 06시 메일에 massa 어제(하노이) 요청·수락·자동 취소·완료·지난 확정 미완료 건수 → verify: bash -n, 로컬 SQL 실행
+- [ ] EX-5. 수락(confirmed) → 자동 완료는 보류 — 완료 트리거가 친구 초대 보상 쿠폰·마사지사 적립·파트너 수수료·마사지사 수수료 집계·후기 요청 푸시를 일으킨다. 사용자 결정 후 진행
+- [ ] EX-6. 운영 적용(사용자 승인 후) — 백업 → sql 적용 → 크론 등록 → signup_report.sh 배포
