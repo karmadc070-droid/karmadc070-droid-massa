@@ -48,6 +48,24 @@ end $$;
 -- 두 번 돌려도 더 바뀌지 않는다
 do $$ begin if public.expire_stale_bookings() <> 0 then raise exception 'FAIL second run'; end if; raise notice 'PASS idempotent'; end $$;
 
+-- 자동 완료: b3(어제 19시 확정, 60분) → 완료 / b5(어제 23:30 확정, 60분 — 끝나는 시각이 00:30) → 그대로
+insert into bookings (id, customer_id, provider_id, service_id, scheduled_at, status, amount_vnd)
+select '00000000-0000-0000-0000-0000000000b5', '00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-0000000000f1', t - interval '30 min', 'requested', 300000 from cut;
+update bookings set status = 'confirmed', accepted_at = now() where id = '00000000-0000-0000-0000-0000000000b5';
+do $$ declare n int; begin
+  n := public.complete_stale_bookings();
+  if n <> 1 then raise exception 'FAIL complete count % (want 1)', n; end if;
+  raise notice 'PASS complete count 1';
+  if (select status::text || '|' || (completed_at is not null)::text from bookings where id='00000000-0000-0000-0000-0000000000b3') <> 'completed|true' then raise exception 'FAIL b3 not completed'; end if;
+  raise notice 'PASS b3 completed with completed_at';
+  if (select status from bookings where id='00000000-0000-0000-0000-0000000000b5') <> 'confirmed' then raise exception 'FAIL b5 should stay (ends after cut)'; end if;
+  raise notice 'PASS b5 stays until its end time passes';
+  if (select count(*) from notifications where kind = 'booking_completed' and booking_id = '00000000-0000-0000-0000-0000000000b3') <> 1 then raise exception 'FAIL completed trigger (review notification) did not fire'; end if;
+  raise notice 'PASS completion triggers fire (review notification)';
+  if public.complete_stale_bookings() <> 0 then raise exception 'FAIL complete second run'; end if;
+  raise notice 'PASS complete idempotent';
+end $$;
+
 -- 로컬 덤프는 권한이 빠져 있어 운영과 같은 최소 권한만 준다(테스트 전용)
 grant usage on schema public, auth to authenticated;
 grant select, update on bookings, profiles, providers to authenticated;
@@ -83,6 +101,8 @@ set local role authenticated;
 do $$ begin
   begin perform public.expire_stale_bookings(); raise exception 'FAIL authenticated can call';
   exception when insufficient_privilege then raise notice 'PASS authenticated denied'; end;
+  begin perform public.complete_stale_bookings(); raise exception 'FAIL authenticated can call complete';
+  exception when insufficient_privilege then raise notice 'PASS authenticated denied complete'; end;
 end $$;
 reset role;
 rollback;
