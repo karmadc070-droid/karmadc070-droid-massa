@@ -2109,3 +2109,10 @@ dry-run(10/31 12:40 KST 운영 SELECT): 오늘 밤 00시(하노이) 자동 취�
 4. 크론: scripts/massa_expire.sh 를 /root/massa_expire.sh 로 올리고 chmod +x, crontab 에 `0 2 * * * /bin/sh /root/massa_expire.sh` 추가(서버 KST 02:00 = 하노이 00:00). 로그 /var/log/massa_expire.log.
 5. 메일: 채널/ops/signup_report.sh 를 /root/signup_report.sh 로 올린다(서버 사본은 /root/backups/signup_report.sh.bak-<날짜> 로 먼저 복사). 확인은 `bash /root/signup_report.sh --dry` 에 'massa 예약' 단락이 나오는지.
 6. 첫 실행 다음 날 06시 메일과 /var/log/massa_expire.log 의 expired 건수를 대조.
+
+### 자동 완료 추가와 운영 적용 (2026-10-31 12:50~13:05 KST, 사용자 승인)
+- 사용자 결정: 마사지사가 수락했으면 완료로 본다. complete_stale_bookings() 추가 — confirmed·on_the_way·in_progress 중 '약속 시각 + 서비스 시간(services.duration_min)'이 하노이 오늘 00:00 이전인 것을 status='completed', completed_at=now() 로 바꾼다. 기존 완료 트리거(초대 보상 쿠폰·마사지사 적립·파트너 수수료·booking_completed 후기 알림)가 그대로 돈다.
+- 후기 알림 시각: notifications 는 insert 즉시 kick_send_push 로 나가고, claim_unpushed_notifications 의 next_push_at 은 booking_new·notice 반복용이라 booking_completed 를 아침으로 미룰 기존 수단이 없다. 그래서 자동 완료 손님에게 '평가를 남겨주세요' 푸시가 하노이 00시에 간다(새 체계는 만들지 않음).
+- 테스트 15/15 PASS(로컬 재현 DB, 자동 완료 5개 추가: 건수·completed_at·끝나지 않은 예약 제외·완료 트리거 알림·재실행 0·앱 사용자 호출 거부).
+- 운영: 백업 /root/backups/massa-pre-expire-202610311254.dump → 트랜잭션 시험(취소 22행·완료 1건·완료 알림 1건) 후 rollback 확인 → 실제 적용(함수 2개 생성, refresh_customer_penalty·notify_booking_event 수정) → /root/massa_expire.sh 설치, crontab '0 2 * * * /bin/sh /root/massa_expire.sh'(백업 /root/backups/crontab.bak-*) → /root/signup_report.sh 교체(백업 /root/backups/signup_report.sh.bak-*), --dry 로 'massa 예약' 단락 확인(메일 발송 안 함).
+- 06시 메일의 자동 완료 건수는 /var/log/massa_expire.log 오늘 줄의 completed=N 을 읽는다. 첫 실행은 11/1 하노이 00:00(서버 02:00).
