@@ -2150,3 +2150,11 @@ dry-run(10/31 12:40 KST 운영 SELECT): 오늘 밤 00시(하노이) 자동 취�
 - 확인: review_push_window_open 생성, claim 에 (d) 반영, notify 에 next_push_at 반영. 베트남 시간 11:31 window=true, 23:30 false, 08:00 true. 미발송 후기 요청 0건. claim 을 트랜잭션 안에서 불러 오류 없음(0행, rollback). massa_push.log 는 claimed 0 이면 남기지 않으므로 적용 뒤 새 줄이 없는 것이 정상이며 오류 줄도 없다.
 - 오늘 밤 베트남 시간 00:00 자동 완료 예정 1건(10/30 13:40 예약)의 후기 요청은 11/1 베트남 시간 08:00 이후 첫 1분 실행 때 나간다.
 - VPS 에 남긴 작업 파일: /root/massa-rp/, /root/massa_rp_*.sh, /root/massa_review_push_delay.sql (정리는 사용자 결정).
+
+## 2026-11-05 하노이 한정 문구 → 베트남 전역
+
+- 바꾼 곳: manifest.webmanifest·index.html 메타 설명("현재 하노이에서 운영" → "베트남 전역에서 운영"), admin.html 메타, 파트너 인쇄 카드 태그(Massage · Việt Nam), store-assets vi-VN·ko-KR 초안. 커밋 d24dd1c·48fe3bb, push 후 vps-deploy-app.sh·vps-deploy-massaviet.sh 실행.
+- 남겨 둔 것: 앱 '매장 방문' 안내(실제 매장 목록이 하노이라 사실대로 둠), 위치 기본값 '하노이', 입력 예시(예: 하노이 스파·Lotte Hotel Hanoi).
+- vps-deploy-massaviet.sh 의 grep -q "출장 마사지" index.html 검사가 실패해 스크립트가 그 지점에서 멈췄다. 파일 교체는 이미 끝난 뒤라 사이트는 정상(새 파일 확인). Caddy reload·상태 출력만 건너뜀. 검사 문구가 지금 site/index.html 과 맞는지 다음에 확인할 것.
+- Play 기본 등록정보(ko-KR) 전체 설명 2줄 수정 → 검토 제출(11/5). Play 등록정보 언어는 ko-KR 하나뿐, vi-VN 미추가.
+- App Store 프로모션 텍스트는 Browser 1 에 App Store Connect 로그인이 없어 못 바꿈 — 문구는 store-assets/ko-KR-appstore-등록정보.md.

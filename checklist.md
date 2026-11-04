@@ -5180,3 +5180,9 @@ vi:
 - [x] RP-2. sql/review_push_delay.sql — 완료 알림 next_push_at=greatest(now(), 예약 시각+3h), claim (a) 에서 제외·(d) 추가(발송 시간·후기 여부), review_push_window_open() → verify: 운영 정의와 diff 해 의도한 줄만 변경
 - [x] RP-3. sql/test_review_push_delay.sql → verify: 로컬 재현 DB 8/8 PASS
 - [ ] RP-4. 운영 적용(사용자 승인 후) — 백업 → 적용 직전 diff → 트랜잭션 시험 → 적용 → 다음 완료 건 발송 시각 확인
+
+## 2026-11-05 베트남 전역 문구
+- [x] 앱·사이트 메타/매니페스트/파트너 카드 수정·배포
+- [x] Play ko-KR 설명 수정 → 검토 제출
+- [ ] App Store 프로모션 텍스트 교체(App Store Connect 로그인 필요)
+- [ ] (선택) Play vi-VN 번역 등록정보 추가 — 초안 store-assets/vi-VN-등록정보.md
