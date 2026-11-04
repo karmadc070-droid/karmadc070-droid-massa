@@ -16,18 +16,18 @@ massa — Massage tại nhà
 
 ### 간단한 설명 (80자)
 ```
-Đặt massage & làm đẹp tại nhà hoặc khách sạn ở Hà Nội. Thanh toán sau khi xong.
+Đặt massage & làm đẹp tại nhà, khách sạn khắp Việt Nam. Thanh toán sau khi xong.
 ```
 
 ### 자세한 설명 (4000자)
 ```
 Massage và làm đẹp ngay tại nhà hoặc phòng khách sạn của bạn — đó là massa.
 
-Tại Hà Nội, bạn có thể gọi kỹ thuật viên đã được xác minh đến đúng giờ bạn muốn, không cần di chuyển. Sau giờ tan làm muộn, trong phòng khách sạn khi đi công tác, hay sau khi ru con ngủ — hãy nhận dịch vụ vào lúc bạn không cần ra khỏi nhà.
+Dù bạn ở đâu tại Việt Nam, bạn có thể gọi kỹ thuật viên đã được xác minh đến đúng giờ bạn muốn, không cần di chuyển. Sau giờ tan làm muộn, trong phòng khách sạn khi đi công tác, hay sau khi ru con ngủ — hãy nhận dịch vụ vào lúc bạn không cần ra khỏi nhà.
 
 ■ Dành cho bạn nếu
 · Bạn hay tăng ca và khó kịp giờ mở cửa của tiệm massage
-· Bạn đến Hà Nội công tác hoặc du lịch và muốn thư giãn ngay trong phòng
+· Bạn đến Việt Nam công tác hoặc du lịch và muốn thư giãn ngay trong phòng
 · Bạn ngại di chuyển hoặc muốn được chăm sóc riêng tư
 · Bạn muốn tìm kỹ thuật viên nói được tiếng Hàn hoặc tiếng Anh
 
@@ -59,7 +59,7 @@ Khi đặt lịch, bạn nhập luôn tên khách sạn, số phòng và cách q
 Tiếng Hàn, tiếng Việt, tiếng Anh, tiếng Nhật, tiếng Trung. Bạn có thể chọn kỹ thuật viên nói được ngôn ngữ của mình.
 
 ■ Khu vực phục vụ
-Hiện đang hoạt động tại Hà Nội (Ba Đình, Hoàn Kiếm, Mỹ Đình, Tây Hồ...), sẽ mở rộng dần ra Đà Nẵng, Nha Trang, TP. Hồ Chí Minh.
+Phục vụ trên toàn Việt Nam — Hà Nội, TP. Hồ Chí Minh, Đà Nẵng, Nha Trang và nhiều tỉnh thành khác.
 
 ■ Tuyển đối tác
 Bạn muốn làm kỹ thuật viên massage hoặc chuyên viên làm đẹp tại nhà? Đăng ký ngay trong ứng dụng. Bạn tự chọn giờ làm, chỉ mất phí hoa hồng khi có đơn thành công. Không phí gia nhập, không phí hàng tháng.
@@ -78,17 +78,17 @@ massa — Massage tại nhà
 
 ### 부제 (30자)
 ```
-Massage & làm đẹp tại Hà Nội
+Massage & làm đẹp toàn quốc
 ```
 
 ### 키워드 (100자, 쉼표 구분)
 ```
-massage,tại nhà,khách sạn,Hà Nội,làm đẹp,nail,waxing,thư giãn,aroma,thái,body,spa,đặt lịch
+massage,tại nhà,khách sạn,Việt Nam,Hà Nội,Sài Gòn,Đà Nẵng,làm đẹp,nail,waxing,thư giãn,thái,spa
 ```
 
 ### 프로모션 텍스트 (170자)
 ```
-Khai trương tại Hà Nội. Gọi kỹ thuật viên đã xác minh đến nhà hoặc khách sạn, thanh toán sau khi xong. Không tip, không phí đi lại.
+Khai trương trên toàn Việt Nam. Gọi kỹ thuật viên đã xác minh đến nhà hoặc khách sạn, thanh toán sau khi xong. Không tip, không phí đi lại.
 ```
 
 ### 설명
