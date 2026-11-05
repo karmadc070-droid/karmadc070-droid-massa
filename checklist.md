@@ -5172,14 +5172,14 @@ vi:
 - [x] EX-2. 같은 파일 — 자동 취소는 손님 제재(refresh_customer_penalty)에 세지 않고, 알림(notify_booking_event)도 보내지 않는다 → verify: 테스트에서 cancel_count·notifications 변화 없음
 - [x] EX-3. scripts/massa_expire.sh — VPS 크론 0 2 * * * (서버 KST 02:00 = 하노이 00:00) → verify: sh -n
 - [x] EX-4. 채널/ops/signup_report.sh — 06시 메일에 massa 어제(하노이) 요청·수락·자동 취소·완료·지난 확정 미완료 건수 → verify: bash -n, 로컬 SQL 실행
-- [ ] EX-5. 수락(confirmed) → 자동 완료는 보류 — 완료 트리거가 친구 초대 보상 쿠폰·마사지사 적립·파트너 수수료·마사지사 수수료 집계·후기 요청 푸시를 일으킨다. 사용자 결정 후 진행
-- [ ] EX-6. 운영 적용(사용자 승인 후) — 백업 → sql 적용 → 크론 등록 → signup_report.sh 배포
+- [x] EX-5. (10/31 사용자 승인으로 complete_stale_bookings 적용됨 — 11/05 확인) 수락(confirmed) → 자동 완료는 보류 — 완료 트리거가 친구 초대 보상 쿠폰·마사지사 적립·파트너 수수료·마사지사 수수료 집계·후기 요청 푸시를 일으킨다. 사용자 결정 후 진행
+- [x] EX-6. (10/31 적용, 크론 0 2 * * *, 11/01~11/05 매일 실행 로그 확인) 운영 적용(사용자 승인 후) — 백업 → sql 적용 → 크론 등록 → signup_report.sh 배포
 
 ## 2026-10-31 후기 요청 푸시 지연 (예약 시각 + 3시간, 베트남 시간 08~22시)
 - [x] RP-1. 발송 경로 조사 — notify_booking_event 의 booking_completed 알림 → send-push 가 claim_unpushed_notifications 결과만 보냄 → verify: 운영 함수 정의·send-push/index.ts 확인
 - [x] RP-2. sql/review_push_delay.sql — 완료 알림 next_push_at=greatest(now(), 예약 시각+3h), claim (a) 에서 제외·(d) 추가(발송 시간·후기 여부), review_push_window_open() → verify: 운영 정의와 diff 해 의도한 줄만 변경
 - [x] RP-3. sql/test_review_push_delay.sql → verify: 로컬 재현 DB 8/8 PASS
-- [ ] RP-4. 운영 적용(사용자 승인 후) — 백업 → 적용 직전 diff → 트랜잭션 시험 → 적용 → 다음 완료 건 발송 시각 확인
+- [x] RP-4. (10/31 13:29 적용, 11/01·11/02 자동 완료 후기 푸시가 08:00 에 발송됨 확인) 운영 적용(사용자 승인 후) — 백업 → 적용 직전 diff → 트랜잭션 시험 → 적용 → 다음 완료 건 발송 시각 확인
 
 ## 2026-11-05 베트남 전역 문구
 - [x] 앱·사이트 메타/매니페스트/파트너 카드 수정·배포

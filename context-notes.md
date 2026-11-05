@@ -2158,3 +2158,7 @@ dry-run(10/31 12:40 KST 운영 SELECT): 오늘 밤 00시(하노이) 자동 취�
 - vps-deploy-massaviet.sh 의 grep -q "출장 마사지" index.html 검사가 실패해 스크립트가 그 지점에서 멈췄다. 파일 교체는 이미 끝난 뒤라 사이트는 정상(새 파일 확인). Caddy reload·상태 출력만 건너뜀. 검사 문구가 지금 site/index.html 과 맞는지 다음에 확인할 것.
 - Play 기본 등록정보(ko-KR) 전체 설명 2줄 수정 → 검토 제출(11/5). Play 등록정보 언어는 ko-KR 하나뿐, vi-VN 미추가.
 - App Store 프로모션 텍스트는 Browser 1 에 App Store Connect 로그인이 없어 못 바꿈 — 문구는 store-assets/ko-KR-appstore-등록정보.md.
+## 2026-11-05 수락 → 자동 완료 상태 확인 (사용자: '예약 수락하면 자동으로 완료 처리해')
+- 이미 10/31 사용자 승인으로 운영 적용돼 있었다(위 '자동 완료 추가와 운영 적용', '후기 요청 푸시 지연 운영 적용'). checklist 의 EX-5·EX-6·RP-4 만 갱신이 빠져 있었다.
+- 확인(읽기 전용): crontab '0 2 * * * /bin/sh /root/massa_expire.sh', /var/log/massa_expire.log 11/01 expired=22 completed=1, 11/02 12/1, 11/03 11/0, 11/04 14/0, 11/05 0/0. 함수 complete_stale_bookings·expire_stale_bookings·review_push_window_open 존재. 완료 3건(11/01 00:00 자동, 11/01 20:38 앱, 11/02 00:00 자동)의 후기 알림은 모두 베트남 시간 08:00 에 발송. 오늘 밤 자동 완료 대상 0건.
+- 새 코드·운영 변경 없음.
