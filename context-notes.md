@@ -2162,3 +2162,4 @@ dry-run(10/31 12:40 KST 운영 SELECT): 오늘 밤 00시(하노이) 자동 취�
 - 이미 10/31 사용자 승인으로 운영 적용돼 있었다(위 '자동 완료 추가와 운영 적용', '후기 요청 푸시 지연 운영 적용'). checklist 의 EX-5·EX-6·RP-4 만 갱신이 빠져 있었다.
 - 확인(읽기 전용): crontab '0 2 * * * /bin/sh /root/massa_expire.sh', /var/log/massa_expire.log 11/01 expired=22 completed=1, 11/02 12/1, 11/03 11/0, 11/04 14/0, 11/05 0/0. 함수 complete_stale_bookings·expire_stale_bookings·review_push_window_open 존재. 완료 3건(11/01 00:00 자동, 11/01 20:38 앱, 11/02 00:00 자동)의 후기 알림은 모두 베트남 시간 08:00 에 발송. 오늘 밤 자동 완료 대상 0건.
 - 새 코드·운영 변경 없음.
+- 2026-11-05 iOS 1.0.25(빌드 66) 심사 제출, WAITING_FOR_REVIEW 확인(reviewSubmission 627e13cf). ko·vi 설명의 하노이 한정 문구 2줄씩을 베트남 전역으로 교체(en 현지화 없음). vi 키워드에 'Việt Nam' 추가, 100자 제한 때문에 'trị liệu' 제거(98자). 새 기능 문구는 서비스 지역 변경 한 문장.
