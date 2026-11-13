@@ -146,6 +146,9 @@
   .mp-card-t { font-size: 16.5px; font-weight: bold; line-height: 1.32; color: #3a3a3a; position: relative; z-index: 2; }
   .mp-card-arrow { position: absolute; left: 14px; bottom: 12px; width: 27px; height: 27px; border-radius: 50%; background: #E3922B; color: #fff; display: flex; align-items: center; justify-content: center; z-index: 2; }
   .mp-card.c-invite .mp-card-arrow { background: #3E7C4F; }
+  /* 홈·신청 완료 화면의 친구 초대 띠 (2026-11-13). 계정 탭 카드만으로는 잘 안 보인다 */
+  .inv-strip { margin: 10px 0 0; padding: 12px 14px; border-radius: 14px; background: #E7F2E7; color: #2F5F3C; font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .inv-strip b { margin-left: auto; }
   .mp-list { background: #fff; border: 1px solid #EDF1EF; border-radius: 18px; padding: 2px 14px; box-shadow: 0 5px 16px rgba(0,0,0,.05); }
   .mp-row { display: flex; align-items: center; gap: 13px; padding: 15px 2px; border-bottom: 1px solid #F2F5F3; cursor: pointer; }
   .mp-row:last-child { border-bottom: none; }
@@ -594,6 +597,7 @@
         <circle cx="60" cy="16" r="1.5" fill="#FFE9BC" opacity=".5"/>
       </svg></div>
     </div>
+    <div class="inv-strip" onclick="openInvite()">🎁 <span>친구 초대 100,000₫ 페이백</span> <b>→</b></div>
   </div>
 
   <!-- 마사지 홈서비스 — 마사지사 선택 리스트 -->
@@ -820,6 +824,7 @@
       <div class="notice" style="text-align:left">🆘 서비스 중 문제가 생기면 앱 내 <b>안전 버튼</b>으로 즉시 연결됩니다. (Phase 1.5)</div>
     </div>
     <button class="cta" id="doneChatBtn" style="display:none;background:#2E8B8B;margin-bottom:8px">💬 테라피스트와 채팅하기</button>
+    <div class="inv-strip" style="margin:0 0 8px" onclick="openInvite()">🎁 <span>친구 초대 100,000₫ 페이백</span> <b>→</b></div>
     <button class="cta" onclick="go('home')">홈으로</button>
   </div>
 
