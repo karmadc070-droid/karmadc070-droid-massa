@@ -5186,3 +5186,8 @@ vi:
 - [x] Play ko-KR 설명 수정 → 검토 제출
 - [ ] App Store 프로모션 텍스트 교체(App Store Connect 로그인 필요)
 - [ ] (선택) Play vi-VN 번역 등록정보 추가 — 초안 store-assets/vi-VN-등록정보.md
+## 2026-11-13 도시별 소개 페이지 (무료 홍보 4번 — 검색 유입)
+- [x] CT-1. site-src/city_content.py 3개 언어 문구, build.py 에 active_cities()·city_page()·서비스 페이지 도시 목록·사이트맵 → verify: 빌드 HTML 66→78개
+- [x] CT-2. 로컬 서버로 vi 하노이 페이지 본문 확인, 베트남어 문구 1곳 수정
+- [x] CT-3. 커밋 24d1aa3, push, vps-deploy-massaviet.sh → 12개 주소 200, 사이트맵 /city/ 반영 확인
+- [ ] 배포 스크립트 45행 grep "출장 마사지" 검사가 지금 index.html 과 맞지 않아 매번 끝에서 멈춘다(파일 교체·IndexNow 는 끝난 뒤). 검사 문구 교체는 사장님 확인 후
