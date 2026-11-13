@@ -45,9 +45,11 @@ begin
 
   return query
   select p.id,
-         p.full_name,
+         -- 마사지사는 프로필 이름을 비워 둔 사람이 많다. 신청서의 활동명으로 채운다 (2026-11-13)
+         coalesce(nullif(p.full_name, ''), pr.display_name),
          u.email::text,
-         p.phone,
+         -- 마사지사 번호는 신청서(provider_kyc.contact)에만 있다. providers.phone 은 트리거가 비운다 (2026-11-13)
+         coalesce(nullif(p.phone, ''), k.contact),
          p.role::text,
          p.nationality,
          p.preferred_language,
@@ -70,7 +72,7 @@ begin
          pr.application_status::text
     from profiles p
     left join lateral (
-      select pr2.id, pr2.application_status
+      select pr2.id, pr2.application_status, pr2.display_name
         from providers pr2
        where pr2.profile_id = p.id or pr2.owner_id = p.id
        order by pr2.created_at desc limit 1) pr on true
@@ -79,8 +81,10 @@ begin
    where (p_role is null or p.role::text = p_role)
      and (p_q is null or p_q = '' or
           coalesce(p.full_name,'') ilike '%'||p_q||'%' or
+          coalesce(pr.display_name,'') ilike '%'||p_q||'%' or
           coalesce(u.email::text,'') ilike '%'||p_q||'%' or
-          coalesce(p.phone,'')      ilike '%'||p_q||'%')
+          coalesce(p.phone,'')      ilike '%'||p_q||'%' or
+          coalesce(k.contact,'')    ilike '%'||p_q||'%')
    order by p.created_at desc
    limit  greatest(1, least(p_limit, 500))
   offset greatest(0, p_offset);
