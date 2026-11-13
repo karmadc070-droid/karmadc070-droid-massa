@@ -2163,3 +2163,10 @@ dry-run(10/31 12:40 KST 운영 SELECT): 오늘 밤 00시(하노이) 자동 취�
 - 확인(읽기 전용): crontab '0 2 * * * /bin/sh /root/massa_expire.sh', /var/log/massa_expire.log 11/01 expired=22 completed=1, 11/02 12/1, 11/03 11/0, 11/04 14/0, 11/05 0/0. 함수 complete_stale_bookings·expire_stale_bookings·review_push_window_open 존재. 완료 3건(11/01 00:00 자동, 11/01 20:38 앱, 11/02 00:00 자동)의 후기 알림은 모두 베트남 시간 08:00 에 발송. 오늘 밤 자동 완료 대상 0건.
 - 새 코드·운영 변경 없음.
 - 2026-11-05 iOS 1.0.25(빌드 66) 심사 제출, WAITING_FOR_REVIEW 확인(reviewSubmission 627e13cf). ko·vi 설명의 하노이 한정 문구 2줄씩을 베트남 전역으로 교체(en 현지화 없음). vi 키워드에 'Việt Nam' 추가, 100자 제한 때문에 'trị liệu' 제거(98자). 새 기능 문구는 서비스 지역 변경 한 문장.
+
+## 2026-11-13 마사지사 등록 점검 (회원 목록 전화 '-')
+- 원인: 마사지사 번호는 provider_kyc.contact 에만 저장된다(providers.phone 은 strip_provider_phone 트리거가 비운다). admin_member_list 는 profiles.phone 만 읽어서 마사지사 전화가 '-' 로 보였다. 데이터는 빠진 것이 없었다(승인 38명 모두 연락처 있음).
+- 수정: admin_member_list 가 전화는 profiles.phone → provider_kyc.contact, 이름은 profiles.full_name → providers.display_name 순으로 채운다. 검색도 두 값을 본다. 커밋 c52a981.
+- 함께 발견: delete_my_account 가 providers 를 남겨 둬서, 계정을 지운 마사지사(Thanh hà, Luccie)가 계속 노출됐다. Thanh hà 앞으로 들어온 예약 8건이 모두 '시간 경과 자동 취소'. 함수가 삭제 전에 is_active=false 로 내리도록 고치고, 두 명은 sql/orphan_providers_off.sql 로 비활성화했다(지우지 않음). 커밋 e5c4fb5.
+- 롤백본: 직전 함수 정의는 커밋 8ebca39 의 같은 파일 두 개.
+- 남은 확인(사장님 판단): Kun 은 9월 등록이라 계좌·신분증 없이 승인·노출 중. Thảo·Thanhtruc 은 승인됐지만 꺼져 있음(본인이 끈 것으로 보임). hoàng hoà 신청서 번호 09821515859 는 한 자리 많음(프로필 번호 0982515859 가 목록에 먼저 보임).
