@@ -562,4 +562,112 @@
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
+  <url>
+    <loc>https://massaviet.com/city/ha-noi.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/city/ha-noi.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/city/ha-noi.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/city/ha-noi.html"/>
+    <lastmod>2026-11-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/en/city/ha-noi.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/city/ha-noi.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/city/ha-noi.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/city/ha-noi.html"/>
+    <lastmod>2026-11-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/vi/city/ha-noi.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/city/ha-noi.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/city/ha-noi.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/city/ha-noi.html"/>
+    <lastmod>2026-11-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/city/ho-chi-minh.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/city/ho-chi-minh.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/city/ho-chi-minh.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/city/ho-chi-minh.html"/>
+    <lastmod>2026-11-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/en/city/ho-chi-minh.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/city/ho-chi-minh.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/city/ho-chi-minh.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/city/ho-chi-minh.html"/>
+    <lastmod>2026-11-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/vi/city/ho-chi-minh.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/city/ho-chi-minh.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/city/ho-chi-minh.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/city/ho-chi-minh.html"/>
+    <lastmod>2026-11-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/city/da-nang.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/city/da-nang.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/city/da-nang.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/city/da-nang.html"/>
+    <lastmod>2026-11-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/en/city/da-nang.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/city/da-nang.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/city/da-nang.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/city/da-nang.html"/>
+    <lastmod>2026-11-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/vi/city/da-nang.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/city/da-nang.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/city/da-nang.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/city/da-nang.html"/>
+    <lastmod>2026-11-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/city/nha-trang.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/city/nha-trang.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/city/nha-trang.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/city/nha-trang.html"/>
+    <lastmod>2026-11-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/en/city/nha-trang.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/city/nha-trang.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/city/nha-trang.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/city/nha-trang.html"/>
+    <lastmod>2026-11-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://massaviet.com/vi/city/nha-trang.html</loc>
+      <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/city/nha-trang.html"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/city/nha-trang.html"/>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://massaviet.com/vi/city/nha-trang.html"/>
+    <lastmod>2026-11-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>

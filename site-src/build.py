@@ -3,6 +3,7 @@
 import os, re, shutil, html as H
 from social import SOCIAL
 import massage_content as mc
+import city_content as cc
 
 SITE = "https://massaviet.com"
 OUT  = "site"
@@ -523,6 +524,48 @@ def massage_page(lang, t, types, durations):
             {"type": "section", "h2": esc(M["others"]), "blocks": [{"type": "links", "items": others}]},
         ]}
 
+def active_cities():
+    """DB(providers)에서 승인·활성 마사지사 수를 도시별로 세어, MIN_ACTIVE 이상인 도시만 돌려준다.
+    못 읽으면 빌드를 멈춘다 — 그대로 배포하면 도시 페이지가 사이트에서 사라진다."""
+    import json, urllib.request
+    q = ("https://api.massaviet.com/rest/v1/providers?select=city_code"
+         "&application_status=eq.approved&is_active=eq.true")
+    try:
+        req = urllib.request.Request(q, headers={"apikey": ANON, "Authorization": f"Bearer {ANON}"})
+        rows = json.load(urllib.request.urlopen(req, timeout=20))
+    except Exception as e:
+        raise SystemExit(f"providers 조회 실패 — 빌드 중단: {e}")
+    n = {}
+    for r in rows:
+        n[r.get("city_code")] = n.get(r.get("city_code"), 0) + 1
+    return [c for c in cc.ORDER if n.get(c, 0) >= cc.MIN_ACTIVE]
+
+def city_list_section(lang, cities):
+    """서비스 페이지 맨 아래에 붙는 도시별 페이지 링크."""
+    C = cc.LABELS[lang]
+    return {"type": "section", "kicker": C["list_kicker"], "h2": C["list_h2"], "lead": C["list_lead"],
+            "blocks": [{"type": "links", "items": [(cc.CITIES[lang][c]["name"], url(lang, f"city/{cc.SLUG[c]}")) for c in cities]}]}
+
+def city_page(lang, c, cities, types):
+    C, x = cc.LABELS[lang], cc.CITIES[lang][c]
+    others = [(cc.CITIES[lang][o]["name"], url(lang, f"city/{cc.SLUG[o]}")) for o in cities if o != c]
+    blocks = [
+        {"type": "section", "kicker": C["kicker"], "h2": esc(C["title"].split(" | ")[0].format(name=x["name"])),
+         "lead": C["lead"].format(name=x["name"]),
+         "blocks": [{"type": "cta", "btns": [(C["cta_app"], url(lang, "download")), (C["cta_guide"], url(lang, "guide"))]}]},
+        {"type": "section", "soft": True, "h2": esc(C["h_areas"]),
+         "blocks": [{"type": "ul", "items": x["areas"]}, {"type": "note", "text": C["areas_note"]}]},
+        {"type": "section", "h2": esc(C["h_services"]), "blocks": [{"type": "ul", "items": C["services"]}]},
+        {"type": "section", "soft": True, "h2": esc(C["h_steps"]), "blocks": [{"type": "ul", "items": C["steps"]}]},
+        {"type": "section", "h2": esc(C["h_hotel"]), "body": [esc(C["hotel"])],
+         "blocks": [{"type": "note", "text": C["disclaimer"]}]},
+        {"type": "section", "soft": True, "h2": esc(C["h_types"]),
+         "blocks": [{"type": "links", "items": [(mc.TYPES[lang][t]["name"], url(lang, f"massage/{mc.slug(t)}")) for t in types]}]},
+    ]
+    if others:
+        blocks.append({"type": "section", "h2": esc(C["h_cities"]), "blocks": [{"type": "links", "items": others}]})
+    return {"title": C["title"].format(name=x["name"]), "desc": C["desc"].format(name=x["name"]), "blocks": blocks}
+
 # ── 빌드 ───────────────────────────────────────────────────
 def build():
     import importlib, sys
@@ -538,6 +581,7 @@ def build():
     shutil.copytree(f"{SRC}/admin", f"{OUT}/admin", dirs_exist_ok=True)
 
     MT, DUR, MT_LASTMOD = massage_types()
+    CITY = active_cities()
     written = []
     for lang in LANGS:
         mod = importlib.import_module(f"content_{lang}")
@@ -551,7 +595,7 @@ def build():
             # play_pending 블록은 '안드로이드 아직 안 나왔다'는 안내다. 출시되면 사라져야 한다.
             blocks = [b for b in page["blocks"] if not (PLAY_LIVE and b.get("play_pending"))]
             if name == "services":
-                blocks = blocks + [massage_list_section(lang, MT)]
+                blocks = blocks + [massage_list_section(lang, MT), city_list_section(lang, CITY)]
             body = "".join(render(b, L, lang) for b in blocks)
             path = f"{d}/{'index' if name=='index' else name}.html"
             open(path, "w", encoding="utf-8", newline="\n").write(chrome(lang, name, L, body, page))
@@ -561,6 +605,15 @@ def build():
         for t in MT:
             name = f"massage/{mc.slug(t)}"
             page = massage_page(lang, t, MT, DUR[t])
+            body = "".join(render(b, L, lang) for b in page["blocks"])
+            path = f"{d}/{name}.html"
+            open(path, "w", encoding="utf-8", newline="\n").write(chrome(lang, name, L, body, page))
+            written.append(path)
+        # 도시별 페이지 — 승인·활성 마사지사가 MIN_ACTIVE 명 이상인 도시만
+        os.makedirs(f"{d}/city", exist_ok=True)
+        for c in CITY:
+            name = f"city/{cc.SLUG[c]}"
+            page = city_page(lang, c, CITY, MT)
             body = "".join(render(b, L, lang) for b in page["blocks"])
             path = f"{d}/{name}.html"
             open(path, "w", encoding="utf-8", newline="\n").write(chrome(lang, name, L, body, page))
@@ -585,6 +638,15 @@ def build():
             us += (f'  <url>\n    <loc>{SITE}{url(lang,name)}</loc>{alts}\n'
                    f'    <lastmod>{MT_LASTMOD[t]}</lastmod>\n'
                    f'    <changefreq>monthly</changefreq>\n    <priority>0.7</priority>\n  </url>\n')
+    for c in CITY:
+        name = f"city/{cc.SLUG[c]}"
+        for lang in LANGS:
+            alts = "".join(
+                f'\n      <xhtml:link rel="alternate" hreflang="{l}" href="{SITE}{url(l,name)}"/>'
+                for l in LANGS)
+            us += (f'  <url>\n    <loc>{SITE}{url(lang,name)}</loc>{alts}\n'
+                   f'    <lastmod>{cc.UPDATED}</lastmod>\n'
+                   f'    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n')
     open(f"{OUT}/sitemap.xml", "w", encoding="utf-8", newline="\n").write(
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n'
