@@ -14,6 +14,9 @@ BEGIN
   IF uid IS NULL THEN
     RAISE EXCEPTION 'not authenticated';
   END IF;
+  -- 마사지사·업체 계정이면 목록에서 먼저 내린다. 안 내리면 주인 없는 마사지사가 계속 보여서
+  -- 손님 예약이 아무도 못 받고 시간 경과로 취소된다 (Thanh hà 8건, 2026-11-13 확인)
+  UPDATE public.providers SET is_active = false WHERE profile_id = uid OR owner_id = uid;
   DELETE FROM public.profiles WHERE id = uid;
   DELETE FROM auth.users WHERE id = uid;
 END;
