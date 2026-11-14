@@ -4,6 +4,7 @@ import os, re, shutil, html as H
 from social import SOCIAL
 import massage_content as mc
 import city_content as cc
+import guide_content as gc
 
 SITE = "https://massaviet.com"
 OUT  = "site"
@@ -566,6 +567,25 @@ def city_page(lang, c, cities, types):
         blocks.append({"type": "section", "h2": esc(C["h_cities"]), "blocks": [{"type": "links", "items": others}]})
     return {"title": C["title"].format(name=x["name"]), "desc": C["desc"].format(name=x["name"]), "blocks": blocks}
 
+def guide_list_section(lang):
+    """홈·서비스·이용 안내 페이지 아래에 붙는 이용 팁 글 링크."""
+    G = gc.LABELS[lang]
+    return {"type": "section", "soft": True, "kicker": G["list_kicker"], "h2": G["list_h2"], "lead": G["list_lead"],
+            "blocks": [{"type": "links", "items": [(gc.ARTICLES[lang][a]["name"], url(lang, f"tips/{a}")) for a in gc.ORDER]}]}
+
+def tip_page(lang, a):
+    G, x = gc.LABELS[lang], gc.ARTICLES[lang][a]
+    others = [(gc.ARTICLES[lang][o]["name"], url(lang, f"tips/{o}")) for o in gc.ORDER if o != a]
+    blocks = [{"type": "section", "kicker": G["kicker"], "h2": esc(x["name"]), "lead": x["lead"]}]
+    for i, sec in enumerate(x["secs"]):
+        inner = [{"type": "ul", "items": sec["items"]}] if sec.get("items") else []
+        blocks.append({"type": "section", "soft": i % 2 == 0, "h2": esc(sec["h2"]),
+                       "body": [esc(t) for t in sec["body"]], "blocks": inner})
+    blocks.append({"type": "section", "h2": esc(G["others"]),
+                   "blocks": [{"type": "links", "items": others}, {"type": "note", "text": G["disclaimer"]},
+                              {"type": "cta", "btns": [(G["cta_app"], url(lang, "download")), (G["cta_guide"], url(lang, "guide"))]}]})
+    return {"title": G["title"].format(name=x["name"]), "desc": x["desc"], "blocks": blocks}
+
 # ── 빌드 ───────────────────────────────────────────────────
 def build():
     import importlib, sys
@@ -596,6 +616,8 @@ def build():
             blocks = [b for b in page["blocks"] if not (PLAY_LIVE and b.get("play_pending"))]
             if name == "services":
                 blocks = blocks + [massage_list_section(lang, MT), city_list_section(lang, CITY)]
+            if name in ("index", "services", "guide"):
+                blocks = blocks + [guide_list_section(lang)]
             body = "".join(render(b, L, lang) for b in blocks)
             path = f"{d}/{'index' if name=='index' else name}.html"
             open(path, "w", encoding="utf-8", newline="\n").write(chrome(lang, name, L, body, page))
@@ -614,6 +636,15 @@ def build():
         for c in CITY:
             name = f"city/{cc.SLUG[c]}"
             page = city_page(lang, c, CITY, MT)
+            body = "".join(render(b, L, lang) for b in page["blocks"])
+            path = f"{d}/{name}.html"
+            open(path, "w", encoding="utf-8", newline="\n").write(chrome(lang, name, L, body, page))
+            written.append(path)
+        # 이용 팁 글 — 읽을거리 (2026-11-14, 애드센스 반려 대응)
+        os.makedirs(f"{d}/tips", exist_ok=True)
+        for a in gc.ORDER:
+            name = f"tips/{a}"
+            page = tip_page(lang, a)
             body = "".join(render(b, L, lang) for b in page["blocks"])
             path = f"{d}/{name}.html"
             open(path, "w", encoding="utf-8", newline="\n").write(chrome(lang, name, L, body, page))
@@ -647,6 +678,15 @@ def build():
             us += (f'  <url>\n    <loc>{SITE}{url(lang,name)}</loc>{alts}\n'
                    f'    <lastmod>{cc.UPDATED}</lastmod>\n'
                    f'    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n')
+    for a in gc.ORDER:
+        name = f"tips/{a}"
+        for lang in LANGS:
+            alts = "".join(
+                f'\n      <xhtml:link rel="alternate" hreflang="{l}" href="{SITE}{url(l,name)}"/>'
+                for l in LANGS)
+            us += (f'  <url>\n    <loc>{SITE}{url(lang,name)}</loc>{alts}\n'
+                   f'    <lastmod>{gc.UPDATED}</lastmod>\n'
+                   f'    <changefreq>monthly</changefreq>\n    <priority>0.7</priority>\n  </url>\n')
     open(f"{OUT}/sitemap.xml", "w", encoding="utf-8", newline="\n").write(
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n'
