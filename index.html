@@ -1133,6 +1133,12 @@ function render() {
   renderFlow();
   renderLangBar();
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  // 앱 광고 — 손님의 예약 내역·계정 화면에서만 배너 (2026-11-15). 예약 흐름과 마사지사 계정에는 띄우지 않는다
+  const N = window.MassaNative;
+  if (N && N.adScreen) {
+    const want = cur() === 'myBookings' || cur() === 'account';
+    (want ? myProviderIds() : Promise.resolve([])).then(p => N.adScreen(want && !(p && p.length))).catch(() => {});
+  }
 }
 
 function go(id) {

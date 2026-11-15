@@ -4,6 +4,7 @@ import { PushNotifications } from "@capacitor/push-notifications";
 import { Geolocation } from "@capacitor/geolocation";
 import { Browser } from "@capacitor/browser";
 import { App } from "@capacitor/app";
+import { AdMob, BannerAdPosition, BannerAdSize, BannerAdPluginEvents } from "@capacitor-community/admob";
 
 // iOS WKWebView는 navigator.geolocation 을 기본 제공하지 않는다.
 // index.html은 navigator.geolocation 만 쓰므로, 플러그인으로 같은 모양의 API를 덮어써서 코드 변경 없이 동작시킨다.
@@ -134,6 +135,58 @@ async function checkPush() {
   } catch (e) { return 'unknown'; }
 }
 
+// ── AdMob 배너 (2026-11-15) ─────────────────────────────────────────
+// 예약 수수료가 본 수익이라 예약 흐름(탐색·코스·시간·결제)에는 광고를 넣지 않는다.
+// index.html 이 화면을 바꿀 때 adScreen(true/false) 를 부른다 — 손님의 예약 내역·계정 화면만 true.
+// 배너는 웹 화면 위에 덮이므로 그 높이만큼 .phone 을 줄여 아래 탭이 가려지지 않게 한다.
+const BANNER = { ios: "ca-app-pub-4286786332257064/8158628282", android: "ca-app-pub-4286786332257064/4410954964" };
+let adReady = null, bannerOn = false, bannerWant = false, bannerH = 0;
+function fitPhone(h) {
+  const ph = document.querySelector(".phone");
+  if (ph) ph.style.height = h ? "calc(100dvh - " + h + "px)" : "";
+}
+function adInit() {
+  if (adReady) return adReady;
+  adReady = (async () => {
+    // iOS 추적 허용(ATT) 창은 앱 시작이 아니라 광고가 처음 필요할 때 한 번만 묻는다
+    if (Capacitor.getPlatform() === "ios") {
+      try {
+        const ts = await AdMob.trackingAuthorizationStatus();
+        if (ts.status === "notDetermined") await AdMob.requestTrackingAuthorization();
+      } catch (e) {}
+    }
+    try {
+      const ci = await AdMob.requestConsentInfo();
+      if (ci.isConsentFormAvailable && ci.status === "REQUIRED") await AdMob.showConsentForm();
+    } catch (e) {}
+    await AdMob.initialize({});
+    AdMob.addListener(BannerAdPluginEvents.SizeChanged, (info) => {
+      bannerH = (info && info.height) || 0;
+      if (bannerWant) fitPhone(bannerH);
+    });
+  })();
+  return adReady;
+}
+async function adScreen(show) {
+  bannerWant = !!show;
+  const adId = BANNER[Capacitor.getPlatform()];
+  if (!adId) return;
+  try {
+    if (bannerWant) {
+      await adInit();
+      if (!bannerWant) return;
+      if (bannerOn) { await AdMob.resumeBanner(); fitPhone(bannerH); }
+      else {
+        await AdMob.showBanner({ adId, adSize: BannerAdSize.ADAPTIVE_BANNER, position: BannerAdPosition.BOTTOM_CENTER, margin: 0 });
+        bannerOn = true;
+      }
+    } else if (bannerOn) {
+      fitPhone(0);
+      await AdMob.hideBanner();
+    }
+  } catch (e) { console.warn("배너 실패", e); }
+}
+
 window.IS_NATIVE_APP = Capacitor.isNativePlatform();
 window.openExternal = openExternal;
 window.MassaNative = {
@@ -143,4 +196,5 @@ window.MassaNative = {
   registerPush,
   checkPush,
   openExternal,
+  adScreen,
 };

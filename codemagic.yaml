@@ -111,6 +111,17 @@ workflows:
           /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PLIST" || true
           echo "----- Info.plist 확인 -----"
           /usr/libexec/PlistBuddy -c "Print :NSLocationWhenInUseUsageDescription" "$PLIST"
+      # AdMob (2026-11-15). 손님의 예약 내역·계정 화면 배너. 앱 ID 가 없으면 SDK 가 시작하자마자 앱을 죽인다.
+      # 추적 허용(ATT) 창은 광고가 처음 필요할 때 native.js 가 묻는다.
+      - name: Info.plist AdMob 설정 (앱 ID·추적 문구·SKAdNetwork)
+        script: |
+          PLIST=ios/App/App/Info.plist
+          /usr/libexec/PlistBuddy -c "Add :GADApplicationIdentifier string ca-app-pub-4286786332257064~1868552104" "$PLIST" || true
+          /usr/libexec/PlistBuddy -c "Add :NSUserTrackingUsageDescription string '허용하면 관심에 더 맞는 광고가 보입니다. 허용하지 않아도 앱은 그대로 쓸 수 있습니다.'" "$PLIST" || true
+          /usr/libexec/PlistBuddy -c "Add :SKAdNetworkItems array" "$PLIST" || true
+          /usr/libexec/PlistBuddy -c "Add :SKAdNetworkItems:0 dict" "$PLIST" || true
+          /usr/libexec/PlistBuddy -c "Add :SKAdNetworkItems:0:SKAdNetworkIdentifier string cstr6suwn9.skadnetwork" "$PLIST" || true
+          /usr/libexec/PlistBuddy -c "Print :GADApplicationIdentifier" "$PLIST" | grep -q 1868552104 || { echo "★ AdMob 앱 ID 넣기 실패 - 중단"; exit 1; }
       # 앱은 5개 언어를 쓰는데 번들이 영어 하나만 선언해서 App Store 제품 페이지에
       # '언어: 영어' 로만 떴다. 실제로 지원하는 언어를 선언해 준다.
       - name: 지원 언어 선언 (ko·vi·en·ja·zh)
@@ -390,6 +401,23 @@ workflows:
           PY
           grep -q 'ACCESS_FINE_LOCATION' "$MF" && grep -q 'ACCESS_COARSE_LOCATION' "$MF" || { echo "★ 위치 권한 추가 실패 - 중단"; exit 1; }
           grep 'LOCATION' "$MF"
+      # AdMob (2026-11-15). 앱 ID 메타데이터가 없으면 SDK 초기화에서 앱이 죽는다.
+      - name: AdMob 앱 ID 넣기
+        script: |
+          MF=android/app/src/main/AndroidManifest.xml
+          python3 - "$MF" <<'PY'
+          import sys
+          p = sys.argv[1]
+          s = open(p, encoding='utf-8').read()
+          if 'com.google.android.gms.ads.APPLICATION_ID' not in s:
+              i = s.find('</application>')
+              if i < 0:
+                  print('★ </application> 를 못 찾았다'); raise SystemExit(1)
+              s = s[:i] + ('    <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID"\n'
+                           '            android:value="ca-app-pub-4286786332257064~9116486730" />\n    ') + s[i:]
+              open(p, 'w', encoding='utf-8').write(s)
+          PY
+          grep -q '9116486730' "$MF" || { echo "★ AdMob 앱 ID 넣기 실패 - 중단"; exit 1; }
       - name: Firebase 설정 넣기
         script: |
           test -f ../google-services.json || { echo "★ google-services.json 이 없다 - 중단"; exit 1; }
