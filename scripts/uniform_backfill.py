@@ -18,7 +18,7 @@ def psql(sql):
 
 
 rows = psql("select id, photo_urls[1] from public.providers "
-            "where kind = 'masseur' and photo_urls[1] is not null and photo_urls[1] not like '%\\_uniform.png' order by created_at;")
+            "where kind = 'masseur' and photo_urls[1] is not null and photo_urls[1] not like '%\\_uniform.png%' order by created_at;")  # 끝의 ?v= 도 허용
 print("대상", len(rows))
 done = 0
 for pid, url in rows:
