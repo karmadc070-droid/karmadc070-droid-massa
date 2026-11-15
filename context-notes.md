@@ -2186,3 +2186,7 @@ dry-run(10/31 12:40 KST 운영 SELECT): 오늘 밤 00시(하노이) 자동 취�
 - 요약 카드 4개(유입·예약·매칭율·수수료)는 탭의 현재 한 칸(오늘·이번 주·이번 달·올해)을 바로 앞 칸과 비교한다. 사용자가 일간 탭에서 14일 합계를 오늘 숫자로 읽은 일이 계기.
 - 작은 그래프·수익 차트·유입 차트는 기간 흐름(14일/12주/12개월/5년) 그대로, 매칭 도넛과 수익 설명 문구는 기간 합계(d.sum).
 - 완료 수는 complete_stale_bookings 가 하노이 00시에 수락된 지난 예약을 자동 완료한 것이 포함됨(실제 시술 확인 아님).
+
+## 2026-11-15 스토어 설치 수 연동
+- store_installs(day, store, installs) 표. Play: /root/play/play_installs.py (05:40, 통계 버킷 overview CSV 의 Daily User Installs, 서비스 계정 emoi-217@emoi-7a2be, 키 /root/play/sa.json). iOS: /root/play/apple_installs.py (05:45, App Store Connect 판매 보고서 일별 SUMMARY, massa Apple ID 6804698319, 제품 유형 1/1F/1T 첫 다운로드만, 키 massa-installs 84N3CXLQGH 판매 및 보고 권한, /root/play/apple.p8).
+- 지표 유입 카드의 신규 기기를 스토어 설치(Play+iOS)로 교체, 스토어별 집계 날짜를 같이 표시. Play 는 약 5~6일, iOS 는 약 2일 늦다. iOS 는 10월 1일부터 백필.
