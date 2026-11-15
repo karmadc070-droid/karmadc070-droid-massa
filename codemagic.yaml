@@ -416,8 +416,15 @@ workflows:
               s = s[:i] + ('    <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID"\n'
                            '            android:value="ca-app-pub-4286786332257064~9116486730" />\n    ') + s[i:]
               open(p, 'w', encoding='utf-8').write(s)
+          # 광고 ID 권한. 병합에 안 들어와 Play 가 "광고 ID 선언과 매니페스트 불일치"로 1.0.27 출시를 막았다
+          s = open(p, encoding='utf-8').read()
+          tag = 'com.google.android.gms.permission.AD_ID'
+          if tag not in s:
+              s = s.replace('<application', '<uses-permission android:name="%s" />\n    <application' % tag, 1)
+              open(p, 'w', encoding='utf-8').write(s)
           PY
           grep -q '9116486730' "$MF" || { echo "★ AdMob 앱 ID 넣기 실패 - 중단"; exit 1; }
+          grep -q 'permission.AD_ID' "$MF" || { echo "★ AD_ID 권한 넣기 실패 - 중단"; exit 1; }
       - name: Firebase 설정 넣기
         script: |
           test -f ../google-services.json || { echo "★ google-services.json 이 없다 - 중단"; exit 1; }
