@@ -695,6 +695,9 @@ def build():
     # 애드센스 판매자 확인 (2026-10-22, 모아학원과 같은 계정)
     open(f"{OUT}/ads.txt", "w", encoding="utf-8", newline="\n").write(
         "google.com, pub-9553196987277637, DIRECT, f08c47fec0942fa0\n")
+    # AdMob 앱 판매자 확인 (2026-11-15). massa 앱 광고는 emoi·KBizV 와 같은 AdMob 계정이다
+    open(f"{OUT}/app-ads.txt", "w", encoding="utf-8", newline="\n").write(
+        "google.com, pub-4286786332257064, DIRECT, f08c47fec0942fa0\n")
 
     open(f"{OUT}/robots.txt", "w", encoding="utf-8", newline="\n").write(
         "# massaviet.com — 소개 사이트는 전부 열고 사이트맵 위치를 알린다\n"
