@@ -632,16 +632,20 @@ function donut(parts, total, midTop, midBot) {
 
 // ── 화면 채우기 ──
 function render(d) {
-  const S = d.series || [], s = d.sum || {}, p = d.prev || {}, t = d.today || {}, now = d.now || {};
+  const S = d.series || [], t = d.today || {}, now = d.now || {};
+  // 요약 카드는 탭의 '지금 한 칸'(오늘·이번 주·이번 달·올해)을 바로 앞 칸과 비교한다 (2026-11-15).
+  // 기간 전체 합계를 쓰면 '일간' 탭에서 14일치가 보여 오늘 숫자로 오해된다. 합계(d.sum)는 아래 수익 설명·매칭 도넛에만 쓴다.
+  const s = S[S.length - 1] || {}, p = S[S.length - 2] || {}, tot = d.sum || {};
   // 등급이 섞이면 "거래액 × 요율" 은 틀린다. DB 가 예약별 요율로 더해 준 값을 쓴다.
-  const rev = Number(s.fee || 0), prevRev = Number(p.fee || 0);
+  const rev = Number(s.fee || 0), prevRev = Number(p.fee || 0), totRev = Number(tot.fee || 0);
   const tiers = d.fee_tiers || {};
   const tierTxt = ['vip','shop','freelancer'].filter(k => tiers[k] != null)
     .map(k => Math.round(tiers[k] * 100) + '%').join(' · ') || '등급별';
   const label = { day:'최근 14일', week:'최근 12주', month:'최근 12개월', year:'최근 5년' }[d.bucket];
+  const cur = { day:['오늘','어제'], week:['이번 주','지난주'], month:['이번 달','지난달'], year:['올해','작년'] }[d.bucket];
 
   $('range').textContent =
-    `${label} · ${d.from} 부터 · 직전 같은 길이(${d.prev_from} 부터)와 비교 · 하노이 시간 기준`;
+    `요약 카드 ${cur[0]}(${s.k || '-'}) · ${cur[1]}와 비교 · 그래프 ${label}(${d.from} 부터) · 하노이 시간 기준`;
 
   // 오늘
   $('today').innerHTML =
@@ -691,21 +695,21 @@ function render(d) {
   // 수익 — 수수료는 거래액의 정확히 같은 비율이라 선을 하나 더 그으면 모양이 겹칠 뿐이다.
   // 그래서 그래프는 거래액 하나만 그리고, 수수료는 숫자로 적는다.
   $('money-note').innerHTML =
-    `완료된 예약의 거래액입니다. 이 기간 거래액 <b>${esc(vnd(s.gmv))}</b> 중 `
-    + `수수료 <b style="color:var(--amber)">${esc(vnd(rev))}</b>. `
+    `완료된 예약의 거래액입니다. ${esc(label)} 거래액 <b>${esc(vnd(tot.gmv))}</b> 중 `
+    + `수수료 <b style="color:var(--amber)">${esc(vnd(totRev))}</b>. `
     + `요율은 마사지사 등급에 따라 ${esc(tierTxt)} 이고, 예약이 들어온 시점의 요율로 계산됩니다.`;
   $('c-money').innerHTML = area(S,
     [{ key:'gmv', name:'거래액', color:C.amber, fill:true }], short);
 
-  // 매칭 도넛
-  const waiting = s.waiting || 0, canc = s.cancelled || 0, ns = s.no_show || 0;
-  const settled = (s.matched || 0) - waiting;
+  // 매칭 도넛 — 비율이라 하루치로는 비어 보인다. 그래프와 같이 기간 전체(tot)로 그린다.
+  const waiting = tot.waiting || 0, canc = tot.cancelled || 0, ns = tot.no_show || 0;
+  const settled = (tot.matched || 0) - waiting;
   $('c-ring').innerHTML = donut(
     [{ n:'성사', v:Math.max(settled, 0), c:C.good },
      { n:'대기 중', v:waiting, c:C.sand },
      { n:'취소', v:canc, c:C.bad },
      { n:'노쇼', v:ns, c:C.clay }],
-    s.bookings, rate(s.matched, s.bookings), '매칭율');
+    tot.bookings, rate(tot.matched, tot.bookings), '매칭율');
 
   // 유입 — 그래프는 손님·마사지사·로그인 전으로 쌓는다. 셋을 더하면 전체 방문이다.
   $('c-traffic').innerHTML = bars(S,
