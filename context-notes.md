@@ -2202,3 +2202,8 @@ dry-run(10/31 12:40 KST 운영 SELECT): 오늘 밤 00시(하노이) 자동 취�
 - 원인: uniform-transform(Gemini gemini-2.5-flash-image) 호출이 402 RESOURCE_EXHAUSTED "prepayment credits are depleted". 10/30 이후 변환 성공 0건 — 마사지사 43명 중 24명이 원본 사진 그대로(가입 화면은 실패하면 원본 유지).
 - 조치: scripts/uniform_backfill.py (VPS /root/massa/uniform_backfill.py, 크론 매시 17분, 로그 /var/log/massa_uniform.log). 첫 사진이 _uniform.png 가 아닌 마사지사를 찾아 함수로 변환 → photo_urls[1](과 같으면 photo_url)을 <원본>_uniform.png 로 교체. 402 를 받으면 바로 멈춤. 원본 파일은 저장소에 남는다.
 - 남은 일: 사용자가 AI Studio 에서 Gemini 선불 크레딧 충전(24장 ≈ $1). 충전 뒤 다음 정시 17분에 자동으로 바뀐다.
+- (19:05) 사용자 지시로 유니폼 로고 글자를 "mㅏssㅏ" → "massa" 로 변경. VPS uniform-transform/index.ts 만 해당(앱 index.html·admin.html 의 UNIFORM_PROMPT 는 이미 "massa"). 백업 index.ts.bak-<시각>, massa-edge-functions 재시작 후 호출 정상(없는 파일 400). 이미 바뀐 19명 사진은 "mㅏssㅏ" 로고 그대로. Higgsfield 는 무료 플랜·크레딧 0 이라 대안이 안 됨.
+- (11/15 밤) Gemini 웹(Pro 구독) 수작업 파이프라인으로 미변환 24장 전부 변환 완료. 프롬프트 핵심: "Clothing swap only… keep the head exactly… do not add glasses or jewelry" + 얼굴 없는 유니폼 참조(ref_uniform.png). 결과는 얼굴 비교 이미지로 한 장씩 확인 후 uniform_put.py 로 교체.
+- 기존 19장 로고 통일: r12·r18 은 이미 "massa" 라 건드리지 않음. 나머지 17장 중 10장은 Gemini 2단계(글자 지우기 → "massa" 넣기), 7장은 Gemini 가 글자를 못 지워서 scripts/fixlogo.py(로컬: 글자 영역 inpaint + Georgia "massa" 재작성, 기울기 인자 지원)로 처리.
+- 결과: 마사지사 43명 전원 첫 사진 _uniform.png, 가슴 글자 "massa". 교체 사진은 ?v=<시각> 붙여 캐시 우회.
+- 판단: 사진 원본·작업물(uniform_work/)은 인물 사진이라 git 에 넣지 않는다.
