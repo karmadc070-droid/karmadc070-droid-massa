@@ -5201,3 +5201,14 @@ vi:
 - [ ] 새 예약 요청이 들어오면 관리자 폰으로 푸시 (notifications 에 admin 줄 추가, 가입 알림과 같은 방식)
 - [ ] 요청 후 10분 안에 아무도 수락하지 않으면 한 번 더 관리자 푸시
 - 배경: 최근 14일 요청 41건 중 성사 7건, 나머지는 마사지사 미수락으로 자정 자동 취소. 11/12 이후 요청이 끊김
+
+## 2026-11-15 앱 하단 배너 광고 (1.0.27)
+- [x] native.js 배너(adScreen) + index.html 예약 내역·계정 탭(손님만) 연결
+- [x] codemagic.yaml iOS Info.plist(GADApplicationIdentifier·ATT·SKAdNetwork)·Android meta-data
+- [x] app-ads.txt 배포
+- [x] Play 광고·광고 ID·데이터 보안 신고 저장
+- [x] Apple 개인정보 라벨 갱신·게시
+- [x] Codemagic 빌드 iOS 1.0.27(69)·Android 1.0.27 성공
+- [ ] iOS 1.0.27 심사 제출 (사용자 확인)
+- [ ] Play 게시 개요에서 심사 보내기 (사용자 확인)
+- [ ] AdMob massa 앱 승인 확인, 실기기 배너 확인

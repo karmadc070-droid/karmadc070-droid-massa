@@ -2190,3 +2190,10 @@ dry-run(10/31 12:40 KST 운영 SELECT): 오늘 밤 00시(하노이) 자동 취�
 ## 2026-11-15 스토어 설치 수 연동
 - store_installs(day, store, installs) 표. Play: /root/play/play_installs.py (05:40, 통계 버킷 overview CSV 의 Daily User Installs, 서비스 계정 emoi-217@emoi-7a2be, 키 /root/play/sa.json). iOS: /root/play/apple_installs.py (05:45, App Store Connect 판매 보고서 일별 SUMMARY, massa Apple ID 6804698319, 제품 유형 1/1F/1T 첫 다운로드만, 키 massa-installs 84N3CXLQGH 판매 및 보고 권한, /root/play/apple.p8).
 - 지표 유입 카드의 신규 기기를 스토어 설치(Play+iOS)로 교체, 스토어별 집계 날짜를 같이 표시. Play 는 약 5~6일, iOS 는 약 2일 늦다. iOS 는 10월 1일부터 백필.
+
+## 2026-11-15 앱 하단 배너 광고 (1.0.27)
+- 노출 위치: 손님의 예약 내역·계정 탭만. 예약 흐름과 관리사(provider) 계정에는 없음. index.html render() 에서 MassaNative.adScreen(true/false).
+- @capacitor-community/admob ^8.3.0. iOS 는 첫 노출 때 ATT → UMP 동의 → initialize. 배너 높이만큼 .phone 높이를 줄임(fitPhone).
+- AdMob 앱: Android ~9116486730 / iOS ~1868552104, 배너 massa_bookings_banner(/4410954964)·_ios(/8158628282). app-ads.txt 는 massaviet.com 에 배포. AdMob 앱 승인은 app-ads.txt 확인 대기.
+- 스토어 신고: Play 광고 예·광고 ID 예(광고 또는 마케팅)·데이터 보안 기기 ID 수집+공유. Apple 개인정보 라벨에 기기 ID·광고 데이터·제품 상호 작용·대략적인 위치(타사 광고, 신원 미연결, 추적 예), 충돌·실적 데이터(분석, 미연결, 추적 아니요) 추가·게시.
+- Codemagic 빌드 iOS 1.0.27(69) TestFlight 제출 준비 완료, Android 1.0.27 프로덕션 초안. 심사 제출은 사용자 확인 후.
