@@ -674,7 +674,10 @@ function render(d) {
       //   '마사지사 22' 를 마사지사 22명으로 읽어서 명단의 15명과 안 맞는다는 신고가 있었다.
       //   한 사람이 여러 번 들어오면 늘어난다. 단위를 붙여 사람 수와 구분한다.
       foot:`방문 — 손님 ${num(s.v_cust)}회 · 마사지사 ${num(s.v_prov)}회 · 로그인 전 ${num(s.v_anon)}회`
-         + ` · 신규 기기 ${num(s.newbies)}대` },
+         // 신규 기기(첫 실행)는 웹 방문·재설치까지 세서 설치 수가 아니다. 스토어 통계의 설치 수를 쓴다 (2026-11-15).
+         // 스토어 집계는 며칠 늦어서 어느 날까지 들어왔는지 같이 적는다. 애플은 키 연결 후 store_installs 에 들어온다.
+         + ` · 스토어 설치 ${num(s.installs)}건`
+         + ((d.installs_through || {}).play ? ` (Play ${String(d.installs_through.play).slice(5).replace('-', '/')}까지)` : '') },
     { lab:'예약', val:num(s.bookings), now:s.bookings, prev:p.bookings, spark:col('bookings'), c:C.cool,
       foot:`성사 ${num(s.matched)} · 완료 ${num(s.done)}` },
     { lab:'매칭율', val:rate(s.matched, s.bookings), point:true,
