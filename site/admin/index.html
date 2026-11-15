@@ -642,10 +642,10 @@ function render(d) {
   const tierTxt = ['vip','shop','freelancer'].filter(k => tiers[k] != null)
     .map(k => Math.round(tiers[k] * 100) + '%').join(' · ') || '등급별';
   const label = { day:'최근 14일', week:'최근 12주', month:'최근 12개월', year:'최근 5년' }[d.bucket];
-  const cur = { day:['오늘','어제'], week:['이번 주','지난주'], month:['이번 달','지난달'], year:['올해','작년'] }[d.bucket];
+  const cur = { day:['오늘','어제와'], week:['이번 주','지난주와'], month:['이번 달','지난달과'], year:['올해','작년과'] }[d.bucket];
 
   $('range').textContent =
-    `요약 카드 ${cur[0]}(${s.k || '-'}) · ${cur[1]}와 비교 · 그래프 ${label}(${d.from} 부터) · 하노이 시간 기준`;
+    `요약 카드 ${cur[0]}(${s.k || '-'}) · ${cur[1]} 비교 · 그래프 ${label}(${d.from} 부터) · 하노이 시간 기준`;
 
   // 오늘
   $('today').innerHTML =
