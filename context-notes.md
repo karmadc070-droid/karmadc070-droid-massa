@@ -2197,3 +2197,8 @@ dry-run(10/31 12:40 KST 운영 SELECT): 오늘 밤 00시(하노이) 자동 취�
 - AdMob 앱: Android ~9116486730 / iOS ~1868552104, 배너 massa_bookings_banner(/4410954964)·_ios(/8158628282). app-ads.txt 는 massaviet.com 에 배포. AdMob 앱 승인은 app-ads.txt 확인 대기.
 - 스토어 신고: Play 광고 예·광고 ID 예(광고 또는 마케팅)·데이터 보안 기기 ID 수집+공유. Apple 개인정보 라벨에 기기 ID·광고 데이터·제품 상호 작용·대략적인 위치(타사 광고, 신원 미연결, 추적 예), 충돌·실적 데이터(분석, 미연결, 추적 아니요) 추가·게시.
 - Codemagic 빌드 iOS 1.0.27(69) TestFlight 제출 준비 완료, Android 1.0.27 프로덕션 초안. 심사 제출은 사용자 확인 후.
+
+## 2026-11-15 마사지사 첫 사진 AI 유니폼 변환 — Gemini 크레딧 소진
+- 원인: uniform-transform(Gemini gemini-2.5-flash-image) 호출이 402 RESOURCE_EXHAUSTED "prepayment credits are depleted". 10/30 이후 변환 성공 0건 — 마사지사 43명 중 24명이 원본 사진 그대로(가입 화면은 실패하면 원본 유지).
+- 조치: scripts/uniform_backfill.py (VPS /root/massa/uniform_backfill.py, 크론 매시 17분, 로그 /var/log/massa_uniform.log). 첫 사진이 _uniform.png 가 아닌 마사지사를 찾아 함수로 변환 → photo_urls[1](과 같으면 photo_url)을 <원본>_uniform.png 로 교체. 402 를 받으면 바로 멈춤. 원본 파일은 저장소에 남는다.
+- 남은 일: 사용자가 AI Studio 에서 Gemini 선불 크레딧 충전(24장 ≈ $1). 충전 뒤 다음 정시 17분에 자동으로 바뀐다.
