@@ -2207,3 +2207,5 @@ dry-run(10/31 12:40 KST 운영 SELECT): 오늘 밤 00시(하노이) 자동 취�
 - 기존 19장 로고 통일: r12·r18 은 이미 "massa" 라 건드리지 않음. 나머지 17장 중 10장은 Gemini 2단계(글자 지우기 → "massa" 넣기), 7장은 Gemini 가 글자를 못 지워서 scripts/fixlogo.py(로컬: 글자 영역 inpaint + Georgia "massa" 재작성, 기울기 인자 지원)로 처리.
 - 결과: 마사지사 43명 전원 첫 사진 _uniform.png, 가슴 글자 "massa". 교체 사진은 ?v=<시각> 붙여 캐시 우회.
 - 판단: 사진 원본·작업물(uniform_work/)은 인물 사진이라 git 에 넣지 않는다.
+- (11/15 20:55) 사용자 결정: Gemini API 크레딧은 당분간 충전하지 않는다. 신규 마사지사 유니폼 변환은 Gemini 웹(수작업)으로 한다.
+  → VPS 크론 uniform_backfill.py(매시 17분) 주석 처리로 중지(백업 /root/backups/crontab.bak-uniform-*). 되살리려면 해당 줄의 '# OFF ...: ' 접두어만 지우면 된다.
