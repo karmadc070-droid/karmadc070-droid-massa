@@ -5237,4 +5237,5 @@ vi:
 - [x] functions/admin-translate — 관리자만, 파파고→구글. massa .env·override 에 emoi 번역 키 3개 복사, functions 컨테이너 재생성(healthy, 무인증 401)
 - [x] admin.html 왼쪽 아래 '🌐 KO/VI · 번역 켬/끔' 막대. 로컬 브라우저 점검(오류 없음) 후 massaviet.com/admin/console 배포
 - [ ] 사용자: 관리자 로그인 상태에서 번역 켬 → 베트남어 글 옆에 한국어가 붙는지 확인
-- [ ] massa 1.0.28 빌드·제출
+- [x] capacitor/package.json 1.0.28, main push (6a3865f)
+- [ ] massa 1.0.28 빌드·제출 — Codemagic 무료 macOS 분 소진(506/500)으로 402 BILLING_NOT_ENABLED. 사용자 결제 활성화 후 iOS·Android 빌드 다시 걸기
