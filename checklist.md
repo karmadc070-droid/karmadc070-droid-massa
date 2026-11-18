@@ -5222,3 +5222,11 @@ vi:
 - [x] 기존 유니폼 17장 가슴 글자 "massa" 로 통일(r12·r18 은 원래 정상)
 - [x] 유니폼 자동 재시도 크론 중지(웹 변환으로 대체, 11/15)
 - [ ] 신규 가입 마사지사 첫 사진은 웹 파이프라인으로 변환(redo_list 쿼리 대신 'photo_urls[1] not like %_uniform.png%' 로 대상 확인)
+
+## 2026-11-19 마사지사 '갈 수 없어요' (수락 후 취소)
+- [x] sql/provider_cancel.sql — 가드(사유 필수·cancelled_by=provider 강제·마사지사의 cancelled_by 위조 차단), 알림(손님 사유 포함·관리자), 손님 제재 제외
+- [x] 롤백 트랜잭션 시험(사유 없음 거부, customer 위조 → provider, 알림 2건) 후 운영 적용·재실행 '이미 반영됨' 확인
+- [x] index.html 확정·이동 중 카드에 버튼 + cancelIncoming + 번역 4개 언어
+- [x] app.massaviet.com 배포(md5 일치). 이때 미배포였던 ff63571(AdMob 배너, 웹에선 MassaNative 없음 → 무동작)도 함께 나감
+- [ ] 네이티브 앱(iOS·Android)은 index.html 번들이라 새 빌드(1.0.28) 필요 — 사용자 확인 대기
+- [ ] 관리자 화면에 마사지사별 수락 후 취소 횟수 표시(선택)

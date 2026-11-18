@@ -2209,3 +2209,11 @@ dry-run(10/31 12:40 KST 운영 SELECT): 오늘 밤 00시(하노이) 자동 취�
 - 판단: 사진 원본·작업물(uniform_work/)은 인물 사진이라 git 에 넣지 않는다.
 - (11/15 20:55) 사용자 결정: Gemini API 크레딧은 당분간 충전하지 않는다. 신규 마사지사 유니폼 변환은 Gemini 웹(수작업)으로 한다.
   → VPS 크론 uniform_backfill.py(매시 17분) 주석 처리로 중지(백업 /root/backups/crontab.bak-uniform-*). 되살리려면 해당 줄의 '# OFF ...: ' 접두어만 지우면 된다.
+
+## 2026-11-19 마사지사 '갈 수 없어요' (수락 후 취소)
+- 배경: 수락 후 마사지사가 못 오는 경우 버튼이 없어 손님이 대신 취소(MS-261107-7698 "스텝이 못온대요", MS-261109-2352). 그 취소가 손님 임박 취소로 잡힐 수 있었다.
+- 범위: confirmed·on_the_way 만. in_progress(도착 후)는 제외 — 그때는 채팅·관리자로 처리.
+- cancelled_by='provider' 는 서버(가드)가 정한다. 마사지사가 cancelled_by 를 직접 바꾸려 하면 거부(손님에게 제재를 떠넘기는 위조 차단). 기존 거절(requested→cancelled, rejected_at)은 cancelled_by 를 안 쓰므로 영향 없음.
+- 손님 알림 kind 는 기존 'booking_cancelled' 재사용 → send-push TITLE 번역("예약이 취소되었습니다")이 그대로 적용, 본문에 사유가 붙는다. 새 kind 를 만들지 않아 send-push 변경 없음.
+- 관리자에게 'booking_cancelled_by_provider' 알림(대체 마사지사 연결용).
+- 네이티브 앱은 index.html 을 번들(codemagic cp ../index.html www/)하므로 웹 배포만으로는 앱 사용 마사지사에게 버튼이 안 보인다.
