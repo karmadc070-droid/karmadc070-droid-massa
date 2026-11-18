@@ -4838,6 +4838,11 @@ const DICT = {
      'Please give a reason. The customer will not see it.',
      '请填写拒绝理由。客人看不到。', '断る理由を書いてください。お客様には見えません。'],
   '사유를 적어 주세요.': ['Vui lòng ghi lý do.', 'Please give a reason.', '请填写理由。', '理由を書いてください。'],
+  '갈 수 없어요': ['Tôi không đến được', "I can't come", '我去不了', '行けません'],
+  '갈 수 없는 이유를 적어 주세요. 손님에게 그대로 전달됩니다.':
+    ['Vui lòng ghi lý do không đến được. Khách sẽ nhận được nội dung này.',
+     "Please say why you can't come. The customer will receive this message.",
+     '请填写无法前往的理由。客人会收到这段内容。', '行けない理由を書いてください。お客様にそのまま届きます。'],
   '보내지 못했습니다.': ['Không gửi được.', 'Could not send.', '发送失败。', '送れませんでした。'],
   '📍 주소': ['📍 Địa chỉ', '📍 Address', '📍 地址', '📍 住所'],
   '📞 전화': ['📞 Điện thoại', '📞 Phone', '📞 电话', '📞 電話'],
@@ -5494,8 +5499,10 @@ async function loadIncoming() {
       // 수락한 뒤 — 출발하면 손님이 지도에서 오는 길을 본다(앱을 켜 둔 동안만). 도착하면 공유가 끝난다
       : b.status === 'confirmed'
         ? '<button class="chip sel" onclick="departIncoming(\'' + b.id + '\')">🚗 ' + rEsc(T('출발')) + '</button>'
+          + '<button class="chip" onclick="cancelIncoming(\'' + b.id + '\',\'confirmed\')">' + rEsc(T('갈 수 없어요')) + '</button>'
       : b.status === 'on_the_way'
         ? '<button class="chip sel" onclick="arriveIncoming(\'' + b.id + '\')">📍 ' + rEsc(T('도착')) + '</button>'
+          + '<button class="chip" onclick="cancelIncoming(\'' + b.id + '\',\'on_the_way\')">' + rEsc(T('갈 수 없어요')) + '</button>'
           + '<span data-share="' + b.id + '" style="align-self:center;font-size:12.5px;font-weight:700"></span>'
       : b.status === 'in_progress'
         ? '<button class="chip sel" onclick="completeIncoming(\'' + b.id + '\')">✅ ' + rEsc(T('완료')) + '</button>'
@@ -5838,6 +5845,17 @@ window.arriveIncoming = async function (id) {
   if (error || !data || !data.length) { alert(T('바꾸지 못했습니다.') + (error ? ' ' + error.message : '')); loadIncoming(); return; }
   stopSharing();
   loadIncoming();
+};
+// 수락한 뒤 못 가게 됐을 때. 사유는 손님에게 알림으로 간다. cancelled_by·cancelled_at 은 가드가 서버에서 정한다(2026-11-19)
+window.cancelIncoming = async function (id, prev) {
+  const reason = prompt(T('갈 수 없는 이유를 적어 주세요. 손님에게 그대로 전달됩니다.'));
+  if (reason === null) return;
+  if (!reason.trim()) { alert(T('사유를 적어 주세요.')); return; }
+  const { data, error } = await sb.from('bookings').update({ status: 'cancelled', cancel_reason: reason.trim() })
+    .eq('id', id).eq('status', prev).select('id');
+  if (error || !data || !data.length) { alert(T('바꾸지 못했습니다.') + (error ? ' ' + error.message : '')); loadIncoming(); return; }
+  if (SHARE && SHARE.id === id) stopSharing();
+  loadIncoming(); paintIncomingRow(); paintBkTabs();
 };
 // 완료 — 관리자 '완료 처리'와 같은 값(status·completed_at)을 보낸다. completed_at 은 가드가 서버 시각으로 덮어 찍는다.
 // 손님 알림('서비스가 완료되었습니다. 평가를 남겨주세요')은 notify_booking_event 가 보내고, 정산·수수료는 서버가 completed_at 으로 센다.
