@@ -66,8 +66,10 @@ end $$;
 -- 크론(postgres)만 부른다. 앱 사용자는 부를 수 없다.
 revoke all on function public.expire_stale_bookings() from public, anon, authenticated;
 
--- 4) 자동 완료 함수. 마사지사가 수락한 예약 중 '약속 시각 + 서비스 시간'이 하노이 오늘 00:00 이전인 것을 완료로 바꾸고 건수를 돌려준다.
+-- 4) 자동 완료 함수. 마사지사가 수락한 예약 중 '약속 시각 + 서비스 시간 + 1시간'이 지난 것을 완료로 바꾸고 건수를 돌려준다.
 --    앱의 완료 처리와 같이 status='completed', completed_at=now() 만 바꿔 기존 완료 트리거가 그대로 돈다.
+--    2026-11-18 사용자 승인: 자정 한 번 → 매시간(크론 7 * * * *). 마사지사가 도착·완료를 안 눌러 손님 화면이
+--    반나절 '이동 중'에 멈추던 문제(MS-261118-3988). 기준을 '하노이 오늘 00:00 이전'에서 '지금부터 1시간 전'으로 바꿨다.
 create or replace function public.complete_stale_bookings()
 returns integer
 language plpgsql
@@ -75,7 +77,7 @@ security definer
 set search_path to 'public'
 as $$
 declare
-  cut timestamptz := date_trunc('day', now() at time zone 'Asia/Ho_Chi_Minh') at time zone 'Asia/Ho_Chi_Minh';
+  cut timestamptz := now() - interval '1 hour';
   n   integer;
 begin
   update bookings b
