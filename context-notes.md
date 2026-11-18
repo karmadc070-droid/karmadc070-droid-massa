@@ -2217,3 +2217,5 @@ dry-run(10/31 12:40 KST 운영 SELECT): 오늘 밤 00시(하노이) 자동 취�
 - 손님 알림 kind 는 기존 'booking_cancelled' 재사용 → send-push TITLE 번역("예약이 취소되었습니다")이 그대로 적용, 본문에 사유가 붙는다. 새 kind 를 만들지 않아 send-push 변경 없음.
 - 관리자에게 'booking_cancelled_by_provider' 알림(대체 마사지사 연결용).
 - 네이티브 앱은 index.html 을 번들(codemagic cp ../index.html www/)하므로 웹 배포만으로는 앱 사용 마사지사에게 버튼이 안 보인다.
+- 11/19 사용자 지시: 마사지사 사정으로 손님이 대신 취소한 MS-261107-7698·MS-261109-2352 를 cancelled_by='provider' 로 바로잡고 두 손님 제재 카운트 재계산(4→3, 2→1). 원본 행 백업 /root/massa-backups/bookings_2_provider_cancel_*.json
+- 마사지사 제재(apply_provider_penalty)는 거절(rejected_at)만 센다. 수락 후 취소는 현재 마사지사 카운트에 안 들어간다.
