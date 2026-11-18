@@ -2219,3 +2219,10 @@ dry-run(10/31 12:40 KST 운영 SELECT): 오늘 밤 00시(하노이) 자동 취�
 - 네이티브 앱은 index.html 을 번들(codemagic cp ../index.html www/)하므로 웹 배포만으로는 앱 사용 마사지사에게 버튼이 안 보인다.
 - 11/19 사용자 지시: 마사지사 사정으로 손님이 대신 취소한 MS-261107-7698·MS-261109-2352 를 cancelled_by='provider' 로 바로잡고 두 손님 제재 카운트 재계산(4→3, 2→1). 원본 행 백업 /root/massa-backups/bookings_2_provider_cancel_*.json
 - 마사지사 제재(apply_provider_penalty)는 거절(rejected_at)만 센다. 수락 후 취소는 현재 마사지사 카운트에 안 들어간다.
+
+## 2026-11-19 마사지사 제재 · 운영 콘솔 번역
+- 수락 후 취소도 거절과 같은 규칙(30일 5 경고 · 8 노출저하 · 12 정지)으로 센다. 고객 노쇼 처리(no_show_at)는 제외. notify_booking_event 의 provider 분기에서 apply_provider_penalty 를 바로 부른다.
+- 거절 제재는 사실상 꺼져 있었다: 거절 직후 재계산하는 곳이 없고, 매일 refresh_all_provider_penalties 는 reject_count>0 또는 penalty_level>0 인 사람만 돈다 → 처음부터 0인 사람은 영원히 0. 30일 실제 거절: Thanhtruc 9, Khánh Ngọc 5, Jin 3, My 2, Baoanh 1. 켜면 Thanhtruc 노출저하·Khánh Ngọc 경고. 사용자 결정 전까지 그대로 둠(Thanhtruc 은 시험 반영 후 0 으로 복구).
+- 참고: Thanhtruc 11/11 거절 5건은 20초 안에 '.', 'h', 'g' 사유 — 묶음 신청(팬아웃)을 한꺼번에 거절한 것으로 보임. 팬아웃 거절을 제재에 넣을지도 같이 정해야 한다.
+- 번역: Gemini 크레딧 소진(402)이라 emoi 와 같은 파파고→구글 순서. 키는 서버에서 emoi 컨테이너 환경변수를 massa .env 로 복사(값 출력 안 함), 백업 /root/massa-backups/massa.env.bak-*.
+- 콘솔 번역은 화면에 보이는 글만, 4자 이상, 화면 언어가 ko 면 베트남어 성조 글자가 있는 글, vi 면 한글이 있는 글. 결과는 원문 옆 파란 '⟶ 번역'. 같은 글은 탭을 닫을 때까지 다시 요청하지 않는다.

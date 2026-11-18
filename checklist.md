@@ -5230,3 +5230,11 @@ vi:
 - [x] app.massaviet.com 배포(md5 일치). 이때 미배포였던 ff63571(AdMob 배너, 웹에선 MassaNative 없음 → 무동작)도 함께 나감
 - [ ] 네이티브 앱(iOS·Android)은 index.html 번들이라 새 빌드(1.0.28) 필요 — 사용자 확인 대기
 - [ ] 관리자 화면에 마사지사별 수락 후 취소 횟수 표시(선택)
+
+## 2026-11-19 마사지사 제재에 수락 후 취소 포함 · 운영 콘솔 번역
+- [x] sql/provider_cancel_penalty.sql — apply_provider_penalty 가 수락 후 취소(노쇼 제외)도 셈, 취소 즉시 재계산. 운영 적용
+- [x] 발견: 거절 제재가 그동안 한 번도 반영 안 됨(refresh_all 이 reject_count>0 인 사람만 돌아서 전원 0). Thanhtruc 10건 → 2단계 되는 것 확인 후 0으로 되돌림 — 사용자 결정 대기
+- [x] functions/admin-translate — 관리자만, 파파고→구글. massa .env·override 에 emoi 번역 키 3개 복사, functions 컨테이너 재생성(healthy, 무인증 401)
+- [x] admin.html 왼쪽 아래 '🌐 KO/VI · 번역 켬/끔' 막대. 로컬 브라우저 점검(오류 없음) 후 massaviet.com/admin/console 배포
+- [ ] 사용자: 관리자 로그인 상태에서 번역 켬 → 베트남어 글 옆에 한국어가 붙는지 확인
+- [ ] massa 1.0.28 빌드·제출
