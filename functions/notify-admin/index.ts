@@ -123,6 +123,35 @@ Deno.serve(async (req) => {
     return json({ ok: r.ok, sent_to: TO, detail: r });
   }
 
+  // ── massaviet.com/shop 주문 요청 ───────────────────
+  if (action === "shop_order") {
+    const id = String(body.order_id ?? "");
+    if (!id) return json({ error: "order_id 없음" }, 400);
+    const { data: o } = await admin.from("shop_order")
+      .select("items, total_vnd, name, phone, address, note, lang, created_at").eq("id", id).single();
+    if (!o) return json({ error: "주문 없음" }, 404);
+
+    const items = (o.items as { name: string; price: number; qty: number }[]) ?? [];
+    const rows: string[][] = [
+      ["주문자", esc(o.name)],
+      // 메일에서 바로 전화할 수 있어야 한다. 결제가 없어서 전화 확인이 곧 주문 확정이다.
+      ["연락처", `<a href="tel:${esc(o.phone)}" style="color:#1B2B31">${esc(o.phone)}</a>`],
+      ["배송 주소", esc(o.address)],
+      ["합계(참고)", `${won(o.total_vnd as number)} VND`],
+      ["화면 언어", esc(o.lang ?? "-")],
+      ["받은 시각", new Date(o.created_at as string).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })],
+    ];
+    const list = `<div style="max-width:520px;margin:0 auto;font-family:-apple-system,'Malgun Gothic',sans-serif;padding:0 26px 26px">
+      <div style="background:#fff;border:1px solid #E2D8CB;border-radius:12px;padding:18px;font-size:14.5px;color:#1B2B31">
+      ${items.map((i) => `<div style="padding:4px 0">${esc(i.name)} × ${esc(i.qty)} — ${won(i.price)} VND</div>`).join("")}
+      ${o.note ? `<div style="margin-top:10px;color:#5C6A6D;white-space:pre-wrap">${esc(o.note)}</div>` : ""}
+      </div></div>`;
+    // 콘솔에 주문 화면이 아직 없다. 버튼을 달면 눌러도 갈 데가 없으므로 달지 않는다.
+    const r = await send(`[massa shop] 주문 요청 · ${o.name} · ${won(o.total_vnd as number)} VND`,
+      shell("쇼핑몰 주문 요청이 들어왔습니다", rows, false) + list);
+    return json({ ok: r.ok, sent_to: TO, detail: r });
+  }
+
   // ── 하루 한 번 미처리 현황 ───────────────────────────
   if (action === "daily_digest") {
     const { data: pend } = await admin.from("provider_deposit")
