@@ -5244,10 +5244,10 @@ vi:
 
 ## 2026-11-19 massaviet.com/shop 마사지 용품 쇼핑몰 뼈대
 목표: 쇼피·쿠팡처럼 홈(배너·카테고리·상품 목록)·카테고리·상품 상세·장바구니·주문 요청까지 되는 정적 쇼핑몰. 결제는 나중에 붙인다.
-- [ ] site-src/shop/ — index.html(홈·카테고리·검색), product.html(상세), cart.html(장바구니·주문 요청), shop.js, shop.css
-- [ ] site-src/shop/products.json — 카테고리 7개, 상품은 비워 둠(물품이 생기면 Claude 가 넣는다)
-- [ ] build.py 가 site-src/shop 을 site/shop 으로 복사
-- [ ] sql/shop_order.sql — 주문 요청 표(손님은 넣기만, 관리자만 읽기), 분당 10건 제한, 알림 트리거
-- [ ] notify-admin 에 shop_order 분기(관리자 메일)
-- [ ] 로컬에서 모바일·PC 화면, 장바구니→주문 요청 흐름 확인(임시 상품으로)
+- [x] site-src/shop/ — index.html(홈·카테고리·검색), product.html(상세), cart.html(장바구니·주문 요청), shop.js, shop.css
+- [x] site-src/shop/products.json — 카테고리 7개, 상품은 비워 둠(물품이 생기면 Claude 가 넣는다)
+- [x] build.py 가 site-src/shop 을 site/shop 으로 복사
+- [x] sql/shop_order.sql — 주문 요청 표(손님은 넣기만, 관리자만 읽기), 분당 10건 제한, 알림 트리거
+- [x] notify-admin 에 shop_order 분기(관리자 메일)
+- [x] 로컬에서 모바일·PC 화면, 장바구니→주문 요청 흐름 확인(임시 상품으로)
 - [ ] 운영 반영(DB·함수·사이트 배포)은 사용자 승인 후
