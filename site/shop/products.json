@@ -1,5 +1,6 @@
 {
   "categories": [
+    {"id": "set",    "icon": "🎁", "name": {"vi": "Combo tiết kiệm",      "ko": "세트 상품",       "en": "Value sets"}},
     {"id": "oil",    "icon": "💧", "name": {"vi": "Dầu massage",          "ko": "마사지 오일",     "en": "Massage oil"}},
     {"id": "aroma",  "icon": "🌿", "name": {"vi": "Tinh dầu",             "ko": "아로마 오일",     "en": "Essential oils"}},
     {"id": "tool",   "icon": "🪨", "name": {"vi": "Đá nóng & dụng cụ",    "ko": "핫스톤·도구",     "en": "Hot stones & tools"}},
@@ -23,7 +24,15 @@
      "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng.\n\nBộ 3 khăn cotton cỡ 35x75cm, thêu logo massa, mềm và thấm hút tốt. Dùng để quấn tóc, lau tay hoặc kê khi massage."},
     {"id": "bed-sheet", "cat": "linen", "name": "massa Khăn trải giường spa 90x190cm", "price": 139000, "images": ["img/sheet.jpg?v=2"], "stock": true,
      "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng.\n\nKhăn trải giường massage cỡ 90x190cm, sợi microfiber mềm, dễ giặt, thêu logo massa."},
-    {"id": "therapist-kit", "cat": "tool", "name": "massa Bộ dụng cụ cho chuyên viên (Starter Kit)", "price": 616000, "sale": 549000, "images": ["img/kit.jpg?v=2"], "stock": true,
+    {"id": "set-homespa", "cat": "set", "name": "massa Combo Home Spa: Dầu massage 100ml + Tinh dầu 10ml + 3 khăn", "price": 207000, "sale": 189000, "images": ["img/set-homespa.jpg?v=1"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng.\n\nBộ thư giãn tại nhà gồm:\n• 1 chai dầu massage Sả chanh & Gừng 100ml\n• 1 chai tinh dầu sả chanh 10ml\n• 3 khăn spa cotton thêu logo\nMua riêng từng món: 207.000₫."},
+    {"id": "set-oil-duo", "cat": "set", "name": "massa Combo 2 dầu massage 100ml (Sả chanh & Gừng + Oải hương)", "price": 138000, "sale": 125000, "images": ["img/set-oil-duo.jpg?v=1"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng.\n\nBộ 2 chai dầu massage toàn thân để đổi hương theo ngày:\n• 1 chai Sả chanh & Gừng 100ml\n• 1 chai Oải hương 100ml\nMua riêng từng món: 138.000₫."},
+    {"id": "set-aroma", "cat": "set", "name": "massa Combo hương thơm: 2 dầu massage 100ml + Tinh dầu 10ml", "price": 177000, "sale": 159000, "images": ["img/set-aroma.jpg?v=1"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng.\n\nBộ hương thơm thư giãn gồm:\n• 1 chai dầu massage Sả chanh & Gừng 100ml\n• 1 chai dầu massage Oải hương 100ml\n• 1 chai tinh dầu sả chanh 10ml\nMua riêng từng món: 177.000₫."},
+    {"id": "set-hotstone", "cat": "set", "name": "massa Combo đá nóng: 8 viên đá bazan + Dầu massage 100ml + 3 khăn", "price": 417000, "sale": 375000, "images": ["img/set-hotstone.jpg?v=1"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng.\n\nBộ massage đá nóng tại nhà gồm:\n• 8 viên đá nóng bazan kèm túi\n• 1 chai dầu massage Sả chanh & Gừng 100ml\n• 3 khăn spa cotton thêu logo\nMua riêng từng món: 417.000₫."},
+    {"id": "therapist-kit", "cat": "set", "name": "massa Bộ dụng cụ cho chuyên viên (Starter Kit)", "price": 616000, "sale": 549000, "images": ["img/kit.jpg?v=2"], "stock": true,
      "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng.\n\nBộ dụng cụ khởi đầu cho chuyên viên massage tại nhà:\n• 1 chai dầu massage Sả chanh & Gừng 500ml\n• 3 khăn spa cotton thêu logo\n• 1 khăn trải giường 90x190cm\n• 8 viên đá nóng bazan kèm túi\nMua riêng từng món: 616.000₫."}
   ]
 }
