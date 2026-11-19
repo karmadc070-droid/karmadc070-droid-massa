@@ -8,5 +8,22 @@
     {"id": "device", "icon": "🔌", "name": {"vi": "Máy massage",          "ko": "마사지 기기",     "en": "Massage devices"}},
     {"id": "skin",   "icon": "🧴", "name": {"vi": "Chăm sóc da",          "ko": "스킨케어",        "en": "Skin care"}}
   ],
-  "products": []
+  "products": [
+    {"id": "oil-lemongrass-100", "cat": "oil", "name": "massa Dầu massage body Sả chanh & Gừng 100ml", "price": 69000, "images": ["img/oil-lemongrass.jpg"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng.\n\nDầu massage toàn thân hương sả chanh và gừng, giúp tay lướt êm và mang lại cảm giác ấm áp, thư giãn.\n• Dung tích: 100ml, chai thủy tinh nâu có vòi nhấn\n• Cách dùng: lấy một lượng vừa đủ, xoa đều lên da và massage nhẹ nhàng\n• Chỉ dùng ngoài da, tránh tiếp xúc với mắt"},
+    {"id": "oil-lavender-100", "cat": "oil", "name": "massa Dầu massage body Oải hương 100ml", "price": 69000, "images": ["img/oil-lavender.jpg"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng.\n\nDầu massage toàn thân hương oải hương dịu nhẹ, phù hợp để thư giãn buổi tối.\n• Dung tích: 100ml, chai thủy tinh nâu có vòi nhấn\n• Cách dùng: lấy một lượng vừa đủ, xoa đều lên da và massage nhẹ nhàng\n• Chỉ dùng ngoài da, tránh tiếp xúc với mắt"},
+    {"id": "oil-lemongrass-500", "cat": "oil", "name": "massa Dầu massage body Sả chanh & Gừng 500ml (Spa size)", "price": 129000, "images": ["img/oil-500.jpg"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng.\n\nChai lớn dành cho chuyên viên massage và spa, dùng được nhiều buổi.\n• Dung tích: 500ml, có vòi nhấn\n• Chỉ dùng ngoài da, tránh tiếp xúc với mắt"},
+    {"id": "aroma-lemongrass-10", "cat": "aroma", "name": "massa Tinh dầu sả chanh 10ml", "price": 39000, "images": ["img/aroma-10.jpg"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng.\n\nTinh dầu sả chanh dùng để xông phòng hoặc pha vào dầu nền khi massage.\n• Dung tích: 10ml, chai thủy tinh nâu có nắp nhỏ giọt\n• Không dùng trực tiếp lên da khi chưa pha loãng"},
+    {"id": "hot-stone-8", "cat": "tool", "name": "massa Bộ đá nóng bazan 8 viên kèm túi", "price": 249000, "images": ["img/stones.jpg"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng.\n\nBộ 8 viên đá bazan giữ nhiệt dùng cho massage đá nóng, kèm túi vải đựng in logo massa.\n• Làm nóng đá bằng nước ấm, kiểm tra nhiệt độ trên tay trước khi dùng"},
+    {"id": "towel-3", "cat": "linen", "name": "massa Bộ 3 khăn spa cotton thêu logo", "price": 99000, "images": ["img/towel.jpg"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng.\n\nBộ 3 khăn cotton cỡ 35x75cm, thêu logo massa, mềm và thấm hút tốt. Dùng để quấn tóc, lau tay hoặc kê khi massage."},
+    {"id": "bed-sheet", "cat": "linen", "name": "massa Khăn trải giường spa 90x190cm", "price": 139000, "images": ["img/sheet.jpg"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng.\n\nKhăn trải giường massage cỡ 90x190cm, sợi microfiber mềm, dễ giặt, thêu logo massa."},
+    {"id": "therapist-kit", "cat": "tool", "name": "massa Bộ dụng cụ cho chuyên viên (Starter Kit)", "price": 616000, "sale": 549000, "images": ["img/kit.jpg"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng.\n\nBộ dụng cụ khởi đầu cho chuyên viên massage tại nhà:\n• 1 chai dầu massage Sả chanh & Gừng 500ml\n• 3 khăn spa cotton thêu logo\n• 1 khăn trải giường 90x190cm\n• 8 viên đá nóng bazan kèm túi\nMua riêng từng món: 616.000₫."}
+  ]
 }
