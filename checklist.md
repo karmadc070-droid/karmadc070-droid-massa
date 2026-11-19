@@ -5250,4 +5250,4 @@ vi:
 - [x] sql/shop_order.sql — 주문 요청 표(손님은 넣기만, 관리자만 읽기), 분당 10건 제한, 알림 트리거
 - [x] notify-admin 에 shop_order 분기(관리자 메일)
 - [x] 로컬에서 모바일·PC 화면, 장바구니→주문 요청 흐름 확인(임시 상품으로)
-- [ ] 운영 반영(DB·함수·사이트 배포)은 사용자 승인 후
+- [x] 운영 반영 (11/19 22:5x) — shop_order 표·정책 2개·트리거, notify-admin 교체(백업 .bak), 사이트 배포, /shop 4개 주소 200. 테스트 주문 1건(TEST Claude) → Resend 200, 관리자 메일 2곳 발송, handled_at 표시
