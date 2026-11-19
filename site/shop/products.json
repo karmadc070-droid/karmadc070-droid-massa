@@ -1,0 +1,12 @@
+{
+  "categories": [
+    {"id": "oil",    "icon": "💧", "name": {"vi": "Dầu massage",          "ko": "마사지 오일",     "en": "Massage oil"}},
+    {"id": "aroma",  "icon": "🌿", "name": {"vi": "Tinh dầu",             "ko": "아로마 오일",     "en": "Essential oils"}},
+    {"id": "tool",   "icon": "🪨", "name": {"vi": "Đá nóng & dụng cụ",    "ko": "핫스톤·도구",     "en": "Hot stones & tools"}},
+    {"id": "linen",  "icon": "🧺", "name": {"vi": "Khăn & ga trải",       "ko": "타월·시트",       "en": "Towels & sheets"}},
+    {"id": "table",  "icon": "🛏️", "name": {"vi": "Giường & ghế massage", "ko": "마사지 베드·의자", "en": "Tables & chairs"}},
+    {"id": "device", "icon": "🔌", "name": {"vi": "Máy massage",          "ko": "마사지 기기",     "en": "Massage devices"}},
+    {"id": "skin",   "icon": "🧴", "name": {"vi": "Chăm sóc da",          "ko": "스킨케어",        "en": "Skin care"}}
+  ],
+  "products": []
+}

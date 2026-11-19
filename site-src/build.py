@@ -599,6 +599,7 @@ def build():
     # 관리자 지표 화면은 콘텐츠 페이지가 아니라 앱이다. 템플릿을 타지 않고 그대로 옮긴다.
     # 접근 통제는 여기가 아니라 DB 함수(admin_dashboard)가 한다.
     shutil.copytree(f"{SRC}/admin", f"{OUT}/admin", dirs_exist_ok=True)
+    shutil.copytree(f"{SRC}/shop", f"{OUT}/shop", dirs_exist_ok=True)   # 마사지 용품 쇼핑몰 (2026-11-19)
 
     MT, DUR, MT_LASTMOD = massage_types()
     CITY = active_cities()
