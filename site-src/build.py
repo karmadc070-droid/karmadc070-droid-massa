@@ -218,10 +218,10 @@ def chrome(lang, name, L, body, page):
     langsw = "".join(
         f'<a href="{url(l,name)}" hreflang="{l}" aria-current="{"true" if l==lang else "false"}">{L["langname"][l]}</a>'
         for l in LANGS)
-    fcol = lambda title, items: (
+    fcol = lambda title, items, extra="": (
         f'<div><h4>{esc(title)}</h4><ul>'
         + "".join(f'<li><a href="{url(lang,n)}">{esc(L["nav"][n])}</a></li>' for n in items)
-        + '</ul></div>')
+        + extra + '</ul></div>')
     alts = "".join(
         f'<link rel="alternate" hreflang="{l}" href="{SITE}{url(l,name)}">' for l in LANGS
     ) + f'<link rel="alternate" hreflang="x-default" href="{SITE}{url("ko",name)}">'
@@ -346,7 +346,7 @@ def chrome(lang, name, L, body, page):
         <a class="brand" href="{url(lang,'index')}">m<span>ㅏ</span>ss<span>ㅏ</span></a>
         <p style="margin:0;max-width:30ch">{esc(L["footer_tag"])}</p>
       </div>
-      {fcol(L["f_service"], ["services","guide","faq"])}
+      {fcol(L["f_service"], ["services","guide","faq"], f'<li><a href="/shop/">{esc(L["shop"])}</a></li>')}
       {fcol(L["f_company"], ["about","safety","partner"])}
       {fcol(L["f_support"], ["download","contact","terms","privacy"])}
     </div>
