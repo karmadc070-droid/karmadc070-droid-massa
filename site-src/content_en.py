@@ -83,7 +83,7 @@ PAGES = {
    "lead": "Late after work, or in a hotel room on a business trip. A verified therapist comes at the time you choose. You pay on the spot, after the service is finished.",
    "alt": "A therapist giving a massage in a candlelit room",
    "cap": "Booking to payment, all in the app. The price shown already includes tax and tip.",
-   "btns": [("Get the app", "/en/download.html"), ("How it works", "/en/guide.html")]},
+   "btns": [("Get the app", "/en/download.html"), ("How it works", "/en/guide.html"), ("Shop supplies", "/shop/")]},
 
   {"type": "section", "soft": True,
    "kicker": "Why call one",

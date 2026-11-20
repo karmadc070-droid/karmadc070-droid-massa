@@ -85,7 +85,7 @@ PAGES = {
    "lead": "Đêm muộn sau giờ làm, hay trong phòng khách sạn giữa chuyến công tác. Chuyên viên đã qua xác minh đến đúng giờ bạn chọn. Bạn thanh toán tại chỗ, sau khi dịch vụ kết thúc.",
    "alt": "Chuyên viên đang massage trong căn phòng thắp nến",
    "cap": "Từ đặt lịch đến thanh toán, tất cả trong ứng dụng. Giá hiển thị đã gồm thuế và tiền tip.",
-   "btns": [("Tải ứng dụng", "/vi/download.html"), ("Xem cách dùng", "/vi/guide.html")]},
+   "btns": [("Tải ứng dụng", "/vi/download.html"), ("Xem cách dùng", "/vi/guide.html"), ("Xem cửa hàng", "/shop/")]},
 
   {"type": "section", "soft": True,
    "kicker": "Vì sao gọi tận nơi",
