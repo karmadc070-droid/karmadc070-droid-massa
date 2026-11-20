@@ -328,6 +328,7 @@ def chrome(lang, name, L, body, page):
   <div class="wrap">
     <a class="brand" href="{url(lang,'index')}">m<span>ㅏ</span>ss<span>ㅏ</span></a>
     <nav class="main">{nav}
+      <a href="/shop/">{esc(L["shop"])}</a>
       <span class="langs">{langsw}</span>
       <a class="navlogin" href="{APP_LOGIN}">{esc(L["login"])}</a>
       <a class="navcta" href="{url(lang,'download')}">{esc(L["cta"])}</a>
@@ -661,6 +662,7 @@ def build():
             pr = "1.0" if name == "index" else ("0.9" if name in ("services","guide","download") else "0.6")
             us += (f'  <url>\n    <loc>{SITE}{url(lang,name)}</loc>{alts}\n'
                    f'    <changefreq>monthly</changefreq>\n    <priority>{pr}</priority>\n  </url>\n')
+    us += f'  <url>\n    <loc>{SITE}/shop/</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n'
     for t in MT:
         name = f"massage/{mc.slug(t)}"
         for lang in LANGS:

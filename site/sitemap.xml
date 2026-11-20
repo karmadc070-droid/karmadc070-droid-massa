@@ -266,6 +266,11 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://massaviet.com/shop/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://massaviet.com/massage/aroma.html</loc>
       <xhtml:link rel="alternate" hreflang="ko" href="https://massaviet.com/massage/aroma.html"/>
       <xhtml:link rel="alternate" hreflang="en" href="https://massaviet.com/en/massage/aroma.html"/>
