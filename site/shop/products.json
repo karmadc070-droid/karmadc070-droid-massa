@@ -6,6 +6,7 @@
     {"id": "tool", "icon": "🪨", "name": {"vi": "Đá nóng & dụng cụ", "ko": "핫스톤·도구", "en": "Hot stones & tools"}},
     {"id": "linen", "icon": "🧺", "name": {"vi": "Khăn & ga trải", "ko": "타월·시트", "en": "Towels & sheets"}},
     {"id": "relax", "icon": "🦶", "name": {"vi": "Thư giãn đầu & chân", "ko": "두피·발 케어", "en": "Head & foot care"}},
+    {"id": "wax", "icon": "✨", "name": {"vi": "Wax lông", "ko": "왁싱 용품", "en": "Waxing"}},
     {"id": "table", "icon": "🛏️", "name": {"vi": "Giường & ghế massage", "ko": "마사지 베드·의자", "en": "Tables & chairs"}},
     {"id": "device", "icon": "🔌", "name": {"vi": "Máy massage", "ko": "마사지 기기", "en": "Massage devices"}},
     {"id": "skin", "icon": "🧴", "name": {"vi": "Chăm sóc da", "ko": "스킨케어", "en": "Skin care"}}
@@ -50,6 +51,18 @@
     {"id": "towel-3", "cat": "linen", "name": "massa Bộ 5 khăn spa cotton thêu logo", "price": 259000, "images": ["img/towel-5.jpg?v=3"], "stock": true,
      "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nBộ 5 khăn cotton cỡ 35x75cm, thêu logo massa, mềm và thấm hút tốt. Dùng để quấn tóc, lau tay hoặc kê khi massage."},
     {"id": "bed-sheet", "cat": "linen", "name": "massa Khăn trải giường spa 90x190cm (bộ 2 tấm)", "price": 349000, "images": ["img/sheet-2.jpg?v=3"], "stock": true,
-     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nKhăn trải giường massage cỡ 90x190cm, sợi microfiber mềm, dễ giặt, thêu logo massa.\n• Bộ 2 tấm"}
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nKhăn trải giường massage cỡ 90x190cm, sợi microfiber mềm, dễ giặt, thêu logo massa.\n• Bộ 2 tấm"},
+    {"id": "wax-beans-1kg", "cat": "wax", "name": "massa Sáp wax lông nóng hạt đậu 1kg + 100 que gỗ", "price": 309000, "images": ["img/wax-1kg.jpg?v=3"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nSáp wax nóng dạng hạt đậu, bám lông tốt, bóc nhẹ không cần giấy.\n• 1 túi sáp 1kg\n• 100 que gỗ phết sáp\n• Nấu sáp đến khi chảy mịn, thử nhiệt độ trên cổ tay trước khi dùng\n• Không dùng trên da trầy xước, mụn viêm hoặc vừa phơi nắng"},
+    {"id": "wax-kit-home", "cat": "wax", "name": "massa Bộ wax lông tại nhà: Nồi Pro-Wax 100 + Sáp 1kg + 100 que gỗ", "price": 479000, "images": ["img/wax-kit-home.jpg?v=3"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nBộ wax lông đầy đủ để bắt đầu tại nhà:\n• 1 nồi nấu sáp Pro-Wax 100 (chỉnh nhiệt)\n• 1 túi sáp wax hạt đậu 1kg\n• 100 que gỗ phết sáp\n• Nấu sáp đến khi chảy mịn, thử nhiệt độ trên cổ tay trước khi dùng\n• Không dùng trên da trầy xước, mụn viêm hoặc vừa phơi nắng"},
+    {"id": "wax-pro-kit", "cat": "wax", "name": "massa Bộ wax cho chuyên viên: Nồi + Sáp 1kg + 100 que + 100 giấy + Mỡ trăn 50ml", "price": 699000, "images": ["img/wax-pro-kit.jpg?v=3"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nBộ dụng cụ wax lông cho chuyên viên làm tại nhà khách:\n• 1 nồi nấu sáp Pro-Wax 100\n• 1 túi sáp wax hạt đậu 1kg\n• 100 que gỗ phết sáp\n• 100 tờ giấy wax (dùng khi wax vùng rộng)\n• 1 lọ mỡ trăn 50ml thoa sau wax\n• Nấu sáp đến khi chảy mịn, thử nhiệt độ trên cổ tay trước khi dùng\n• Không dùng trên da trầy xước, mụn viêm hoặc vừa phơi nắng"},
+    {"id": "wax-salon-pack", "cat": "wax", "name": "massa Gói sáp salon: 3kg sáp hạt đậu + 300 que gỗ + 100 giấy wax", "price": 859000, "images": ["img/wax-salon.jpg?v=3"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nGói vật tư cho spa, salon hoặc chuyên viên làm nhiều khách:\n• 3 túi sáp wax hạt đậu 1kg\n• 300 que gỗ phết sáp\n• 100 tờ giấy wax\n• Nấu sáp đến khi chảy mịn, thử nhiệt độ trên cổ tay trước khi dùng\n• Không dùng trên da trầy xước, mụn viêm hoặc vừa phơi nắng"},
+    {"id": "cupping-24", "cat": "tool", "name": "massa Bộ giác hơi 24 cốc không dùng lửa + Dầu massage 100ml", "price": 399000, "images": ["img/cupping-24.jpg?v=3"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nBộ giác hơi chân không, không dùng lửa, an toàn khi dùng tại nhà:\n• 24 cốc nhựa nhiều cỡ + súng hút chân không\n• 1 chai dầu massage Sả chanh & Gừng 100ml\n• Mỗi lần giác không quá 10–15 phút; không giác trên da tổn thương"},
+    {"id": "massage-cream-1kg", "cat": "skin", "name": "massa Kem massage body Collagen hũ 1kg", "price": 329000, "images": ["img/cream-1kg.jpg?v=3"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nKem massage body dưỡng ẩm, tay lướt êm và không nhờn rít, hũ lớn dùng được nhiều buổi.\n• Hũ 1kg\n• Chỉ dùng ngoài da, tránh tiếp xúc với mắt"}
   ]
 }
