@@ -18,7 +18,7 @@
       payNote: 'Thanh toán trực tuyến sẽ sớm có. Sau khi nhận yêu cầu, massa sẽ gọi điện xác nhận đơn hàng, phí giao hàng và cách thanh toán.',
       need: 'Vui lòng nhập họ tên, số điện thoại và địa chỉ.', sending: 'Đang gửi…',
       sent: 'Đã gửi yêu cầu! massa sẽ liên hệ với bạn sớm.', fail: 'Gửi thất bại. Vui lòng thử lại sau.',
-      back: 'Về massaviet.com', min: 'Đặt tối thiểu {n} sản phẩm' },
+      back: 'Về massaviet.com', min: 'Đặt tối thiểu {n} sản phẩm', cmp: 'Mua lẻ' },
     ko: { search: '상품 검색', all: '전체', bannerT: '테라피스트와 가정을 위한 마사지 용품',
       bannerP: '오일, 아로마, 핫스톤, 타월, 마사지 베드까지 — 베트남 전역 배송.', cats: '카테고리',
       items: '상품', count: '상품 {n}개', soon: '상품을 준비하고 있어요. 곧 만나요!',
@@ -30,7 +30,7 @@
       payNote: '온라인 결제는 곧 열려요. 주문 요청을 받으면 massa가 전화로 주문 내용, 배송비, 결제 방법을 확인해 드려요.',
       need: '이름, 전화번호, 주소를 입력해 주세요.', sending: '보내는 중…',
       sent: '주문 요청을 보냈어요! massa가 곧 연락드릴게요.', fail: '보내지 못했어요. 잠시 후 다시 시도해 주세요.',
-      back: 'massaviet.com 으로', min: '{n}개부터 주문 가능' },
+      back: 'massaviet.com 으로', min: '{n}개부터 주문 가능', cmp: '낱개 구매 시' },
     en: { search: 'Search products', all: 'All', bannerT: 'Massage supplies for therapists & homes',
       bannerP: 'Oils, aromatherapy, hot stones, towels, massage tables — delivered across Vietnam.', cats: 'Categories',
       items: 'Products', count: '{n} products', soon: 'Products are on the way. Please check back soon!',
@@ -42,7 +42,7 @@
       payNote: 'Online payment is coming soon. After we receive your request, massa will call to confirm the order, delivery fee and payment.',
       need: 'Please enter your name, phone and address.', sending: 'Sending…',
       sent: 'Request sent! massa will contact you soon.', fail: 'Could not send. Please try again later.',
-      back: 'Back to massaviet.com', min: 'Minimum order: {n}' }
+      back: 'Back to massaviet.com', min: 'Minimum order: {n}', cmp: 'Bought separately' }
   };
 
   let lang = 'vi';
@@ -69,8 +69,12 @@
     let el = $('.toast'); if (!el) { el = document.createElement('div'); el.className = 'toast'; document.body.appendChild(el); }
     el.textContent = msg; el.classList.add('on'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('on'), 1800);
   }
+  // compare = 같은 샵 낱개 상품으로 똑같이 맞췄을 때의 합계 (근거 없는 '정가'는 쓰지 않는다)
   const priceHtml = (p) => p.sale && p.sale < p.price
-    ? `${vnd(p.sale)}<s>${vnd(p.price)}</s>` : vnd(p.price);
+    ? `${vnd(p.sale)}<s>${vnd(p.price)}</s>`
+    : p.compare > p.price
+      ? `<span class="was"><small>${esc(t('cmp'))}</small> <span class="x">${vnd(p.compare)}</span></span>${vnd(p.price)}<span class="off">-${Math.round((1 - p.price / p.compare) * 100)}%</span>`
+      : vnd(p.price);
   const unit = (p) => (p.sale && p.sale < p.price ? p.sale : p.price);
   const img = (p) => (p.images && p.images[0]) || '';
   // 단품 이익이 작은 상품은 최소 주문 수량(minQty)을 둔다
