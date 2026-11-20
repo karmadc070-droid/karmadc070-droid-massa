@@ -8,6 +8,7 @@
     {"id": "relax", "icon": "🦶", "name": {"vi": "Thư giãn đầu & chân", "ko": "두피·발 케어", "en": "Head & foot care"}},
     {"id": "wax", "icon": "✨", "name": {"vi": "Wax lông", "ko": "왁싱 용품", "en": "Waxing"}},
     {"id": "nail", "icon": "💅", "name": {"vi": "Dụng cụ nail", "ko": "네일 용품", "en": "Nail supplies"}},
+    {"id": "bag", "icon": "👜", "name": {"vi": "Túi đựng dụng cụ", "ko": "가방·파우치", "en": "Bags & cases"}},
     {"id": "table", "icon": "🛏️", "name": {"vi": "Giường & ghế massage", "ko": "마사지 베드·의자", "en": "Tables & chairs"}},
     {"id": "device", "icon": "🔌", "name": {"vi": "Máy massage", "ko": "마사지 기기", "en": "Massage devices"}},
     {"id": "skin", "icon": "🧴", "name": {"vi": "Chăm sóc da", "ko": "스킨케어", "en": "Skin care"}}
@@ -120,6 +121,26 @@
     {"id": "nail-brush-15", "cat": "nail", "name": "Bộ 15 cọ vẽ móng", "price": 129000, "minQty": 2, "images": ["img/nail-brush.jpg?v=3"], "stock": true,
      "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nBộ 15 cọ vẽ móng nhiều kiểu đầu: cọ nét, cọ bản, cọ quạt, cọ đắp bột.\n• Rửa sạch cọ sau mỗi lần dùng"},
     {"id": "nail-starter-kit", "cat": "nail", "name": "massa Bộ dụng cụ nail khởi nghiệp: Máy hơ + Máy mài + Kìm + 15 cọ + 500 móng úp", "price": 999000, "images": ["img/nail-kit.jpg?v=3"], "stock": true,
-     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nBộ đồ nghề cơ bản cho người mới mở tiệm nail tại nhà:\n• 1 máy hơ gel UV/LED 48W\n• 1 máy mài móng tích điện 35.000 vòng/phút\n• 1 kìm cắt da thép không gỉ\n• 1 bộ 15 cọ vẽ móng\n• 1 hộp 500 móng úp"}
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nBộ đồ nghề cơ bản cho người mới mở tiệm nail tại nhà:\n• 1 máy hơ gel UV/LED 48W\n• 1 máy mài móng tích điện 35.000 vòng/phút\n• 1 kìm cắt da thép không gỉ\n• 1 bộ 15 cọ vẽ móng\n• 1 hộp 500 móng úp"},
+    {"id": "bag-tote-canvas", "cat": "bag", "name": "massa Túi tote canvas in logo", "price": 139000, "minQty": 2, "images": ["img/bag-tote.jpg?v=3"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nTúi tote vải canvas dày, in logo massa, đựng khăn, dầu và đồ dùng khi đi làm tại nhà khách.\n• Cỡ khoảng 38x38cm, quai vai dài"},
+    {"id": "bag-tool-case", "cat": "bag", "name": "Túi đựng dụng cụ spa vải chống thấm", "price": 189000, "minQty": 2, "images": ["img/bag-tool-case.jpg?v=3"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nTúi hộp vải chống thấm nước, nhiều ngăn, đựng dụng cụ spa, nail, wax hoặc trang điểm.\n• Có quai xách và dây đeo vai\n• Lau sạch bằng khăn ẩm"},
+    {"id": "bag-clear-pouch-3", "cat": "bag", "name": "Bộ 3 túi trong suốt đựng mỹ phẩm", "price": 79000, "minQty": 3, "images": ["img/bag-clear-pouch.jpg?v=3"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nBộ 3 túi nhựa trong suốt có khóa kéo, nhìn thấy đồ bên trong, chia riêng dầu, kem và dụng cụ nhỏ.\n• 3 cỡ to, vừa, nhỏ"},
+    {"id": "bag-cosmetic-large", "cat": "bag", "name": "Túi đựng mỹ phẩm cỡ lớn nhiều ngăn", "price": 149000, "minQty": 2, "images": ["img/bag-cosmetic-large.jpg?v=3"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nTúi đựng mỹ phẩm cỡ lớn, khóa kéo đôi, nhiều ngăn chia bên trong, đựng chai dầu, hũ kem và khăn nhỏ."},
+    {"id": "bag-oil-case-8", "cat": "bag", "name": "Hộp đựng tinh dầu chống sốc 8 chai", "price": 169000, "minQty": 2, "images": ["img/bag-oil-8.jpg?v=3"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nHộp vải chống sốc có khóa kéo, 8 ô đệm mút giữ chai tinh dầu không va đập khi di chuyển.\n• Vừa chai 5–15ml"},
+    {"id": "bag-oil-case-30", "cat": "bag", "name": "Túi đựng tinh dầu 30 ngăn chống sốc", "price": 279000, "images": ["img/bag-oil-30.jpg?v=3"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nTúi đựng tinh dầu cỡ lớn 30 ngăn có đệm, dành cho chuyên viên mang nhiều loại tinh dầu khi đi làm.\n• Vừa chai 5–15ml"},
+    {"id": "bag-trolley-s", "cat": "bag", "name": "Vali kéo đựng dụng cụ spa & nail cỡ nhỏ", "price": 749000, "images": ["img/bag-trolley-s.jpg?v=3"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nVali kéo cỡ nhỏ có bánh xe, nhiều khay và ngăn, đựng gọn đồ nghề spa, nail hoặc trang điểm khi đi làm tại nhà khách."},
+    {"id": "bag-trolley-48", "cat": "bag", "name": "Vali kéo đựng dụng cụ 48cm kèm 4 túi trong", "price": 1149000, "images": ["img/bag-trolley-48.jpg?v=3"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nVali kéo cao 48cm cho chuyên viên đi làm tại nhà khách:\n• Kèm 4 túi trong suốt chia đồ\n• Bánh xe xoay 360°, tay kéo rút gọn"},
+    {"id": "bag-trolley-3tier", "cat": "bag", "name": "Vali kéo 3 tầng khay đựng đồ nghề chuyên nghiệp", "price": 1799000, "images": ["img/bag-trolley-3tier.jpg?v=3"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nVali kéo 3 tầng, khay kéo xếp tầng, đựng nhiều dụng cụ và chai lọ cho spa, nail, trang điểm.\n• Có khóa\n• Bánh xe, tay kéo rút gọn"},
+    {"id": "bag-therapist-set", "cat": "bag", "name": "massa Bộ túi chuyên viên: Túi dụng cụ chống thấm + Tote canvas + 3 túi trong suốt", "price": 449000, "images": ["img/bag-therapist-set.jpg?v=3"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nBộ túi cho chuyên viên massage đi làm tại nhà khách:\n• 1 túi đựng dụng cụ vải chống thấm\n• 1 túi tote canvas in logo massa\n• 1 bộ 3 túi trong suốt đựng dầu, kem và dụng cụ nhỏ"}
   ]
 }
