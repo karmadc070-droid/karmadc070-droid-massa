@@ -64,15 +64,15 @@
      "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nBộ giác hơi chân không, không dùng lửa, an toàn khi dùng tại nhà:\n• 24 cốc nhựa nhiều cỡ + súng hút chân không\n• 1 chai dầu massage Sả chanh & Gừng 100ml\n• Mỗi lần giác không quá 10–15 phút; không giác trên da tổn thương"},
     {"id": "massage-cream-1kg", "cat": "skin", "name": "massa Kem massage body Collagen hũ 1kg", "price": 329000, "images": ["img/cream-1kg.jpg?v=3"], "stock": true,
      "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nKem massage body dưỡng ẩm, tay lướt êm và không nhờn rít, hũ lớn dùng được nhiều buổi.\n• Hũ 1kg\n• Chỉ dùng ngoài da, tránh tiếp xúc với mắt"},
-    {"id": "wax-pot", "cat": "wax", "name": "Nồi nấu sáp wax lông Pro-Wax 100", "price": 155000, "images": ["img/wax-pot.jpg?v=3"], "stock": true,
+    {"id": "wax-pot", "cat": "wax", "name": "Nồi nấu sáp wax lông Pro-Wax 100", "price": 155000, "minQty": 2, "images": ["img/wax-pot.jpg?v=3"], "stock": true,
      "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nNồi nấu sáp wax nóng có núm chỉnh nhiệt, nắp trong suốt, dùng cho sáp hạt đậu và sáp hũ.\n• Dung tích khoảng 500ml\n• Sáp chảy sau khoảng 5–10 phút\n• Nấu sáp đến khi chảy mịn, thử nhiệt độ trên cổ tay trước khi dùng\n• Không dùng trên da trầy xước, mụn viêm hoặc vừa phơi nắng"},
-    {"id": "wax-sticks-strips", "cat": "wax", "name": "massa Bộ 200 que gỗ + 200 tờ giấy wax", "price": 155000, "images": ["img/wax-sticks-strips.jpg?v=3"], "stock": true,
+    {"id": "wax-sticks-strips", "cat": "wax", "name": "massa Bộ 200 que gỗ + 200 tờ giấy wax", "price": 155000, "minQty": 2, "images": ["img/wax-sticks-strips.jpg?v=3"], "stock": true,
      "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nVật tư wax dùng một lần, thay mới cho mỗi khách:\n• 200 que gỗ phết sáp\n• 200 tờ giấy wax vải không dệt\n• Nấu sáp đến khi chảy mịn, thử nhiệt độ trên cổ tay trước khi dùng\n• Không dùng trên da trầy xước, mụn viêm hoặc vừa phơi nắng"},
-    {"id": "mo-tran-50", "cat": "wax", "name": "Mỡ trăn thoa sau wax 50ml", "price": 149000, "images": ["img/mo-tran-50.jpg?v=3"], "stock": true,
+    {"id": "mo-tran-50", "cat": "wax", "name": "Mỡ trăn thoa sau wax 50ml", "price": 149000, "minQty": 2, "images": ["img/mo-tran-50.jpg?v=3"], "stock": true,
      "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nMỡ trăn thoa lên vùng da sau khi wax để làm dịu da.\n• Lọ 50ml\n• Chỉ dùng ngoài da; thử trước trên một vùng da nhỏ"},
-    {"id": "guasha-set", "cat": "tool", "name": "massa Bộ cây lăn & đá Gua Sha thạch anh hồng", "price": 209000, "images": ["img/guasha-set.jpg?v=3"], "stock": true,
+    {"id": "guasha-set", "cat": "tool", "name": "massa Bộ cây lăn & đá Gua Sha thạch anh hồng", "price": 209000, "minQty": 2, "images": ["img/guasha-set.jpg?v=3"], "stock": true,
      "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nBộ dụng cụ massage mặt bằng đá thạch anh hồng:\n• 1 cây lăn hai đầu\n• 1 miếng đá Gua Sha\n• Dùng kèm dầu hoặc kem massage, lăn nhẹ theo hướng từ trong ra ngoài"},
-    {"id": "headband-5", "cat": "linen", "name": "massa Bộ 5 băng đô spa", "price": 99000, "images": ["img/headband-5.jpg?v=3"], "stock": true,
+    {"id": "headband-5", "cat": "linen", "name": "massa Bộ 5 băng đô spa", "price": 99000, "minQty": 2, "images": ["img/headband-5.jpg?v=3"], "stock": true,
      "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nBăng đô cotton dán gai, giữ tóc gọn khi massage mặt, rửa mặt hoặc wax.\n• Bộ 5 cái, cỡ 7x70cm"}
   ]
 }

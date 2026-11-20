@@ -18,7 +18,7 @@
       payNote: 'Thanh toán trực tuyến sẽ sớm có. Sau khi nhận yêu cầu, massa sẽ gọi điện xác nhận đơn hàng, phí giao hàng và cách thanh toán.',
       need: 'Vui lòng nhập họ tên, số điện thoại và địa chỉ.', sending: 'Đang gửi…',
       sent: 'Đã gửi yêu cầu! massa sẽ liên hệ với bạn sớm.', fail: 'Gửi thất bại. Vui lòng thử lại sau.',
-      back: 'Về massaviet.com' },
+      back: 'Về massaviet.com', min: 'Đặt tối thiểu {n} sản phẩm' },
     ko: { search: '상품 검색', all: '전체', bannerT: '테라피스트와 가정을 위한 마사지 용품',
       bannerP: '오일, 아로마, 핫스톤, 타월, 마사지 베드까지 — 베트남 전역 배송.', cats: '카테고리',
       items: '상품', count: '상품 {n}개', soon: '상품을 준비하고 있어요. 곧 만나요!',
@@ -30,7 +30,7 @@
       payNote: '온라인 결제는 곧 열려요. 주문 요청을 받으면 massa가 전화로 주문 내용, 배송비, 결제 방법을 확인해 드려요.',
       need: '이름, 전화번호, 주소를 입력해 주세요.', sending: '보내는 중…',
       sent: '주문 요청을 보냈어요! massa가 곧 연락드릴게요.', fail: '보내지 못했어요. 잠시 후 다시 시도해 주세요.',
-      back: 'massaviet.com 으로' },
+      back: 'massaviet.com 으로', min: '{n}개부터 주문 가능' },
     en: { search: 'Search products', all: 'All', bannerT: 'Massage supplies for therapists & homes',
       bannerP: 'Oils, aromatherapy, hot stones, towels, massage tables — delivered across Vietnam.', cats: 'Categories',
       items: 'Products', count: '{n} products', soon: 'Products are on the way. Please check back soon!',
@@ -42,7 +42,7 @@
       payNote: 'Online payment is coming soon. After we receive your request, massa will call to confirm the order, delivery fee and payment.',
       need: 'Please enter your name, phone and address.', sending: 'Sending…',
       sent: 'Request sent! massa will contact you soon.', fail: 'Could not send. Please try again later.',
-      back: 'Back to massaviet.com' }
+      back: 'Back to massaviet.com', min: 'Minimum order: {n}' }
   };
 
   let lang = 'vi';
@@ -73,6 +73,9 @@
     ? `${vnd(p.sale)}<s>${vnd(p.price)}</s>` : vnd(p.price);
   const unit = (p) => (p.sale && p.sale < p.price ? p.sale : p.price);
   const img = (p) => (p.images && p.images[0]) || '';
+  // 단품 이익이 작은 상품은 최소 주문 수량(minQty)을 둔다
+  const minQ = (p) => p.minQty || 1;
+  const minHtml = (p) => (minQ(p) > 1 ? `<div class="min">${esc(t('min', minQ(p)))}</div>` : '');
   const catName = (data, id) => { const c = data.categories.find((x) => x.id === id); return c ? c.name[lang] : ''; };
 
   function header() {
@@ -100,7 +103,7 @@
     return `<a class="card" href="product.html?id=${encodeURIComponent(p.id)}">
       <div class="img" style="background-image:url('${esc(img(p))}')"></div>
       <div class="body"><div class="name">${esc(p.name)}</div>
-      <div class="price">${priceHtml(p)}</div>${p.stock === false ? `<div class="badge-out">${esc(t('out'))}</div>` : ''}</div></a>`;
+      <div class="price">${priceHtml(p)}</div>${minHtml(p)}${p.stock === false ? `<div class="badge-out">${esc(t('out'))}</div>` : ''}</div></a>`;
   }
 
   function pageHome(data) {
@@ -122,12 +125,12 @@
     if (!p) { $('#detail').innerHTML = `<div class="empty"><span class="ic">📦</span>${esc(t('notFound'))}</div>`; return; }
     document.title = p.name + ' — massa shop';
     const imgs = p.images && p.images.length ? p.images : [''];
-    let qty = 1;
+    let qty = minQ(p);
     $('#detail').innerHTML = `<div class="crumbs"><a href="./">${esc(t('home'))}</a> › <a href="./?cat=${esc(p.cat)}">${esc(catName(data, p.cat))}</a></div>
       <div class="detail"><div class="gallery"><div class="main" id="mainImg" style="background-image:url('${esc(imgs[0])}')"></div>
         ${imgs.length > 1 ? `<div class="thumbs">${imgs.map((u, i) => `<button data-i="${i}" class="${i ? '' : 'on'}" style="background-image:url('${esc(u)}')"></button>`).join('')}</div>` : ''}</div>
-      <div class="info"><h1>${esc(p.name)}</h1><div class="price">${priceHtml(p)}</div>
-        <div class="actions"><div class="qty"><button id="qm">−</button><span id="qv">1</span><button id="qp">+</button></div></div>
+      <div class="info"><h1>${esc(p.name)}</h1><div class="price">${priceHtml(p)}</div>${minHtml(p)}
+        <div class="actions"><div class="qty"><button id="qm">−</button><span id="qv">${qty}</span><button id="qp">+</button></div></div>
         <div class="actions"><button class="btn btn-line" id="add" ${p.stock === false ? 'disabled' : ''}>${esc(t('add'))}</button>
           <button class="btn btn-main" id="buy" ${p.stock === false ? 'disabled' : ''}>${esc(p.stock === false ? t('out') : t('buy'))}</button></div>
         ${p.desc ? `<div class="desc">${esc(p.desc)}</div>` : ''}</div></div>`;
@@ -135,7 +138,7 @@
       $('#mainImg').style.backgroundImage = `url('${imgs[b.dataset.i]}')`;
       document.querySelectorAll('.thumbs button').forEach((x) => x.classList.toggle('on', x === b));
     });
-    $('#qm').onclick = () => { qty = Math.max(1, qty - 1); $('#qv').textContent = qty; };
+    $('#qm').onclick = () => { qty = Math.max(minQ(p), qty - 1); $('#qv').textContent = qty; };
     $('#qp').onclick = () => { qty = Math.min(99, qty + 1); $('#qv').textContent = qty; };
     $('#add').onclick = () => { addToCart(p.id, qty); toast(t('added')); };
     $('#buy').onclick = () => { addToCart(p.id, qty); location.href = 'cart.html'; };
@@ -145,6 +148,7 @@
     const draw = () => {
       // 목록에서 빠진 상품은 장바구니에서도 뺀다 — 없는 물건을 주문받지 않도록
       const c = getCart().filter((x) => data.products.some((p) => p.id === x.id && p.stock !== false));
+      c.forEach((x) => { x.qty = Math.max(minQ(data.products.find((p) => p.id === x.id)), x.qty); });
       setCart(c);
       $('#cartTitle').textContent = t('cart');
       if (!c.length) {
@@ -155,7 +159,7 @@
       const total = rows.reduce((a, r) => a + unit(r.p) * r.x.qty, 0);
       $('#cart').innerHTML = `<div class="cart-layout"><div class="box">${rows.map((r) => `<div class="line">
           <a class="img" href="product.html?id=${encodeURIComponent(r.p.id)}" style="background-image:url('${esc(img(r.p))}')"></a>
-          <div><div>${esc(r.p.name)}</div><div class="price">${vnd(unit(r.p))}</div>
+          <div><div>${esc(r.p.name)}</div><div class="price">${vnd(unit(r.p))}</div>${minHtml(r.p)}
             <button class="rm" data-rm="${esc(r.p.id)}">${esc(t('remove'))}</button></div>
           <div class="qty"><button data-d="-1" data-id="${esc(r.p.id)}">−</button><span>${r.x.qty}</span><button data-d="1" data-id="${esc(r.p.id)}">+</button></div>
         </div>`).join('')}</div>
@@ -169,7 +173,8 @@
             <div class="note">${esc(t('payNote'))}</div><div class="msg" id="msg"></div></form></div></div>`;
       document.querySelectorAll('[data-d]').forEach((b) => b.onclick = () => {
         const cc = getCart(); const it = cc.find((x) => x.id === b.dataset.id);
-        it.qty = Math.min(99, Math.max(1, it.qty + Number(b.dataset.d))); setCart(cc); draw();
+        const pp = data.products.find((p) => p.id === it.id);
+        it.qty = Math.min(99, Math.max(minQ(pp), it.qty + Number(b.dataset.d))); setCart(cc); draw();
       });
       document.querySelectorAll('[data-rm]').forEach((b) => b.onclick = () => { setCart(getCart().filter((x) => x.id !== b.dataset.rm)); draw(); });
       $('#orderForm').onsubmit = async (e) => {
