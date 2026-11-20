@@ -7,6 +7,7 @@
     {"id": "linen", "icon": "🧺", "name": {"vi": "Khăn & ga trải", "ko": "타월·시트", "en": "Towels & sheets"}},
     {"id": "relax", "icon": "🦶", "name": {"vi": "Thư giãn đầu & chân", "ko": "두피·발 케어", "en": "Head & foot care"}},
     {"id": "wax", "icon": "✨", "name": {"vi": "Wax lông", "ko": "왁싱 용품", "en": "Waxing"}},
+    {"id": "nail", "icon": "💅", "name": {"vi": "Dụng cụ nail", "ko": "네일 용품", "en": "Nail supplies"}},
     {"id": "table", "icon": "🛏️", "name": {"vi": "Giường & ghế massage", "ko": "마사지 베드·의자", "en": "Tables & chairs"}},
     {"id": "device", "icon": "🔌", "name": {"vi": "Máy massage", "ko": "마사지 기기", "en": "Massage devices"}},
     {"id": "skin", "icon": "🧴", "name": {"vi": "Chăm sóc da", "ko": "스킨케어", "en": "Skin care"}}
@@ -107,6 +108,18 @@
     {"id": "robe-spa", "cat": "linen", "name": "Áo choàng spa cho khách", "price": 179000, "minQty": 2, "images": ["img/robe-spa.jpg?v=3"], "stock": true,
      "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nÁo choàng spa dáng dài, vải mềm, có đai buộc, dùng cho khách trước và sau khi massage.\n• Free size"},
     {"id": "underwear-100", "cat": "linen", "name": "Quần lót giấy dùng một lần cho spa (100 cái)", "price": 299000, "minQty": 2, "images": ["img/underwear-100.jpg?v=3"], "stock": true,
-     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nQuần lót giấy dùng một lần cho khách khi massage body hoặc wax.\n• 100 cái, free size"}
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nQuần lót giấy dùng một lần cho khách khi massage body hoặc wax.\n• 100 cái, free size"},
+    {"id": "nail-lamp-48w", "cat": "nail", "name": "Máy hơ gel UV/LED 48W", "price": 199000, "images": ["img/nail-lamp.jpg?v=3"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nMáy hơ sơn gel UV/LED 48W, cảm biến tự bật khi đưa tay vào, hẹn giờ 30/60/90 giây.\n• Dùng cho cả móng tay và móng chân\n• Không nhìn trực tiếp vào đèn khi đang bật"},
+    {"id": "nail-drill", "cat": "nail", "name": "Máy mài móng tích điện 35.000 vòng/phút", "price": 499000, "images": ["img/nail-drill.jpg?v=3"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nMáy mài móng cầm tay tích điện cho thợ nail, chỉnh tốc độ, đảo chiều.\n• Tốc độ tối đa 35.000 vòng/phút\n• Kèm bộ đầu mài cơ bản\n• Bắt đầu ở tốc độ thấp, không mài lâu một chỗ"},
+    {"id": "nail-nipper", "cat": "nail", "name": "Kìm cắt da móng thép không gỉ", "price": 129000, "minQty": 2, "images": ["img/nail-nipper.jpg?v=3"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nKìm cắt da thép không gỉ, lưỡi mỏng sắc, có lò xo đôi.\n• Vệ sinh và sát khuẩn sau mỗi khách"},
+    {"id": "nail-tips-500", "cat": "nail", "name": "Hộp 500 móng úp đủ size", "price": 79000, "minQty": 3, "images": ["img/nail-tips.jpg?v=3"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nMóng úp nhựa dẻo trong suốt, hộp 500 móng chia 10 size, dùng làm móng úp, đắp gel hoặc tập vẽ."},
+    {"id": "nail-brush-15", "cat": "nail", "name": "Bộ 15 cọ vẽ móng", "price": 129000, "minQty": 2, "images": ["img/nail-brush.jpg?v=3"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nBộ 15 cọ vẽ móng nhiều kiểu đầu: cọ nét, cọ bản, cọ quạt, cọ đắp bột.\n• Rửa sạch cọ sau mỗi lần dùng"},
+    {"id": "nail-starter-kit", "cat": "nail", "name": "massa Bộ dụng cụ nail khởi nghiệp: Máy hơ + Máy mài + Kìm + 15 cọ + 500 móng úp", "price": 999000, "images": ["img/nail-kit.jpg?v=3"], "stock": true,
+     "desc": "Hàng đặt trước — massa sẽ gọi điện xác nhận thời gian giao hàng. Miễn phí giao hàng toàn quốc.\n\nBộ đồ nghề cơ bản cho người mới mở tiệm nail tại nhà:\n• 1 máy hơ gel UV/LED 48W\n• 1 máy mài móng tích điện 35.000 vòng/phút\n• 1 kìm cắt da thép không gỉ\n• 1 bộ 15 cọ vẽ móng\n• 1 hộp 500 móng úp"}
   ]
 }
